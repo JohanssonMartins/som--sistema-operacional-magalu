@@ -3,12 +3,34 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   HardHat, LayoutDashboard, ListChecks, Check, X, Plus, Save, Edit2,
   Users, Settings, Shield, Package, ShoppingCart, Leaf, ArrowUp, ArrowDown,
-  LogOut, Lock, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
-  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2
+  LogOut, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
+  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS } from "./data";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "./db";
+
+// --- CONSTANTES DE CONFIGURAÇÃO (FORA DO COMPONENTE PARA PERFORMANCE) ---
+const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '490', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
+
+const PILAR_ORDER = ['Pessoas', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
+const BLOCO_ORDER = [
+  'Reconhecimento', 'Carreira', 'Desenvolvimento', 'Clima', 'Retenção', 'Atração', 'Cultura', 'Diversidade',
+  'Gestão de Acidente', 'Ergonomia', 'Gestão de Fornecedores', 'Segurança Sanitária', 'PAE', 'Manutenção', 'Saúde', 'Gestão Meio Ambiente', 'Comportamento Seguro',
+  'Prazo', 'Gestão do Transportador', 'Encantamento', 'Experiência do Cliente',
+  'Maga Lean', 'Resolução de problema', 'Kaizen', 'Conselho', '5S', 'Agenda da Rotina',
+  'Recebimento', 'Acuracidade', 'Expedição Leves', 'Expedição Pesado', 'Intralogística'
+];
+
+const getPilarWeight = (pilar: string) => {
+  const idx = PILAR_ORDER.indexOf(pilar);
+  return idx === -1 ? 999 : idx;
+};
+
+const getBlocoWeight = (bloco: string) => {
+  const idx = BLOCO_ORDER.indexOf(bloco);
+  return idx === -1 ? 999 : idx;
+};
 
 const LogoIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -42,13 +64,15 @@ const DebouncedTextarea = ({
   onChange,
   placeholder,
   className,
-  rows = 2
+  rows = 2,
+  disabled = false
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
   rows?: number;
+  disabled?: boolean;
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -77,6 +101,7 @@ const DebouncedTextarea = ({
       placeholder={placeholder}
       className={className}
       rows={rows}
+      disabled={disabled}
     />
   );
 };
@@ -136,18 +161,41 @@ export default function App() {
 
   const baseItems = useLiveQuery(() => db.baseItems.toArray()) || [];
   const items = useLiveQuery(() => db.items.toArray()) || [];
-  const [formData, setFormData] = useState<Partial<ChecklistItem>>({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true });
+  const [formData, setFormData] = useState<Partial<ChecklistItem>>({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true, nossaAcao: '' });
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsUnitDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // --- SINCRONIZAÇÃO AUTOMÁTICA DE NOVAS UNIDADES/ITENS ---
   useEffect(() => {
     const syncChecklists = async () => {
-      if (baseItems.length === 0 || usersList.length === 0) return;
+      if (baseItems.length === 0) return;
 
       const currentItems = await db.items.toArray();
+
+      // Otimização: Criar mapas para busca O(1)
+      const itemsMap = new Map<string, ChecklistItem>();
+      const ghostMap = new Map<string, ChecklistItem>(); // Chave: unit + item_text
+
+      currentItems.forEach(item => {
+        itemsMap.set(item.id, item);
+        ghostMap.set(`${item.unidade}-${item.item}`, item);
+      });
+
       const allUnits = Array.from(new Set([
-        ...usersList.map(u => u.unidade),
-        ...currentItems.map(i => i.unidade)
+        ...UNIDADES_DISPONIVEIS,
+        ...(usersList?.map(u => u.unidade) || [])
       ])).filter(u => u && u !== 'Master' && u !== 'Todas');
 
       const itemsToPut: ChecklistItem[] = [];
@@ -160,12 +208,12 @@ export default function App() {
           const expectedId = `${unit}-${baseItem.id}`;
           validIds.add(expectedId);
 
-          const existingItem = currentItems.find(i => i.id === expectedId);
+          const existingItem = itemsMap.get(expectedId);
 
           if (!existingItem) {
-            // Procura item fantasma com o mesmo nome para preservar histórico (caso antigo)
-            const ghost = currentItems.find(i => i.item === baseItem.item && i.unidade === unit && i.id !== expectedId);
-            if (ghost) {
+            // Busca rápida por "fantasma" via mapa
+            const ghost = ghostMap.get(`${unit}-${baseItem.item}`);
+            if (ghost && ghost.id !== expectedId) {
               itemsToPut.push({
                 ...ghost,
                 id: expectedId,
@@ -191,13 +239,18 @@ export default function App() {
             }
           } else {
             // Atualiza caso os campos da Base tenham mudado
-            if (existingItem.pilar !== baseItem.pilar ||
+            const hasChanged =
+              existingItem.pilar !== baseItem.pilar ||
               existingItem.bloco !== baseItem.bloco ||
               existingItem.ativo !== baseItem.ativo ||
               existingItem.item !== baseItem.item ||
               existingItem.order !== baseItem.order ||
-              existingItem.score !== baseItem.score) {
+              existingItem.descricao !== baseItem.descricao ||
+              existingItem.exigeEvidencia !== baseItem.exigeEvidencia ||
+              existingItem.nossaAcao !== baseItem.nossaAcao ||
+              existingItem.score !== baseItem.score;
 
+            if (hasChanged) {
               itemsToPut.push({
                 ...existingItem,
                 pilar: baseItem.pilar,
@@ -208,7 +261,8 @@ export default function App() {
                 score: baseItem.score,
                 exigeEvidencia: baseItem.exigeEvidencia,
                 ativo: baseItem.ativo,
-                order: baseItem.order
+                order: baseItem.order,
+                nossaAcao: baseItem.nossaAcao
               });
             }
           }
@@ -289,33 +343,41 @@ export default function App() {
   // --- FUNÇÕES DA BASE DE CHECKLIST ---
   const handleAddBaseItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await db.baseItems.update(editingId, { ...formData });
+    try {
+      const payload = { ...formData };
+      delete payload.id; // Evita erro de sobrescrita de chave primária (ex: tentar mudar '6994-1' para '1')
 
-      const allItems = await db.items.toArray();
-      const itemsToUpdate = allItems.filter(item => item.id.endsWith(`-${editingId}`));
-      if (itemsToUpdate.length > 0) {
-        await Promise.all(itemsToUpdate.map(item => db.items.update(item.id, { ...formData })));
-      }
-    } else {
-      const newId = Date.now().toString();
-      const newItem: ChecklistItem = {
-        id: newId,
-        code: `NEW-${newId.slice(-4)}`,
-        order: baseItems.length + 1,
-        ...formData
-      } as ChecklistItem;
-      await db.baseItems.add(newItem);
+      if (editingId) {
+        await db.baseItems.update(editingId, payload);
 
-      const units = Array.from(new Set(usersList.map(u => u.unidade))).filter(u => u !== 'Master');
-      const newItems = units.map(unit => ({ ...newItem, id: `${unit}-${newId}`, unidade: unit, assigneeId: '' }));
-      if (newItems.length > 0) {
-        await db.items.bulkAdd(newItems);
+        const allItems = await db.items.toArray();
+        const itemsToUpdate = allItems.filter(item => item.id.endsWith(`-${editingId}`));
+        if (itemsToUpdate.length > 0) {
+          await Promise.all(itemsToUpdate.map(item => db.items.update(item.id, payload)));
+        }
+      } else {
+        const newId = Date.now().toString();
+        const newItem: ChecklistItem = {
+          id: newId,
+          code: `NEW-${newId.slice(-4)}`,
+          order: baseItems.length + 1,
+          ...payload
+        } as ChecklistItem;
+        await db.baseItems.add(newItem);
+
+        const units = Array.from(new Set(usersList.map(u => u.unidade))).filter(u => u !== 'Master');
+        const newItems = units.map(unit => ({ ...newItem, id: `${unit}-${newId}`, unidade: unit, assigneeId: '' }));
+        if (newItems.length > 0) {
+          await db.items.bulkAdd(newItems);
+        }
       }
+      setIsModalOpen(false);
+      setEditingId(null);
+      setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+    } catch (error) {
+      console.error("Erro ao salvar item da base:", error);
+      alert("Houve um erro ao efetuar o salvamento. Verifique se os dados estão corretos.");
     }
-    setIsModalOpen(false);
-    setEditingId(null);
-    setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true });
   };
 
   const handleEditBaseItem = (item: ChecklistItem) => {
@@ -325,7 +387,7 @@ export default function App() {
   };
 
   const openNewBaseItemModal = () => {
-    setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true });
+    setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true, nossaAcao: '' });
     setEditingId(null);
     setIsModalOpen(true);
   };
@@ -335,7 +397,7 @@ export default function App() {
   };
 
   const handleUpdateItemField = async (itemId: string, field: keyof ChecklistItem, value: string) => {
-    await db.items.update(itemId, { [field]: value });
+    await db.items.update(itemId, { [field]: value } as any);
   };
 
   const handleEvaluateItem = async (itemId: string, aderente: boolean) => {
@@ -407,6 +469,60 @@ export default function App() {
       await db.users.delete(userId);
     }
   };
+
+  // --- CÁLCULOS DO PAINEL DE CHECKLIST (MEMOIZADOS PARA PERFORMANCE) ---
+  const dashboardStats = React.useMemo(() => {
+    const vItems = items.filter(i => selectedUnit === 'Todas' ? true : i.unidade === selectedUnit);
+    const aItems = vItems.filter(i => i.ativo);
+    const tItems = aItems.length;
+    const tResp = aItems.filter(i => i.completed).length;
+    const tAder = aItems.filter(i => i.completed && i.aderente).length;
+
+    const progTotal = tItems === 0 ? 0 : (tResp / tItems) * 100;
+    const aderMedia = tItems === 0 ? 0 : (tAder / tItems) * 100;
+    const sGeral = aderMedia >= 80 ? 'Aderente' : 'Não Aderente';
+
+    const currentPilares = Array.from(new Set(aItems.map(i => i.pilar))).sort((a, b) => getPilarWeight(a) - getPilarWeight(b));
+
+    const rPorPilar = currentPilares.map(pilar => {
+      const pilarItems = aItems.filter(i => i.pilar === pilar);
+      const pTotal = pilarItems.length;
+      const pRespondidos = pilarItems.filter(i => i.completed).length;
+      const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
+      const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
+      const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
+      const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
+
+      return {
+        pilar,
+        total: pTotal,
+        respondidos: pRespondidos,
+        progresso: pProgresso,
+        aderencia: pAderencia,
+        status: pStatus
+      };
+    });
+
+    return {
+      visibleItems: vItems,
+      activeItems: aItems,
+      totalItems: tItems,
+      totalRespondidos: tResp,
+      totalAderentes: tAder,
+      progressoTotal: progTotal,
+      aderenciaMedia: aderMedia,
+      statusGeral: sGeral,
+      resumoPorPilar: rPorPilar,
+      pilares: currentPilares
+    };
+  }, [items, selectedUnit]);
+
+  // Se não houver usuário logado, mostramos a tela de login (acima)
+  // Mas por segurança, garantimos que as variáveis existam para o restante do render
+  const {
+    visibleItems, activeItems, totalItems, totalRespondidos, totalAderentes,
+    progressoTotal, aderenciaMedia, statusGeral, resumoPorPilar, pilares
+  } = dashboardStats;
 
   // --- TELA DE LOGIN ---
   if (!currentUser) {
@@ -517,51 +633,7 @@ export default function App() {
     );
   }
 
-  // --- CÁLCULOS DO PAINEL DE CHECKLIST ---
-  const visibleItems = items.filter(i => selectedUnit === 'Todas' ? true : i.unidade === selectedUnit);
-  const activeItems = visibleItems.filter(i => i.ativo);
-  const totalItems = activeItems.length;
-  const totalRespondidos = activeItems.filter(i => i.completed).length;
-  const totalAderentes = activeItems.filter(i => i.completed && i.aderente).length;
 
-  const progressoTotal = totalItems === 0 ? 0 : (totalRespondidos / totalItems) * 100;
-  const aderenciaMedia = totalItems === 0 ? 0 : (totalAderentes / totalItems) * 100;
-  const statusGeral = aderenciaMedia >= 80 ? 'Aderente' : 'Não Aderente';
-
-  // Ordem customizada para Pilares e Blocos
-  const PILAR_ORDER = ['Pessoas', 'Sustentabilidade'];
-  const BLOCO_ORDER = ['Reconhecimento', 'Carreira', 'Desenvolvimento', 'Clima', 'Retenção', 'Atração', 'Cultura', 'Diversidade', 'Gestão de Acidente'];
-
-  const getPilarWeight = (pilar: string) => {
-    const idx = PILAR_ORDER.indexOf(pilar);
-    return idx === -1 ? 999 : idx;
-  };
-
-  const getBlocoWeight = (bloco: string) => {
-    const idx = BLOCO_ORDER.indexOf(bloco);
-    return idx === -1 ? 999 : idx;
-  };
-
-  const pilares = Array.from(new Set(activeItems.map(i => i.pilar))).sort((a, b) => getPilarWeight(a) - getPilarWeight(b));
-
-  const resumoPorPilar = pilares.map(pilar => {
-    const pilarItems = activeItems.filter(i => i.pilar === pilar);
-    const pTotal = pilarItems.length;
-    const pRespondidos = pilarItems.filter(i => i.completed).length;
-    const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
-    const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
-    const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
-    const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
-
-    return {
-      pilar,
-      total: pTotal,
-      respondidos: pRespondidos,
-      progresso: pProgresso,
-      aderencia: pAderencia,
-      status: pStatus
-    };
-  });
 
   // --- TELA PRINCIPAL (LOGADO) ---
   return (
@@ -582,205 +654,241 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 md:space-x-4 shrink-0">
-                <div className="flex items-center bg-gray-100 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700/50 rounded-md px-3 py-2 hidden sm:flex h-9 box-border">
-                  <Package className="w-4 h-4 shrink-0 text-gray-500 dark:text-zinc-400 mr-2" />
-                  {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL') ? (
-                    <select
-                      value={selectedUnit}
-                      onChange={(e) => setSelectedUnit(e.target.value)}
-                      className="bg-transparent text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none cursor-pointer appearance-none outline-none"
-                    >
-                      <option value="Todas" className="bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Todas Nacionais</option>
-                      {Array.from(new Set(items.map(i => i.unidade))).filter(Boolean).map(u => (
-                        <option key={u} value={u} className="bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Unidade {u}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <select
-                      value={selectedUnit}
-                      disabled
-                      className="bg-transparent text-sm font-medium text-gray-500 dark:text-zinc-500 focus:outline-none cursor-not-allowed appearance-none outline-none"
-                    >
-                      <option value={currentUser.unidade} className="bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Unidade {currentUser.unidade}</option>
-                    </select>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${isUnitDropdownOpen
+                    ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 ring-2 ring-blue-500/20'
+                    : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50'
+                    } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'GERENTE_DIVISIONAL') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+                >
+                  <div className={`p-1 rounded-md ${isUnitDropdownOpen ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'}`}>
+                    <Package className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col items-start leading-tight pr-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Unidade</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
+                      {selectedUnit === 'Todas' ? 'Todos os CDs' : `Unidade ${selectedUnit}`}
+                    </span>
+                  </div>
+                  {(currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL') && (
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isUnitDropdownOpen ? 'rotate-180' : ''}`} />
                   )}
-                </div>
-
-                <button
-                  onClick={() => setActiveTab('home')}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'home' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
-                >
-                  <LayoutDashboard className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline whitespace-nowrap">Dashboard</span>
                 </button>
 
-                <button
-                  onClick={() => setActiveTab('checklist')}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
-                >
-                  <ListChecks className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline whitespace-nowrap">Preencher Check-List</span>
-                </button>
-
-                {/* Apenas ADMIN e GERENTES (Divisional e do CD) veem a base. Colaborador e Dono do Pilar não veem */}
-                {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') && (
-                  <button
-                    onClick={() => setActiveTab('base-checklist')}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'base-checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
-                  >
-                    <Database className="w-4 h-4 shrink-0" />
-                    <span className="hidden sm:inline whitespace-nowrap">Base Check-List</span>
-                  </button>
-                )}
-
-                {/* Apenas ADMIN vê a aba de usuários */}
-                {currentUser.role === 'ADMIN' && (
-                  <button
-                    onClick={() => setActiveTab('users')}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'users' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
-                  >
-                    <Users className="w-4 h-4 shrink-0" />
-                    <span className="hidden sm:inline whitespace-nowrap">Usuários</span>
-                  </button>
-                )}
-
-                <div className="h-6 w-px bg-gray-300 dark:bg-zinc-800 mx-2 hidden sm:block"></div>
-
-                {/* Theme Toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors"
-                  title="Alternar Tema"
-                >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-
-                {/* Notificações */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                    className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors relative"
-                  >
-                    <Bell className="w-5 h-5" />
-                    {(visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 || visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0) && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {isNotificationsOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
+                <AnimatePresence>
+                  {isUnitDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute right-0 mt-2 w-56 max-h-[400px] overflow-y-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-[60] py-2 no-scrollbar scroll-smooth"
+                    >
+                      <div className="px-3 pb-2 mb-2 border-b border-gray-100 dark:border-zinc-800/50">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Selecione a Visão</span>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedUnit('Todas'); setIsUnitDropdownOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${selectedUnit === 'Todas'
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
+                          : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                          }`}
                       >
-                        <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex justify-between items-center">
-                          <h4 className="text-sm font-bold text-gray-900 dark:text-white">Notificações</h4>
-                          <span className="bg-amber-500 text-zinc-950 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length + visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length}
-                          </span>
-                        </div>
-                        <div className="max-h-80 overflow-y-auto">
-                          {/* Atribuições Pendentes */}
-                          {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 && (
-                            <div className="p-2 bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-zinc-800/50">
-                              <span className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Suas Atribuições</span>
+                        <div className={`w-2 h-2 rounded-full ${selectedUnit === 'Todas' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
+                        Todos os CDs
+                      </button>
+                      {UNIDADES_DISPONIVEIS.map(u => (
+                        <button
+                          key={u}
+                          onClick={() => { setSelectedUnit(u); setIsUnitDropdownOpen(false); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${selectedUnit === u
+                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
+                            : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                            }`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${selectedUnit === u ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
+                          Unidade {u}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'home' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
+              >
+                <LayoutDashboard className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('checklist')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
+              >
+                <ListChecks className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Preencher Check-List</span>
+              </button>
+
+              {/* Apenas ADMIN e GERENTES (Divisional e do CD) veem a base. Colaborador e Dono do Pilar não veem */}
+              {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') && (
+                <button
+                  onClick={() => setActiveTab('base-checklist')}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'base-checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
+                >
+                  <Database className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline whitespace-nowrap">Base Check-List</span>
+                </button>
+              )}
+
+              {/* Apenas ADMIN vê a aba de usuários */}
+              {currentUser.role === 'ADMIN' && (
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'users' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline whitespace-nowrap">Usuários</span>
+                </button>
+              )}
+
+              <div className="h-6 w-px bg-gray-300 dark:bg-zinc-800 mx-2 hidden sm:block"></div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors"
+                title="Alternar Tema"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
+              {/* Notificações */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors relative"
+                >
+                  <Bell className="w-5 h-5" />
+                  {(visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 || visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0) && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {isNotificationsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
+                    >
+                      <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex justify-between items-center">
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white">Notificações</h4>
+                        <span className="bg-amber-500 text-zinc-950 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length + visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length}
+                        </span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {/* Atribuições Pendentes */}
+                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 && (
+                          <div className="p-2 bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-zinc-800/50">
+                            <span className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Suas Atribuições</span>
+                          </div>
+                        )}
+                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).map(task => (
+                          <div key={`assign-${task.id}`} className="p-4 border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <p className="text-sm text-gray-800 dark:text-zinc-200 leading-snug">
+                              Você foi designado para verificar: <strong className="text-amber-600 dark:text-amber-400 block mt-1">{task.item}</strong>
+                            </p>
+                            <div className="flex items-center space-x-2 mt-2">
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">{task.pilar}</span>
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">{task.bloco}</span>
                             </div>
-                          )}
-                          {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).map(task => (
-                            <div key={`assign-${task.id}`} className="p-4 border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          </div>
+                        ))}
+
+                        {/* Prazos Vencendo/Vencidos */}
+                        {visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0 && (
+                          <div className="p-2 bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-zinc-800/50">
+                            <span className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Prazos</span>
+                          </div>
+                        )}
+                        {visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).map(task => {
+                          const status = getDueDateStatus(task.prazo);
+                          return (
+                            <div key={`deadline-${task.id}`} className={`p-4 border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors ${status === 'overdue' ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-amber-50/50 dark:bg-amber-900/10'}`}>
                               <p className="text-sm text-gray-800 dark:text-zinc-200 leading-snug">
-                                Você foi designado para verificar: <strong className="text-amber-600 dark:text-amber-400 block mt-1">{task.item}</strong>
+                                {status === 'overdue' ? <span className="text-red-600 dark:text-red-400 font-bold">Atrasado: </span> : <span className="text-amber-600 dark:text-amber-400 font-bold">Vencendo em breve: </span>}
+                                {task.item}
                               </p>
                               <div className="flex items-center space-x-2 mt-2">
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">{task.pilar}</span>
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">{task.bloco}</span>
+                                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">Prazo: {task.prazo}</span>
                               </div>
                             </div>
-                          ))}
+                          );
+                        })}
 
-                          {/* Prazos Vencendo/Vencidos */}
-                          {visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0 && (
-                            <div className="p-2 bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-zinc-800/50">
-                              <span className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Prazos</span>
-                            </div>
-                          )}
-                          {visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).map(task => {
-                            const status = getDueDateStatus(task.prazo);
-                            return (
-                              <div key={`deadline-${task.id}`} className={`p-4 border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors ${status === 'overdue' ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-amber-50/50 dark:bg-amber-900/10'}`}>
-                                <p className="text-sm text-gray-800 dark:text-zinc-200 leading-snug">
-                                  {status === 'overdue' ? <span className="text-red-600 dark:text-red-400 font-bold">Atrasado: </span> : <span className="text-amber-600 dark:text-amber-400 font-bold">Vencendo em breve: </span>}
-                                  {task.item}
-                                </p>
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-950 px-2 py-1 rounded border border-gray-200 dark:border-zinc-800">Prazo: {task.prazo}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length === 0 && visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length === 0 && (
-                            <div className="p-6 text-center text-gray-500 dark:text-zinc-500 text-sm flex flex-col items-center">
-                              <Check className="w-8 h-8 text-gray-300 dark:text-zinc-700 mb-2" />
-                              <p>Nenhuma notificação no momento.</p>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Perfil do Usuário */}
-                <div className="flex items-center space-x-3 pl-2">
-                  <div className="hidden sm:flex flex-col text-right">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white leading-none">{currentUser.name}</span>
-                    <div className="flex items-center justify-end space-x-1 mt-1">
-                      <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">{currentUser.unidade}</span>
-                      <span className={`text-[10px] font-bold ${currentUser.role === 'ADMIN' ? 'text-blue-600 dark:text-blue-400' :
-                        currentUser.role === 'GERENTE_DIVISIONAL' ? 'text-purple-600 dark:text-purple-400' :
-                          currentUser.role === 'GERENTE_DO_CD' ? 'text-amber-600 dark:text-amber-400' :
-                            currentUser.role === 'DONO_DO_PILAR' ? 'text-orange-600 dark:text-orange-400' :
-                              'text-emerald-600 dark:text-emerald-400'
-                        }`}>
-                        {currentUser.role.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className="relative group cursor-pointer rounded-full"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Alterar foto de perfil"
-                  >
-                    {currentUser.photo ? (
-                      <img src={currentUser.photo} alt="Perfil" className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full object-cover border border-gray-300 dark:border-zinc-700" />
-                    ) : (
-                      <div className="bg-gray-200 dark:bg-zinc-800 w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full border border-gray-300 dark:border-zinc-700 group-hover:bg-gray-300 dark:group-hover:bg-zinc-700 transition-colors">
-                        <UserIcon className="w-4 h-4 text-gray-500 dark:text-zinc-300" />
+                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length === 0 && visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length === 0 && (
+                          <div className="p-6 text-center text-gray-500 dark:text-zinc-500 text-sm flex flex-col items-center">
+                            <Check className="w-8 h-8 text-gray-300 dark:text-zinc-700 mb-2" />
+                            <p>Nenhuma notificação no momento.</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="text-[8px] font-bold text-white uppercase tracking-wider">Foto</span>
-                    </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handlePhotoUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Perfil do Usuário */}
+              <div className="flex items-center space-x-3 pl-2">
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white leading-none">{currentUser.name}</span>
+                  <div className="flex items-center justify-end space-x-1 mt-1">
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">{currentUser.unidade}</span>
+                    <span className={`text-[10px] font-bold ${currentUser.role === 'ADMIN' ? 'text-blue-600 dark:text-blue-400' :
+                      currentUser.role === 'GERENTE_DIVISIONAL' ? 'text-purple-600 dark:text-purple-400' :
+                        currentUser.role === 'GERENTE_DO_CD' ? 'text-amber-600 dark:text-amber-400' :
+                          currentUser.role === 'DONO_DO_PILAR' ? 'text-orange-600 dark:text-orange-400' :
+                            'text-emerald-600 dark:text-emerald-400'
+                      }`}>
+                      {currentUser.role.replace(/_/g, ' ')}
+                    </span>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 text-gray-400 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors"
-                    title="Sair"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
                 </div>
+                <div
+                  className="relative group cursor-pointer rounded-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Alterar foto de perfil"
+                >
+                  {currentUser.photo ? (
+                    <img src={currentUser.photo} alt="Perfil" className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full object-cover border border-gray-300 dark:border-zinc-700" />
+                  ) : (
+                    <div className="bg-gray-200 dark:bg-zinc-800 w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full border border-gray-300 dark:border-zinc-700 group-hover:bg-gray-300 dark:group-hover:bg-zinc-700 transition-colors">
+                      <UserIcon className="w-4 h-4 text-gray-500 dark:text-zinc-300" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <span className="text-[8px] font-bold text-white uppercase tracking-wider">Foto</span>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handlePhotoUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -1072,9 +1180,23 @@ export default function App() {
                             <React.Fragment key={checkItem.id}>
                               {/* Row 1: Headers for Item & Score */}
                               <tr className="bg-gray-100 dark:bg-zinc-800/80">
-                                <td rowSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2 w-32 text-center align-middle bg-white dark:bg-zinc-900">
-                                  <div className="font-bold text-gray-900 dark:text-white">{checkItem.pilar}</div>
-                                  <div className="text-xs text-gray-500 dark:text-zinc-400">{checkItem.bloco}</div>
+                                <td rowSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2 w-32 bg-white dark:bg-zinc-900 overflow-hidden">
+                                  <div className="flex flex-col items-center justify-center h-full space-y-1">
+                                    {checkItem.completed && (
+                                      <motion.div
+                                        initial={{ scale: 0, opacity: 0, y: 10 }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        className="text-amber-500/80"
+                                        title="Item Bloqueado"
+                                      >
+                                        <Lock className="w-4 h-4" />
+                                      </motion.div>
+                                    )}
+                                    <div className="text-center">
+                                      <div className="font-bold text-gray-900 dark:text-white leading-tight">{checkItem.pilar}</div>
+                                      <div className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">{checkItem.bloco}</div>
+                                    </div>
+                                  </div>
                                 </td>
                                 <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300">
                                   Item a Verificar
@@ -1114,17 +1236,17 @@ export default function App() {
                                     value={checkItem.nossaAcao || ''}
                                     onChange={(val) => handleUpdateItemField(checkItem.id, 'nossaAcao', val)}
                                     placeholder="Descreva a ação a ser tomada..."
-                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                     rows={2}
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                   />
                                 </td>
                                 <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                   <select
                                     value={checkItem.prioridade || 'Média'}
                                     onChange={(e) => handleUpdateItemField(checkItem.id, 'prioridade', e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                   >
                                     <option value="Alta" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">alta</option>
                                     <option value="Média" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">média</option>
@@ -1136,16 +1258,16 @@ export default function App() {
                                     type="date"
                                     value={checkItem.prazo || ''}
                                     onChange={(e) => handleUpdateItemField(checkItem.id, 'prazo', e.target.value)}
-                                    className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                   />
                                 </td>
                                 <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                   <select
                                     value={checkItem.assigneeId || ''}
                                     onChange={(e) => handleAssignItem(checkItem.id, e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
                                   >
                                     <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
                                     {usersList.filter(u => u.unidade === checkItem.unidade).map(u => (
@@ -1158,8 +1280,8 @@ export default function App() {
                                     type="date"
                                     value={checkItem.periodoAcao || ''}
                                     onChange={(e) => handleUpdateItemField(checkItem.id, 'periodoAcao', e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                   />
                                 </td>
                                 <td className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1207,9 +1329,9 @@ export default function App() {
                                     value={checkItem.justificativaResponsavel || ''}
                                     onChange={(val) => handleUpdateItemField(checkItem.id, 'justificativaResponsavel', val)}
                                     placeholder="Justifique o motivo de não conseguir atender ao item..."
-                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                     rows={2}
-                                    disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                   />
                                 </td>
                                 <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1220,11 +1342,13 @@ export default function App() {
                                         <button
                                           key={cat.id}
                                           onClick={() => {
+                                            if (checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')) return;
                                             setSelectedItemForEvidence(checkItem);
                                             setSelectedEvidenceCategory(cat.id);
                                             setIsEvidenceModalOpen(true);
                                           }}
-                                          className="flex flex-col items-center justify-start w-20 text-center group relative"
+                                          disabled={checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                          className="flex flex-col items-center justify-start w-20 text-center group relative disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm mb-1 transition-transform group-hover:scale-110 ${cat.bg}`}>
                                             <cat.icon className="w-5 h-5" />
@@ -1379,6 +1503,14 @@ export default function App() {
                     <textarea required value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all min-h-[80px]" placeholder="Instruções detalhadas sobre como auditar este item..." />
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-zinc-300 flex items-center gap-2">
+                      <span>Nossa ação (Padrão)</span>
+                      <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal italic">- Opcional</span>
+                    </label>
+                    <textarea value={formData.nossaAcao || ''} onChange={(e) => setFormData({ ...formData, nossaAcao: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all min-h-[60px]" placeholder="Ação padrão a ser tomada que será distribuída para todos..." />
+                  </div>
+
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Score (Peso)</label>
@@ -1484,7 +1616,26 @@ export default function App() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Unidade/CD</label>
-                    <input required type="text" value={userFormData.unidade} onChange={(e) => setUserFormData({ ...userFormData, unidade: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="Ex: 6994" />
+                    <select required value={userFormData.unidade} onChange={(e) => setUserFormData({ ...userFormData, unidade: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
+                      <option value="" disabled>Selecione uma Unidade/CD</option>
+                      <option value="50">50</option>
+                      <option value="94">94</option>
+                      <option value="300">300</option>
+                      <option value="350">350</option>
+                      <option value="490">490</option>
+                      <option value="550">550</option>
+                      <option value="590">590</option>
+                      <option value="991">991</option>
+                      <option value="994">994</option>
+                      <option value="1100">1100</option>
+                      <option value="1250">1250</option>
+                      <option value="1500">1500</option>
+                      <option value="1800">1800</option>
+                      <option value="2500">2500</option>
+                      <option value="2650">2650</option>
+                      <option value="2900">2900</option>
+                      <option value="5200">5200</option>
+                    </select>
                   </div>
 
                   <div className="space-y-2">
@@ -1708,7 +1859,7 @@ export default function App() {
         <footer className="mt-auto py-6 text-center text-sm text-gray-500 dark:text-zinc-500 border-t border-gray-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm">
           © 2026 Magalu | Feito com ❤ por J's Martins
         </footer>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
