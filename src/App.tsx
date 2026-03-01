@@ -418,6 +418,22 @@ export default function App() {
     }
   };
 
+  const handleEvaluateAuditoria = async (itemId: string, aderente: boolean) => {
+    await db.items.update(itemId, {
+      auditoriaRealizada: true,
+      auditoriaAderente: aderente
+    } as any);
+  };
+
+  const handleUndoAuditoria = async (itemId: string) => {
+    const item = await db.items.get(itemId);
+    if (item) {
+      const updatedItem = { ...item, auditoriaRealizada: false };
+      delete updatedItem.auditoriaAderente;
+      await db.items.put(updatedItem);
+    }
+  };
+
   // --- FUNÇÕES DE USUÁRIOS ---
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -489,7 +505,9 @@ export default function App() {
       const pTotal = pilarItems.length;
       const pRespondidos = pilarItems.filter(i => i.completed).length;
       const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
+      const pAuditoriasRealizadas = pilarItems.filter(i => i.auditoriaRealizada).length;
       const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
+      const pAuditoriaOficial = pTotal === 0 ? 0 : (pAuditoriasRealizadas / pTotal) * 100;
       const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
       const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
 
@@ -498,6 +516,7 @@ export default function App() {
         total: pTotal,
         respondidos: pRespondidos,
         progresso: pProgresso,
+        auditoriaOficial: pAuditoriaOficial,
         aderencia: pAderencia,
         status: pStatus
       };
@@ -656,11 +675,11 @@ export default function App() {
 
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
+                  onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${isUnitDropdownOpen
                     ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 ring-2 ring-blue-500/20'
                     : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50'
-                    } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'GERENTE_DIVISIONAL') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+                    } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'AUDITOR' && currentUser?.role !== 'GERENTE_DIVISIONAL') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
                 >
                   <div className={`p-1 rounded-md ${isUnitDropdownOpen ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'}`}>
                     <Package className="w-4 h-4" />
@@ -671,7 +690,7 @@ export default function App() {
                       {selectedUnit === 'Todas' ? 'Todos os CDs' : `Unidade ${selectedUnit}`}
                     </span>
                   </div>
-                  {(currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL') && (
+                  {(currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL') && (
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isUnitDropdownOpen ? 'rotate-180' : ''}`} />
                   )}
                 </button>
@@ -906,12 +925,24 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dashboardData.map((card, idx) => {
                   const Icon = card.icon;
+                  const pilarInfo = resumoPorPilar.find(p => p.pilar === card.title);
+                  const actualAutoAuditoria = pilarInfo ? Math.round(pilarInfo.progresso) : 0;
+                  const actualOficialAuditoria = pilarInfo ? Math.round((pilarInfo as any).auditoriaOficial || 0) : 0;
+                  const dispersao = Math.abs(actualAutoAuditoria - actualOficialAuditoria);
+                  let dispersaoType = 'up';
+                  if (actualAutoAuditoria > actualOficialAuditoria) {
+                    dispersaoType = 'down';
+                  } else if (actualOficialAuditoria > actualAutoAuditoria) {
+                    dispersaoType = 'up';
+                  } else {
+                    dispersaoType = card.dispersaoType; // fallback if equal
+                  }
+
                   return (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: idx * 0.1, ease: "easeOut" }}
                       whileHover={{ y: -4 }}
                       className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 shadow-lg hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 group"
                     >
@@ -937,32 +968,32 @@ export default function App() {
                           <div>
                             <div className="flex justify-between text-xs mb-1">
                               <span className="text-gray-500 dark:text-zinc-400">Auto Auditoria</span>
-                              <span className="text-gray-900 dark:text-zinc-200 font-bold">{card.autoAuditoria}%</span>
+                              <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualAutoAuditoria}%</span>
                             </div>
                             <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                              <motion.div initial={{ width: 0 }} animate={{ width: `${card.autoAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.autoColor} rounded-full`} />
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${actualAutoAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.autoColor} rounded-full`} />
                             </div>
                           </div>
                           <div>
                             <div className="flex justify-between text-xs mb-1">
                               <span className="text-gray-500 dark:text-zinc-400">Auditoria Oficial</span>
-                              <span className="text-gray-900 dark:text-zinc-200 font-bold">{card.oficial}%</span>
+                              <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualOficialAuditoria}%</span>
                             </div>
                             <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                              <motion.div initial={{ width: 0 }} animate={{ width: `${card.oficial}%` }} transition={{ duration: 1, delay: 0.9 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.oficialColor} rounded-full`} />
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.9 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.oficialColor} rounded-full`} />
                             </div>
                           </div>
                         </div>
 
                         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 1.2 + (idx * 0.1), type: "spring" }} className="w-24 bg-gray-50 dark:bg-zinc-800/50 rounded-lg flex flex-col items-center justify-center p-2 border border-gray-200 dark:border-zinc-700/30 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-default">
                           <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium mb-2 uppercase tracking-wider">Dispersão</span>
-                          <div className={`flex items-center space-x-1 font-bold text-xl ${card.dispersaoType === 'up' ? 'text-[#36b37e]' : 'text-[#e34935]'}`}>
-                            {card.dispersaoType === 'up' ?
+                          <div className={`flex items-center space-x-1 font-bold text-xl whitespace-nowrap ${dispersaoType === 'up' ? 'text-[#36b37e]' : 'text-[#e34935]'}`}>
+                            {dispersaoType === 'up' ?
                               <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2 }}><ArrowUp className="w-4 h-4" strokeWidth={3} /></motion.div> :
                               <motion.div animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2 }}><ArrowDown className="w-4 h-4" strokeWidth={3} /></motion.div>
                             }
-                            <span>{card.dispersao} <span className="text-sm">pp</span></span>
-                            {card.dispersaoType === 'up' ?
+                            <span className="flex items-baseline space-x-1"><span>{dispersao}</span> <span className="text-sm">pp</span></span>
+                            {dispersaoType === 'up' ?
                               <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2, delay: 0.2 }}><ArrowUp className="w-4 h-4" strokeWidth={3} /></motion.div> :
                               <motion.div animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2, delay: 0.2 }}><ArrowDown className="w-4 h-4" strokeWidth={3} /></motion.div>
                             }
@@ -974,7 +1005,7 @@ export default function App() {
                 })}
               </div>
             </div>
-          ) : activeTab === 'base-checklist' && (currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') ? (
+          ) : activeTab === 'base-checklist' && (currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') ? (
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -1146,235 +1177,283 @@ export default function App() {
 
               <div className="bg-gray-50 dark:bg-zinc-950 overflow-hidden">
                 <div className="overflow-x-auto pb-8">
-                  <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
-                    <thead className="hidden">
-                      <tr>
-                        <th>Pilar</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-transparent">
-                      {visibleItems
-                        .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter))
-                        .sort((a, b) => {
-                          const wPilarA = getPilarWeight(a.pilar);
-                          const wPilarB = getPilarWeight(b.pilar);
-                          if (wPilarA !== wPilarB) return wPilarA - wPilarB;
+                  {selectedUnit === 'Todas' ? (
+                    <div className="flex flex-col items-center justify-center p-12 text-center text-gray-500 dark:text-zinc-400">
+                      <LayoutDashboard className="w-16 h-16 mb-4 text-gray-300 dark:text-zinc-700" />
+                      <h3 className="text-xl font-bold text-gray-700 dark:text-zinc-300 mb-2">Visão Geral dos CDs</h3>
+                      <p className="max-w-md">Selecione uma Unidade/CD específica no menu superior para preencher ou visualizar os itens do Check-List detalhadamente.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
+                      <thead className="hidden">
+                        <tr>
+                          <th>Pilar</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-transparent">
+                        {visibleItems
+                          .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter))
+                          .sort((a, b) => {
+                            const wPilarA = getPilarWeight(a.pilar);
+                            const wPilarB = getPilarWeight(b.pilar);
+                            if (wPilarA !== wPilarB) return wPilarA - wPilarB;
 
-                          const wBlocoA = getBlocoWeight(a.bloco);
-                          const wBlocoB = getBlocoWeight(b.bloco);
-                          if (wBlocoA !== wBlocoB) return wBlocoA - wBlocoB;
+                            const wBlocoA = getBlocoWeight(a.bloco);
+                            const wBlocoB = getBlocoWeight(b.bloco);
+                            if (wBlocoA !== wBlocoB) return wBlocoA - wBlocoB;
 
-                          if (prioritySortOrder === 'none') return (a.order || 0) - (b.order || 0);
+                            if (prioritySortOrder === 'none') return (a.order || 0) - (b.order || 0);
 
-                          const weight = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
-                          const wA = weight[a.prioridade || 'Média'];
-                          const wB = weight[b.prioridade || 'Média'];
-                          return prioritySortOrder === 'desc' ? wB - wA : wA - wB;
-                        })
-                        .map((checkItem) => {
-                          const dueDateStatus = getDueDateStatus(checkItem.prazo);
-                          const isApproaching = dueDateStatus === 'approaching' && !checkItem.completed;
-                          const isOverdue = dueDateStatus === 'overdue' && !checkItem.completed;
+                            const weight = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+                            const wA = weight[a.prioridade || 'Média'];
+                            const wB = weight[b.prioridade || 'Média'];
+                            return prioritySortOrder === 'desc' ? wB - wA : wA - wB;
+                          })
+                          .map((checkItem) => {
+                            const dueDateStatus = getDueDateStatus(checkItem.prazo);
+                            const isApproaching = dueDateStatus === 'approaching' && !checkItem.completed;
+                            const isOverdue = dueDateStatus === 'overdue' && !checkItem.completed;
 
-                          return (
-                            <React.Fragment key={checkItem.id}>
-                              {/* Row 1: Headers for Item & Score */}
-                              <tr className="bg-gray-100 dark:bg-zinc-800/80">
-                                <td rowSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2 w-32 bg-white dark:bg-zinc-900 overflow-hidden">
-                                  <div className="flex flex-col items-center justify-center h-full space-y-1">
-                                    {checkItem.completed && (
-                                      <motion.div
-                                        initial={{ scale: 0, opacity: 0, y: 10 }}
-                                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                                        className="text-amber-500/80"
-                                        title="Item Bloqueado"
-                                      >
-                                        <Lock className="w-4 h-4" />
-                                      </motion.div>
-                                    )}
-                                    <div className="text-center">
-                                      <div className="font-bold text-gray-900 dark:text-white leading-tight">{checkItem.pilar}</div>
-                                      <div className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">{checkItem.bloco}</div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300">
-                                  Item a Verificar
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300 w-24">
-                                  Score
-                                </td>
-                                <td colSpan={4} className="border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"></td>
-                              </tr>
-
-                              {/* Row 2: Item content & Score value */}
-                              <tr className="bg-white dark:bg-zinc-900">
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <div className="font-bold text-gray-900 dark:text-white">{checkItem.item}</div>
-                                  <div className="text-xs text-gray-600 dark:text-zinc-400 mt-1">{checkItem.descricao}</div>
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2 text-center text-xl font-bold text-gray-900 dark:text-white">
-                                  {checkItem.score}
-                                </td>
-                                <td colSpan={4} className="border border-gray-300 dark:border-zinc-700"></td>
-                              </tr>
-
-                              {/* Row 3: Action Headers */}
-                              <tr className="bg-gray-100 dark:bg-zinc-800/80 text-center text-xs font-bold italic text-gray-700 dark:text-zinc-300">
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2 text-emerald-600 dark:text-emerald-400">Nossa ação</td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">Prioridade</td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">Prazo</td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">Atribuído a</td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">Período da ação</td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">Status</td>
-                              </tr>
-
-                              {/* Row 4: Action Values */}
-                              <tr className="bg-white dark:bg-zinc-900 text-center">
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <DebouncedTextarea
-                                    value={checkItem.nossaAcao || ''}
-                                    onChange={(val) => handleUpdateItemField(checkItem.id, 'nossaAcao', val)}
-                                    placeholder="Descreva a ação a ser tomada..."
-                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
-                                    rows={2}
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
-                                  />
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <select
-                                    value={checkItem.prioridade || 'Média'}
-                                    onChange={(e) => handleUpdateItemField(checkItem.id, 'prioridade', e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
-                                  >
-                                    <option value="Alta" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">alta</option>
-                                    <option value="Média" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">média</option>
-                                    <option value="Baixa" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">baixa</option>
-                                  </select>
-                                </td>
-                                <td className={`border border-gray-300 dark:border-zinc-700 p-2 ${isOverdue ? 'bg-red-50 dark:bg-red-900/20' : isApproaching ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}>
-                                  <input
-                                    type="date"
-                                    value={checkItem.prazo || ''}
-                                    onChange={(e) => handleUpdateItemField(checkItem.id, 'prazo', e.target.value)}
-                                    className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
-                                  />
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <select
-                                    value={checkItem.assigneeId || ''}
-                                    onChange={(e) => handleAssignItem(checkItem.id, e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
-                                  >
-                                    <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
-                                    {usersList.filter(u => u.unidade === checkItem.unidade).map(u => (
-                                      <option key={u.id} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
-                                    ))}
-                                  </select>
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <input
-                                    type="date"
-                                    value={checkItem.periodoAcao || ''}
-                                    onChange={(e) => handleUpdateItemField(checkItem.id, 'periodoAcao', e.target.value)}
-                                    className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
-                                  />
-                                </td>
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  {checkItem.completed ? (
-                                    <div className="flex items-center justify-center space-x-2">
-                                      {checkItem.aderente ? (
-                                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic">Conforme</span>
-                                      ) : (
-                                        <span className="text-red-600 dark:text-red-400 font-bold text-sm italic">Não Conforme</span>
-                                      )}
-                                      {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
-                                        <button onClick={() => handleUndoEvaluation(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
-                                          <Edit2 className="w-3 h-3" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-center space-x-2">
-                                      <span className="text-gray-500 dark:text-zinc-400 font-bold text-sm italic">Pendente</span>
-                                      {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
-                                        <>
-                                          <button onClick={() => handleEvaluateItem(checkItem.id, true)} className="p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Marcar como Conforme">
-                                            <Check className="w-4 h-4" />
-                                          </button>
-                                          <button onClick={() => handleEvaluateItem(checkItem.id, false)} className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Marcar como Não Conforme">
-                                            <X className="w-4 h-4" />
-                                          </button>
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-
-                              {/* Row 5: Justificativa & Evidencias Headers */}
-                              <tr className="bg-gray-100 dark:bg-zinc-800/50 text-center text-xs font-bold italic text-gray-700 dark:text-zinc-300">
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2 text-gray-500">Justificativa do responsável</td>
-                                <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 p-2">Anexa Evidências</td>
-                              </tr>
-
-                              {/* Row 6: Justificativa & Evidencias Values */}
-                              <tr className="bg-white dark:bg-zinc-900 text-center">
-                                <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <DebouncedTextarea
-                                    value={checkItem.justificativaResponsavel || ''}
-                                    onChange={(val) => handleUpdateItemField(checkItem.id, 'justificativaResponsavel', val)}
-                                    placeholder="Justifique o motivo de não conseguir atender ao item..."
-                                    className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
-                                    rows={2}
-                                    disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
-                                  />
-                                </td>
-                                <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 p-2">
-                                  <div className="flex justify-around items-start">
-                                    {EVIDENCE_CATEGORIES.map(cat => {
-                                      const count = checkItem.evidencias?.filter(e => e.category === cat.id).length || 0;
-                                      return (
-                                        <button
-                                          key={cat.id}
-                                          onClick={() => {
-                                            if (checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')) return;
-                                            setSelectedItemForEvidence(checkItem);
-                                            setSelectedEvidenceCategory(cat.id);
-                                            setIsEvidenceModalOpen(true);
-                                          }}
-                                          disabled={checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
-                                          className="flex flex-col items-center justify-start w-20 text-center group relative disabled:opacity-40 disabled:cursor-not-allowed"
+                            return (
+                              <React.Fragment key={checkItem.id}>
+                                {/* Row 1: Headers for Item & Score */}
+                                <tr className="bg-gray-100 dark:bg-zinc-800/80">
+                                  <td rowSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2 w-32 bg-white dark:bg-zinc-900 overflow-hidden">
+                                    <div className="flex flex-col items-center justify-center h-full space-y-1">
+                                      {checkItem.completed && (
+                                        <motion.div
+                                          initial={{ scale: 0, opacity: 0, y: 10 }}
+                                          animate={{ scale: 1, opacity: 1, y: 0 }}
+                                          className="text-amber-500/80"
+                                          title="Item Bloqueado"
                                         >
-                                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm mb-1 transition-transform group-hover:scale-110 ${cat.bg}`}>
-                                            <cat.icon className="w-5 h-5" />
-                                          </div>
-                                          {count > 0 && (
-                                            <span className="absolute top-0 right-2 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-zinc-900">
-                                              {count}
-                                            </span>
-                                          )}
-                                          <span className="text-[10px] leading-tight text-gray-700 dark:text-gray-300 italic">{cat.label}</span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </td>
-                              </tr>
+                                          <Lock className="w-4 h-4" />
+                                        </motion.div>
+                                      )}
+                                      <div className="text-center">
+                                        <div className="font-bold text-gray-900 dark:text-white leading-tight">{checkItem.pilar}</div>
+                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">{checkItem.bloco}</div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300">
+                                    Item a Verificar
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300 w-24">
+                                    Score
+                                  </td>
+                                  <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-center text-orange-500 text-lg">Auditoria</td>
+                                </tr>
 
-                              {/* Spacer Row to separate items */}
-                              <tr className="bg-gray-50 dark:bg-zinc-950 border-none">
-                                <td colSpan={7} className="h-8 border-none bg-gray-50 dark:bg-zinc-950"></td>
-                              </tr>
-                            </React.Fragment>
-                          );
-                        })}
-                    </tbody>
-                  </table>
+                                {/* Row 2: Item content & Score value */}
+                                <tr className="bg-white dark:bg-zinc-900">
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <div className="font-bold text-gray-900 dark:text-white">{checkItem.item}</div>
+                                    <div className="text-xs text-gray-600 dark:text-zinc-400 mt-1">{checkItem.descricao}</div>
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-center text-xl font-bold text-gray-900 dark:text-white">
+                                    {checkItem.score}
+                                  </td>
+                                  <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <DebouncedTextarea
+                                      value={checkItem.auditoriaTexto || ''}
+                                      onChange={(val) => handleUpdateItemField(checkItem.id, 'auditoriaTexto', val)}
+                                      placeholder="Digite o texto aqui"
+                                      className="w-full bg-white/50 dark:bg-black/20 border border-transparent hover:border-gray-200 dark:hover:border-zinc-700/50 focus:bg-white dark:focus:bg-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-lg text-sm text-center text-orange-500 font-semibold placeholder-orange-300 dark:placeholder-orange-700 resize-y min-h-[50px] p-2 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed"
+                                      rows={2}
+                                      disabled={currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN'}
+                                    />
+                                  </td>
+                                </tr>
+
+                                {/* Row 3: Action Headers */}
+                                <tr className="bg-gray-100 dark:bg-zinc-800/80 text-center text-xs font-bold italic text-gray-700 dark:text-zinc-300">
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-emerald-600 dark:text-emerald-400">Nossa ação</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">Prioridade</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">Prazo</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">Atribuído a</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">Período da ação</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">Status</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-orange-500">Auditoria check</td>
+                                </tr>
+
+                                {/* Row 4: Action Values */}
+                                <tr className="bg-white dark:bg-zinc-900 text-center">
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <DebouncedTextarea
+                                      value={checkItem.nossaAcao || ''}
+                                      onChange={(val) => handleUpdateItemField(checkItem.id, 'nossaAcao', val)}
+                                      placeholder="Descreva a ação a ser tomada..."
+                                      className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
+                                      rows={2}
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <select
+                                      value={checkItem.prioridade || 'Média'}
+                                      onChange={(e) => handleUpdateItemField(checkItem.id, 'prioridade', e.target.value)}
+                                      className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    >
+                                      <option value="Alta" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">alta</option>
+                                      <option value="Média" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">média</option>
+                                      <option value="Baixa" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">baixa</option>
+                                    </select>
+                                  </td>
+                                  <td className={`border border-gray-300 dark:border-zinc-700 p-2 ${isOverdue ? 'bg-red-50 dark:bg-red-900/20' : isApproaching ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}>
+                                    <input
+                                      type="date"
+                                      value={checkItem.prazo || ''}
+                                      onChange={(e) => handleUpdateItemField(checkItem.id, 'prazo', e.target.value)}
+                                      className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <select
+                                      value={checkItem.assigneeId || ''}
+                                      onChange={(e) => handleAssignItem(checkItem.id, e.target.value)}
+                                      className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                    >
+                                      <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
+                                      {usersList.filter(u => u.unidade === checkItem.unidade).map(u => (
+                                        <option key={u.id} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <input
+                                      type="date"
+                                      value={checkItem.periodoAcao || ''}
+                                      onChange={(e) => handleUpdateItemField(checkItem.id, 'periodoAcao', e.target.value)}
+                                      className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    {checkItem.completed ? (
+                                      <div className="flex items-center justify-center space-x-2">
+                                        {checkItem.aderente ? (
+                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic">Conforme</span>
+                                        ) : (
+                                          <span className="text-red-600 dark:text-red-400 font-bold text-sm italic">Não Conforme</span>
+                                        )}
+                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
+                                          <button onClick={() => handleUndoEvaluation(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
+                                            <Edit2 className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center justify-center space-x-2">
+                                        <span className="text-gray-500 dark:text-zinc-400 font-bold text-sm italic">Pendente</span>
+                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
+                                          <>
+                                            <button onClick={() => handleEvaluateItem(checkItem.id, true)} className="p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Marcar como Conforme">
+                                              <Check className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => handleEvaluateItem(checkItem.id, false)} className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Marcar como Não Conforme">
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    {checkItem.auditoriaRealizada ? (
+                                      <div className="flex items-center justify-center space-x-2">
+                                        {checkItem.auditoriaAderente ? (
+                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic"><Check className="w-5 h-5" /></span>
+                                        ) : (
+                                          <span className="text-red-600 dark:text-red-400 font-bold text-sm italic"><X className="w-5 h-5" /></span>
+                                        )}
+                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
+                                          <button onClick={() => handleUndoAuditoria(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
+                                            <Edit2 className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center justify-center space-x-2">
+                                        <span className="text-gray-500 dark:text-zinc-400 font-bold text-sm italic">Pendente</span>
+                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
+                                          <>
+                                            <button onClick={() => handleEvaluateAuditoria(checkItem.id, true)} className="p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Aprovar">
+                                              <Check className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => handleEvaluateAuditoria(checkItem.id, false)} className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Rejeitar">
+                                              <X className="w-4 h-4" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+
+                                {/* Row 5: Justificativa & Evidencias Headers */}
+                                <tr className="bg-gray-100 dark:bg-zinc-800/50 text-center text-xs font-bold italic text-gray-700 dark:text-zinc-300">
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-gray-500">Justificativa do responsável</td>
+                                  <td colSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2">Anexa Evidências</td>
+                                </tr>
+
+                                {/* Row 6: Justificativa & Evidencias Values */}
+                                <tr className="bg-white dark:bg-zinc-900 text-center">
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <DebouncedTextarea
+                                      value={checkItem.justificativaResponsavel || ''}
+                                      onChange={(val) => handleUpdateItemField(checkItem.id, 'justificativaResponsavel', val)}
+                                      placeholder="Justifique o motivo de não conseguir atender ao item..."
+                                      className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
+                                      rows={2}
+                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                    />
+                                  </td>
+                                  <td colSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2">
+                                    <div className="flex justify-around items-start">
+                                      {EVIDENCE_CATEGORIES.map(cat => {
+                                        const count = checkItem.evidencias?.filter(e => e.category === cat.id).length || 0;
+                                        return (
+                                          <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                              if (checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')) return;
+                                              setSelectedItemForEvidence(checkItem);
+                                              setSelectedEvidenceCategory(cat.id);
+                                              setIsEvidenceModalOpen(true);
+                                            }}
+                                            disabled={checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                            className="flex flex-col items-center justify-start w-20 text-center group relative disabled:opacity-40 disabled:cursor-not-allowed"
+                                          >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm mb-1 transition-transform group-hover:scale-110 ${cat.bg}`}>
+                                              <cat.icon className="w-5 h-5" />
+                                            </div>
+                                            {count > 0 && (
+                                              <span className="absolute top-0 right-2 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-zinc-900">
+                                                {count}
+                                              </span>
+                                            )}
+                                            <span className="text-[10px] leading-tight text-gray-700 dark:text-gray-300 italic">{cat.label}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </td>
+                                </tr>
+
+                                {/* Spacer Row to separate items */}
+                                <tr className="bg-gray-50 dark:bg-zinc-950 border-none">
+                                  <td colSpan={8} className="h-8 border-none bg-gray-50 dark:bg-zinc-950"></td>
+                                </tr>
+                              </React.Fragment>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
             </div>
@@ -1427,10 +1506,11 @@ export default function App() {
                           <td className="px-6 py-4">{user.unidade || '-'}</td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
-                              user.role === 'GERENTE_DIVISIONAL' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                                user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
-                                  user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
-                                    'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                              user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                                user.role === 'GERENTE_DIVISIONAL' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                                  user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
+                                    user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
+                                      'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
                               }`}>
                               <Shield className="w-3 h-3 mr-1" />
                               {user.role.replace(/_/g, ' ')}
@@ -1618,6 +1698,7 @@ export default function App() {
                     <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Unidade/CD</label>
                     <select required value={userFormData.unidade} onChange={(e) => setUserFormData({ ...userFormData, unidade: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
                       <option value="" disabled>Selecione uma Unidade/CD</option>
+                      <option value="Master">Master</option>
                       <option value="50">50</option>
                       <option value="94">94</option>
                       <option value="300">300</option>
@@ -1656,6 +1737,7 @@ export default function App() {
                       <option value="GERENTE_DO_CD">Gerente do CD (Pode editar Check-List)</option>
                       <option value="GERENTE_DIVISIONAL">Gerente Divisional (Visualiza todas as unidades, não edita)</option>
                       <option value="ADMIN">Administrador (Acesso Total)</option>
+                      <option value="AUDITOR">Auditor (Validação de Check-list)</option>
                     </select>
                   </div>
 
@@ -1697,7 +1779,7 @@ export default function App() {
 
                 <div className="p-6 space-y-6">
                   {/* Upload Section - Permite apenas quem pode editar */}
-                  {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) ? (
+                  {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) ? (
                     <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <input
                         type="file"
@@ -1764,7 +1846,7 @@ export default function App() {
                                 <a href={ev.url} download={ev.name} className="p-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 rounded transition-colors" title="Baixar">
                                   <ArrowDown className="w-4 h-4" />
                                 </a>
-                                {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) && (
+                                {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) && (
                                   <button
                                     onClick={async () => {
                                       if (!selectedItemForEvidence) return;

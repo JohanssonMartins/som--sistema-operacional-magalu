@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'GERENTE_DIVISIONAL' | 'GERENTE_DO_CD' | 'DONO_DO_PILAR' | 'COLABORADOR';
+export type Role = 'ADMIN' | 'AUDITOR' | 'GERENTE_DIVISIONAL' | 'GERENTE_DO_CD' | 'DONO_DO_PILAR' | 'COLABORADOR';
 
 export type User = {
   id: string;
@@ -41,6 +41,9 @@ export type ChecklistItem = {
   prazo?: string;
   evidencias?: { name: string; url: string; category: string }[];
   unidade?: string;
+  auditoriaTexto?: string;
+  auditoriaRealizada?: boolean;
+  auditoriaAderente?: boolean;
 };
 
 export const INITIAL_CHECKLIST: ChecklistItem[] = [
