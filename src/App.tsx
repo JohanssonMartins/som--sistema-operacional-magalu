@@ -312,7 +312,7 @@ export default function App() {
     const user = usersList.find(u => u.email === loginEmail && u.password === loginPassword);
     if (user) {
       setCurrentUser(user);
-      setSelectedUnit(user.unidade || 'Todas');
+      setSelectedUnit(user.unidade === 'Master' ? 'Todas' : (user.unidade || 'Todas'));
       setLoginError('');
       setActiveTab('home');
     } else {
@@ -489,6 +489,7 @@ export default function App() {
   // --- CÁLCULOS DO PAINEL DE CHECKLIST (MEMOIZADOS PARA PERFORMANCE) ---
   const dashboardStats = React.useMemo(() => {
     const vItems = items.filter(i => selectedUnit === 'Todas' ? true : i.unidade === selectedUnit);
+
     const aItems = vItems.filter(i => i.ativo);
     const tItems = aItems.length;
     const tResp = aItems.filter(i => i.completed).length;
@@ -506,8 +507,12 @@ export default function App() {
       const pRespondidos = pilarItems.filter(i => i.completed).length;
       const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
       const pAuditoriasRealizadas = pilarItems.filter(i => i.auditoriaRealizada).length;
+      const pAuditoriasConformes = pilarItems.filter(i => i.auditoriaRealizada && i.auditoriaAderente).length;
+
       const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
-      const pAuditoriaOficial = pTotal === 0 ? 0 : (pAuditoriasRealizadas / pTotal) * 100;
+      // Adereência oficial deve calcular os conformes sobre os totais (ou sobre os realizados?)
+      // Aderência normal é sobre o total de itens para espelhar a nota final do CD
+      const pAuditoriaOficial = pTotal === 0 ? 0 : (pAuditoriasConformes / pTotal) * 100;
       const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
       const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
 
@@ -635,6 +640,10 @@ export default function App() {
                 <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" onClick={() => { setLoginEmail('donopilar@magalu.com'); setLoginPassword('123'); }}>
                   <span className="text-orange-600 dark:text-orange-400 font-medium">Dono Pilar</span>
                   <span className="text-gray-500 dark:text-zinc-400">donopilar@...</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" onClick={() => { setLoginEmail('auditor@magalu.com'); setLoginPassword('123'); }}>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-medium">Auditor</span>
+                  <span className="text-gray-500 dark:text-zinc-400">auditor@...</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" onClick={() => { setLoginEmail('colab@magalu.com'); setLoginPassword('123'); }}>
                   <span className="text-emerald-600 dark:text-emerald-400 font-medium">Colab</span>
@@ -925,8 +934,13 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dashboardData.map((card, idx) => {
                   const Icon = card.icon;
-                  const pilarInfo = resumoPorPilar.find(p => p.pilar === card.title);
-                  const actualAutoAuditoria = pilarInfo ? Math.round(pilarInfo.progresso) : 0;
+                  // Map card titles to base pilar names for exact matches
+                  let pilarName = card.title;
+                  if (card.title === 'Clientes') pilarName = 'Cliente';
+                  else if (card.title === 'Segurança') pilarName = 'Sustentabilidade'; // Base tem bloco Segurança Sanitária dentro de Sustentabilidade
+
+                  const pilarInfo = resumoPorPilar.find(p => p.pilar === pilarName);
+                  const actualAutoAuditoria = pilarInfo ? Math.round(pilarInfo.aderencia) : 0;
                   const actualOficialAuditoria = pilarInfo ? Math.round((pilarInfo as any).auditoriaOficial || 0) : 0;
                   const dispersao = Math.abs(actualAutoAuditoria - actualOficialAuditoria);
                   let dispersaoType = 'up';
@@ -1121,6 +1135,7 @@ export default function App() {
                       onChange={(e) => setSelectedPilarFilter(e.target.value)}
                       className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
                     >
+                      <option value="Minhas Atribuições">Minhas atribuições</option>
                       <option value="Todos">Todos os Pilares</option>
                       {pilares.map(p => (
                         <option key={p} value={p}>{p}</option>
@@ -1192,7 +1207,7 @@ export default function App() {
                       </thead>
                       <tbody className="bg-transparent">
                         {visibleItems
-                          .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter))
+                          .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || (selectedPilarFilter === 'Minhas Atribuições' ? i.assigneeId === currentUser?.id : i.pilar === selectedPilarFilter)))
                           .sort((a, b) => {
                             const wPilarA = getPilarWeight(a.pilar);
                             const wPilarB = getPilarWeight(b.pilar);
@@ -1286,7 +1301,7 @@ export default function App() {
                                       placeholder="Descreva a ação a ser tomada..."
                                       className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                       rows={2}
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1294,7 +1309,7 @@ export default function App() {
                                       value={checkItem.prioridade || 'Média'}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'prioridade', e.target.value)}
                                       className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                     >
                                       <option value="Alta" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">alta</option>
                                       <option value="Média" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">média</option>
@@ -1307,7 +1322,7 @@ export default function App() {
                                       value={checkItem.prazo || ''}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'prazo', e.target.value)}
                                       className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1315,7 +1330,7 @@ export default function App() {
                                       value={checkItem.assigneeId || ''}
                                       onChange={(e) => handleAssignItem(checkItem.id, e.target.value)}
                                       className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
                                     >
                                       <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
                                       {usersList.filter(u => u.unidade === checkItem.unidade).map(u => (
@@ -1329,7 +1344,7 @@ export default function App() {
                                       value={checkItem.periodoAcao || ''}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'periodoAcao', e.target.value)}
                                       className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1409,7 +1424,7 @@ export default function App() {
                                       placeholder="Justifique o motivo de não conseguir atender ao item..."
                                       className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                       rows={2}
-                                      disabled={checkItem.completed || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
                                     />
                                   </td>
                                   <td colSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1425,7 +1440,7 @@ export default function App() {
                                               setSelectedEvidenceCategory(cat.id);
                                               setIsEvidenceModalOpen(true);
                                             }}
-                                            disabled={checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                            disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
                                             className="flex flex-col items-center justify-start w-20 text-center group relative disabled:opacity-40 disabled:cursor-not-allowed"
                                           >
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm mb-1 transition-transform group-hover:scale-110 ${cat.bg}`}>
