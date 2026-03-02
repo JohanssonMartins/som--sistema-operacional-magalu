@@ -931,7 +931,9 @@ export default function App() {
           {activeTab === 'home' ? (
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div>
-                <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">Auditoria</h2>
+                <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
+                  Auditoria - <span className="text-xl font-medium text-gray-700 dark:text-gray-300">{selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}</span>
+                </h2>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após auditoria oficial</p>
               </div>
 
@@ -1282,7 +1284,7 @@ export default function App() {
                                       placeholder="Digite o texto aqui"
                                       className="w-full bg-white/50 dark:bg-black/20 border border-transparent hover:border-gray-200 dark:hover:border-zinc-700/50 focus:bg-white dark:focus:bg-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-lg text-sm text-center text-orange-500 font-semibold placeholder-orange-300 dark:placeholder-orange-700 resize-y min-h-[50px] p-2 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed"
                                       rows={2}
-                                      disabled={currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN'}
+                                      disabled={currentUser.role !== 'AUDITOR'}
                                     />
                                   </td>
                                 </tr>
@@ -1423,7 +1425,7 @@ export default function App() {
                                           ) : (
                                             <span className="text-red-600 dark:text-red-400 font-bold text-sm italic whitespace-nowrap">Não Conforme <X className="w-4 h-4 inline" /></span>
                                           )}
-                                          {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
+                                          {currentUser.role === 'AUDITOR' && (
                                             <button onClick={() => handleUndoAuditoria(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
                                               <Edit2 className="w-3 h-3" />
                                             </button>
@@ -1436,7 +1438,7 @@ export default function App() {
                                     ) : (
                                       <div className="flex items-center justify-center space-x-2">
                                         <span className="text-gray-500 dark:text-zinc-400 font-bold text-sm italic">Pendente</span>
-                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
+                                        {currentUser.role === 'AUDITOR' && (
                                           <>
                                             <button onClick={() => handleEvaluateAuditoria(checkItem.id, true)} className="p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Aprovar">
                                               <Check className="w-4 h-4" />
