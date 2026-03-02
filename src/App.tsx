@@ -421,7 +421,8 @@ export default function App() {
   const handleEvaluateAuditoria = async (itemId: string, aderente: boolean) => {
     await db.items.update(itemId, {
       auditoriaRealizada: true,
-      auditoriaAderente: aderente
+      auditoriaAderente: aderente,
+      auditoriaCompletedAt: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
     } as any);
   };
 
@@ -430,6 +431,7 @@ export default function App() {
     if (item) {
       const updatedItem = { ...item, auditoriaRealizada: false };
       delete updatedItem.auditoriaAderente;
+      delete updatedItem.auditoriaCompletedAt;
       await db.items.put(updatedItem);
     }
   };
@@ -506,6 +508,7 @@ export default function App() {
       const pTotal = pilarItems.length;
       const pRespondidos = pilarItems.filter(i => i.completed).length;
       const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
+      const pNaoAderentes = pRespondidos - pAderentes;
       const pAuditoriasRealizadas = pilarItems.filter(i => i.auditoriaRealizada).length;
       const pAuditoriasConformes = pilarItems.filter(i => i.auditoriaRealizada && i.auditoriaAderente).length;
 
@@ -519,7 +522,8 @@ export default function App() {
       return {
         pilar,
         total: pTotal,
-        respondidos: pRespondidos,
+        conforme: pAderentes,
+        naoConforme: pNaoAderentes,
         progresso: pProgresso,
         auditoriaOficial: pAuditoriaOficial,
         aderencia: pAderencia,
@@ -800,7 +804,7 @@ export default function App() {
                   className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors relative"
                 >
                   <Bell className="w-5 h-5" />
-                  {(visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 || visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0) && (
+                  {(visibleItems.filter(i => (i.assigneeId === currentUser.id || i.assigneeId2 === currentUser.id || i.assigneeId3 === currentUser.id) && !i.completed).length > 0 || visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length > 0) && (
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                   )}
                 </button>
@@ -816,17 +820,17 @@ export default function App() {
                       <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex justify-between items-center">
                         <h4 className="text-sm font-bold text-gray-900 dark:text-white">Notificações</h4>
                         <span className="bg-amber-500 text-zinc-950 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length + visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length}
+                          {visibleItems.filter(i => (i.assigneeId === currentUser.id || i.assigneeId2 === currentUser.id || i.assigneeId3 === currentUser.id) && !i.completed).length + visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length}
                         </span>
                       </div>
                       <div className="max-h-80 overflow-y-auto">
                         {/* Atribuições Pendentes */}
-                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length > 0 && (
+                        {visibleItems.filter(i => (i.assigneeId === currentUser.id || i.assigneeId2 === currentUser.id || i.assigneeId3 === currentUser.id) && !i.completed).length > 0 && (
                           <div className="p-2 bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-100 dark:border-zinc-800/50">
                             <span className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Suas Atribuições</span>
                           </div>
                         )}
-                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).map(task => (
+                        {visibleItems.filter(i => (i.assigneeId === currentUser.id || i.assigneeId2 === currentUser.id || i.assigneeId3 === currentUser.id) && !i.completed).map(task => (
                           <div key={`assign-${task.id}`} className="p-4 border-b border-gray-100 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                             <p className="text-sm text-gray-800 dark:text-zinc-200 leading-snug">
                               Você foi designado para verificar: <strong className="text-amber-600 dark:text-amber-400 block mt-1">{task.item}</strong>
@@ -859,7 +863,7 @@ export default function App() {
                           );
                         })}
 
-                        {visibleItems.filter(i => i.assigneeId === currentUser.id && !i.completed).length === 0 && visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length === 0 && (
+                        {visibleItems.filter(i => (i.assigneeId === currentUser.id || i.assigneeId2 === currentUser.id || i.assigneeId3 === currentUser.id) && !i.completed).length === 0 && visibleItems.filter(i => !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))).length === 0 && (
                           <div className="p-6 text-center text-gray-500 dark:text-zinc-500 text-sm flex flex-col items-center">
                             <Check className="w-8 h-8 text-gray-300 dark:text-zinc-700 mb-2" />
                             <p>Nenhuma notificação no momento.</p>
@@ -1155,7 +1159,8 @@ export default function App() {
                       <tr>
                         <th className="px-6 py-4 text-left">Pilar</th>
                         <th className="px-6 py-4">Total de Itens</th>
-                        <th className="px-6 py-4">Respondidos</th>
+                        <th className="px-6 py-4 text-emerald-600 dark:text-emerald-400">Conforme</th>
+                        <th className="px-6 py-4 text-red-600 dark:text-red-400">Não Conforme</th>
                         <th className="px-6 py-4">Progresso</th>
                         <th className="px-6 py-4">Aderência</th>
                         <th className="px-6 py-4">Status</th>
@@ -1167,7 +1172,8 @@ export default function App() {
                         <tr key={row.pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                           <td className="px-6 py-4 text-left font-bold text-gray-900 dark:text-zinc-100">{row.pilar}</td>
                           <td className="px-6 py-4">{row.total}</td>
-                          <td className="px-6 py-4">{row.respondidos}</td>
+                          <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">{row.conforme}</td>
+                          <td className="px-6 py-4 font-bold text-red-600 dark:text-red-400">{row.naoConforme}</td>
                           <td className="px-6 py-4">{row.progresso.toFixed(1).replace('.', ',')}%</td>
                           <td className="px-6 py-4">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
                           <td className="px-6 py-4">
@@ -1207,7 +1213,7 @@ export default function App() {
                       </thead>
                       <tbody className="bg-transparent">
                         {visibleItems
-                          .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || (selectedPilarFilter === 'Minhas Atribuições' ? i.assigneeId === currentUser?.id : i.pilar === selectedPilarFilter)))
+                          .filter(i => i.ativo && (!showOnlyPending || !i.completed) && (selectedPilarFilter === 'Todos' || (selectedPilarFilter === 'Minhas Atribuições' ? (i.assigneeId === currentUser?.id || i.assigneeId2 === currentUser?.id || i.assigneeId3 === currentUser?.id) : i.pilar === selectedPilarFilter)))
                           .sort((a, b) => {
                             const wPilarA = getPilarWeight(a.pilar);
                             const wPilarB = getPilarWeight(b.pilar);
@@ -1301,7 +1307,7 @@ export default function App() {
                                       placeholder="Descreva a ação a ser tomada..."
                                       className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                       rows={2}
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3))}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1309,7 +1315,7 @@ export default function App() {
                                       value={checkItem.prioridade || 'Média'}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'prioridade', e.target.value)}
                                       className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3))}
                                     >
                                       <option value="Alta" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">alta</option>
                                       <option value="Média" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">média</option>
@@ -1322,21 +1328,47 @@ export default function App() {
                                       value={checkItem.prazo || ''}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'prazo', e.target.value)}
                                       className={`w-full bg-transparent border-none focus:ring-0 text-center text-sm italic cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed ${isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : isApproaching ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-zinc-300'}`}
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3))}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
-                                    <select
-                                      value={checkItem.assigneeId || ''}
-                                      onChange={(e) => handleAssignItem(checkItem.id, e.target.value)}
-                                      className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
-                                    >
-                                      <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
-                                      {usersList.filter(u => u.unidade === checkItem.unidade).map(u => (
-                                        <option key={u.id} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
-                                      ))}
-                                    </select>
+                                    <div className="flex flex-col space-y-1">
+                                      <select
+                                        value={checkItem.assigneeId || ''}
+                                        onChange={(e) => handleUpdateItemField(checkItem.id, 'assigneeId', e.target.value)}
+                                        className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                        disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                      >
+                                        <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
+                                        {usersList.filter(u => u.unidade === checkItem.unidade && u.id !== checkItem.assigneeId2 && u.id !== checkItem.assigneeId3).map(u => (
+                                          <option key={u.id} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
+                                        ))}
+                                      </select>
+
+                                      <select
+                                        value={checkItem.assigneeId2 || ''}
+                                        onChange={(e) => handleUpdateItemField(checkItem.id, 'assigneeId2', e.target.value)}
+                                        className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                        disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                      >
+                                        <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
+                                        {usersList.filter(u => u.unidade === checkItem.unidade && u.id !== checkItem.assigneeId && u.id !== checkItem.assigneeId3).map(u => (
+                                          <option key={`a2-${u.id}`} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
+                                        ))}
+                                      </select>
+
+                                      <select
+                                        value={checkItem.assigneeId3 || ''}
+                                        onChange={(e) => handleUpdateItemField(checkItem.id, 'assigneeId3', e.target.value)}
+                                        className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
+                                        disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                      >
+                                        <option value="" className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">Não atribuído</option>
+                                        {usersList.filter(u => u.unidade === checkItem.unidade && u.id !== checkItem.assigneeId && u.id !== checkItem.assigneeId2).map(u => (
+                                          <option key={`a3-${u.id}`} value={u.id} className="not-italic font-medium bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">{u.name.split(' ')[0]}</option>
+                                        ))}
+                                      </select>
+                                    </div>
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                     <input
@@ -1344,27 +1376,32 @@ export default function App() {
                                       value={checkItem.periodoAcao || ''}
                                       onChange={(e) => handleUpdateItemField(checkItem.id, 'periodoAcao', e.target.value)}
                                       className="w-full bg-transparent border-none focus:ring-0 text-center text-sm italic text-gray-700 dark:text-zinc-300 cursor-pointer dark:[color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed"
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3))}
                                     />
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                     {checkItem.completed ? (
-                                      <div className="flex items-center justify-center space-x-2">
-                                        {checkItem.aderente ? (
-                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic">Conforme</span>
-                                        ) : (
-                                          <span className="text-red-600 dark:text-red-400 font-bold text-sm italic">Não Conforme</span>
-                                        )}
-                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
-                                          <button onClick={() => handleUndoEvaluation(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
-                                            <Edit2 className="w-3 h-3" />
-                                          </button>
+                                      <div className="flex flex-col items-center justify-center space-y-1">
+                                        <div className="flex items-center justify-center space-x-2">
+                                          {checkItem.aderente ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic whitespace-nowrap">Conforme <Check className="w-4 h-4 inline" /></span>
+                                          ) : (
+                                            <span className="text-red-600 dark:text-red-400 font-bold text-sm italic whitespace-nowrap">Não Conforme <X className="w-4 h-4 inline" /></span>
+                                          )}
+                                          {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3)) && (
+                                            <button onClick={() => handleUndoEvaluation(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
+                                              <Edit2 className="w-3 h-3" />
+                                            </button>
+                                          )}
+                                        </div>
+                                        {checkItem.completedAt && (
+                                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium">{checkItem.completedAt}</span>
                                         )}
                                       </div>
                                     ) : (
                                       <div className="flex items-center justify-center space-x-2">
                                         <span className="text-gray-500 dark:text-zinc-400 font-bold text-sm italic">Pendente</span>
-                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId) && (
+                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3)) && (
                                           <>
                                             <button onClick={() => handleEvaluateItem(checkItem.id, true)} className="p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Marcar como Conforme">
                                               <Check className="w-4 h-4" />
@@ -1379,16 +1416,21 @@ export default function App() {
                                   </td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                     {checkItem.auditoriaRealizada ? (
-                                      <div className="flex items-center justify-center space-x-2">
-                                        {checkItem.auditoriaAderente ? (
-                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic"><Check className="w-5 h-5" /></span>
-                                        ) : (
-                                          <span className="text-red-600 dark:text-red-400 font-bold text-sm italic"><X className="w-5 h-5" /></span>
-                                        )}
-                                        {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
-                                          <button onClick={() => handleUndoAuditoria(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
-                                            <Edit2 className="w-3 h-3" />
-                                          </button>
+                                      <div className="flex flex-col items-center justify-center space-y-1">
+                                        <div className="flex items-center justify-center space-x-2">
+                                          {checkItem.auditoriaAderente ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm italic whitespace-nowrap">Conforme <Check className="w-4 h-4 inline" /></span>
+                                          ) : (
+                                            <span className="text-red-600 dark:text-red-400 font-bold text-sm italic whitespace-nowrap">Não Conforme <X className="w-4 h-4 inline" /></span>
+                                          )}
+                                          {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR') && (
+                                            <button onClick={() => handleUndoAuditoria(checkItem.id)} className="p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-gray-300 transition-colors" title="Desfazer">
+                                              <Edit2 className="w-3 h-3" />
+                                            </button>
+                                          )}
+                                        </div>
+                                        {checkItem.auditoriaCompletedAt && (
+                                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium">{checkItem.auditoriaCompletedAt}</span>
                                         )}
                                       </div>
                                     ) : (
@@ -1424,7 +1466,7 @@ export default function App() {
                                       placeholder="Justifique o motivo de não conseguir atender ao item..."
                                       className="w-full bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-sm text-gray-700 dark:text-zinc-300 placeholder-gray-400 dark:placeholder-zinc-600 resize-y min-h-[70px] p-3 transition-all duration-200 shadow-inner disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
                                       rows={2}
-                                      disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId)}
+                                      disabled={(checkItem.completed && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3))}
                                     />
                                   </td>
                                   <td colSpan={6} className="border border-gray-300 dark:border-zinc-700 p-2">
@@ -1794,7 +1836,7 @@ export default function App() {
 
                 <div className="p-6 space-y-6">
                   {/* Upload Section - Permite apenas quem pode editar */}
-                  {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) ? (
+                  {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) ? (
                     <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <input
                         type="file"
@@ -1861,7 +1903,7 @@ export default function App() {
                                 <a href={ev.url} download={ev.name} className="p-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 rounded transition-colors" title="Baixar">
                                   <ArrowDown className="w-4 h-4" />
                                 </a>
-                                {(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId) && (
+                                {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) && (
                                   <button
                                     onClick={async () => {
                                       if (!selectedItemForEvidence) return;

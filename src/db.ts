@@ -9,10 +9,10 @@ const db = new Dexie('SomDatabase') as Dexie & {
 };
 
 // Schema declaration
-db.version(1).stores({
+db.version(2).stores({
     users: 'id, email, unidade, role',
     baseItems: 'id, pilar, bloco', // order is not primary key
-    items: 'id, unidade, pilar, assigneeId, completed' // Index columns to allow filtering
+    items: 'id, unidade, pilar, assigneeId, assigneeId2, assigneeId3, completed' // Index columns to allow filtering
 });
 
 // Seed data function to populate initial db if empty

@@ -32,6 +32,8 @@ export type ChecklistItem = {
   ativo: boolean;
   order: number;
   assigneeId?: string;
+  assigneeId2?: string;
+  assigneeId3?: string;
   completed?: boolean;
   aderente?: boolean;
   completedAt?: string;
@@ -45,6 +47,7 @@ export type ChecklistItem = {
   auditoriaTexto?: string;
   auditoriaRealizada?: boolean;
   auditoriaAderente?: boolean;
+  auditoriaCompletedAt?: string;
 };
 
 export const INITIAL_CHECKLIST: ChecklistItem[] = [
