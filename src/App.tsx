@@ -1239,9 +1239,10 @@ export default function App() {
                               </td>
                               <td className="px-6 py-5 font-bold border-r border-gray-200 dark:border-zinc-700 bg-blue-50/30 dark:bg-blue-900/5">
                                 <div className="flex flex-col items-center justify-center">
-                                  <span className={`px-3 py-1.5 rounded-md text-sm shadow-sm ${aderenciaGeral >= 60 ? 'bg-emerald-500 text-white' :
-                                    aderenciaGeral >= 40 ? 'bg-yellow-400 text-yellow-950 font-bold' :
-                                      'bg-red-500 text-white'
+                                  <span className={`px-3 py-1.5 rounded-md text-sm shadow-sm ${aderenciaGeral === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
+                                    aderenciaGeral >= 60 ? 'bg-emerald-500 text-white' :
+                                      aderenciaGeral >= 40 ? 'bg-yellow-400 text-yellow-950 font-bold' :
+                                        'bg-red-500 text-white'
                                     }`}>
                                     {aderenciaGeral.toFixed(1).replace('.', ',')}%
                                   </span>
@@ -1264,9 +1265,10 @@ export default function App() {
                                   <td key={`${unidade}-${pilar}`} className="px-4 py-5 border-b border-gray-100 dark:border-zinc-800/80">
                                     {pTotal > 0 ? (
                                       <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 shadow-sm transition-colors border border-transparent hover:border-gray-200 dark:hover:border-zinc-700">
-                                        <span className={`text-sm font-bold px-2 py-1 rounded shadow-sm ${pAderencia >= 60 ? 'bg-emerald-500 text-white' :
-                                          pAderencia >= 40 ? 'bg-yellow-400 text-yellow-950' :
-                                            'bg-red-500 text-white'
+                                        <span className={`text-sm font-bold px-2 py-1 rounded shadow-sm ${pAderencia === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
+                                          pAderencia >= 60 ? 'bg-emerald-500 text-white' :
+                                            pAderencia >= 40 ? 'bg-yellow-400 text-yellow-950' :
+                                              'bg-red-500 text-white'
                                           }`}>
                                           {pAderencia.toFixed(1).replace('.', ',')}%
                                         </span>
