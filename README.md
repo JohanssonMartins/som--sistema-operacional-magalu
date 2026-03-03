@@ -1,55 +1,73 @@
-# SOM - Sistema Operacional Magalu
+# S.O.M - Sistema Operacional Magalu 🚀
 
-Este é o projeto front-end para a página "Em Construção" do **SOM (Sistema Operacional Magalu)**. O projeto foi desenvolvido utilizando tecnologias modernas para garantir alta performance, responsividade e uma interface agradável.
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?logo=vite)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?logo=tailwind-css)
+![Prisma](https://img.shields.io/badge/Prisma-6.1-2D3748?logo=prisma)
+![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express)
 
-## 🚀 Tecnologias Utilizadas
+O **S.O.M (Sistema Operacional Magalu)** é uma plataforma avançada de gestão de excelência operacional e auditoria para os Centros de Distribuição (CDs) do Magalu. O sistema permite o acompanhamento em tempo real da aderência aos pilares da empresa, gestão de checklists, evidências e rankings de performance.
 
-- **[React 19](https://react.dev/)** - Biblioteca principal para construção da interface.
-- **[TypeScript](https://www.typescriptlang.org/)** - Tipagem estática para maior segurança no código.
-- **[Vite](https://vitejs.dev/)** - Ferramenta de build extremamente rápida.
-- **[Tailwind CSS 4](https://tailwindcss.com/)** - Framework de CSS utilitário para estilização rápida e responsiva.
-- **[Motion (Framer Motion)](https://motion.dev/)** - Biblioteca para animações fluidas.
-- **[Lucide React](https://lucide.dev/)** - Conjunto de ícones bonitos e consistentes.
+## ✨ Funcionalidades Principais
+
+- **📊 Dashboard de Auditoria**: Visão consolidada por unidade (CD) ou visão empresa ("Todos os CDs").
+- **✅ Gestão de Checklists**: Auto-auditoria e auditoria oficial com fluxos de aprovação e bloqueio de itens concluídos.
+- **🏆 Top Magalog**: Ranking de performance dos CDs com premiações dinâmicas (Medalhas de Ouro, Prata e Bronze).
+- **🔒 Controle de Acesso (RBAC)**: Diferentes níveis de permissão (Admin, Auditor, Gerente Divisional, Gerente de CD, Dono de Pilar e Colaborador).
+- **📸 Gestão de Evidências**: Upload e visualização de fotos/documentos para comprovação de conformidade.
+- **🌓 Modo Escuro/Claro**: Interface moderna e adaptável às preferências do usuário.
+
+## 🛠️ Tecnologias Utilizadas
+
+### Front-end
+- **React 19 & TypeScript**: Core da aplicação com tipagem forte.
+- **Motion (Framer Motion)**: Animações fluidas e micro-interações.
+- **Lucide React**: Biblioteca de ícones moderna.
+- **Tailwind CSS 4**: Estilização performática e responsiva.
+- **Dexie.js**: Armazenamento local robusto (quando offline).
+
+### Back-end
+- **Node.js & Express**: API REST para gestão de dados.
+- **Prisma ORM**: Modelagem e acesso ao banco de dados.
+- **Better-SQLite3**: Banco de dados relacional leve e rápido.
 
 ## 📋 Pré-requisitos
 
-Antes de começar, certifique-se de ter instalado em sua máquina:
-- [Node.js](https://nodejs.org/) (versão 18 ou superior recomendada)
-- Um gerenciador de pacotes como `npm`, `yarn` ou `pnpm`.
+- **Node.js** (versão 18 ou superior)
+- **npm** (incluso no Node.js)
 
-## 🛠️ Como rodar o projeto localmente
+## 🚀 Como rodar o projeto
 
-Siga os passos abaixo para executar o site no seu ambiente de desenvolvimento:
+O projeto possui um ambiente integrado de front-end e back-end.
 
-1. **Clone o repositório** (se aplicável) ou baixe os arquivos do projeto.
-2. **Abra o terminal** na pasta raiz do projeto.
-3. **Instale as dependências** executando o comando:
+1. **Instale as dependências**:
    ```bash
    npm install
    ```
-   *(ou `yarn install` / `pnpm install` dependendo do seu gerenciador)*
 
-4. **Inicie o servidor de desenvolvimento**:
+2. **Inicie o servidor de banco de dados (API)**:
+   ```bash
+   npm run server
+   ```
+
+3. **Inicie o front-end (em outro terminal)**:
    ```bash
    npm run dev
    ```
 
-5. **Acesse no navegador**:
-   O terminal exibirá um link local (geralmente `http://localhost:5173` ou `http://localhost:3000`). Clique nele ou copie e cole no seu navegador.
+4. **Acesse no navegador**:
+   - Front-end: `http://localhost:3000` (ou a porta exibida no terminal)
+   - API: `http://localhost:3333`
 
-## 📦 Como gerar o build de produção
+## 📂 Estrutura do Projeto
 
-Quando o site estiver pronto para ser publicado, você pode gerar a versão otimizada para produção:
+- `src/`: Código fonte do front-end (React).
+- `server/`: Código fonte do back-end (Express/Prisma).
+- `prisma/`: Esquemas e migrações do banco de dados.
+- `public/`: Arquivos estáticos.
+- `README.md`: Documentação do projeto.
 
-```bash
-npm run build
-```
+---
 
-Isso criará uma pasta `dist/` contendo os arquivos estáticos minificados e prontos para serem hospedados em serviços como Vercel, Netlify, AWS S3, etc.
-
-## 📝 Estrutura do Projeto
-
-- `src/App.tsx`: Componente principal contendo a estrutura da página (Navbar e conteúdo central).
-- `src/index.css`: Arquivo de estilos globais onde o Tailwind CSS é importado.
-- `src/main.tsx`: Ponto de entrada da aplicação React.
-- `vite.config.ts`: Configurações do Vite e plugins.
+© 2026 Magalu | Desenvolvido por J's Martins

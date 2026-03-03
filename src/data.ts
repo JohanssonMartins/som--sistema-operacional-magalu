@@ -13,7 +13,7 @@ export type User = {
 export const MOCK_USERS: User[] = [
   { id: '1', name: 'Ana (Admin)', email: 'admin@magalu.com', role: 'ADMIN', password: '123', unidade: 'Master' },
   { id: '2', name: 'Beto (Gerente CD)', email: 'gerentecd@magalu.com', role: 'GERENTE_DO_CD', password: '123', unidade: '6991' },
-  { id: '3', name: 'Carlos (Colab)', email: 'colab@magalu.com', role: 'COLABORADOR', password: '123', unidade: '6994' },
+  { id: '3', name: 'Carlos (Colab)', email: 'colab@magalu.com', role: 'COLABORADOR', password: '123', unidade: '994' },
   { id: '4', name: 'Diana (Divisional)', email: 'divisional@magalu.com', role: 'GERENTE_DIVISIONAL', password: '123', unidade: 'Master' },
   { id: '5', name: 'Eduardo (Dono Pilar)', email: 'donopilar@magalu.com', role: 'DONO_DO_PILAR', password: '123', unidade: '6991' },
   { id: '6', name: 'Fábio (Auditor)', email: 'auditor@magalu.com', role: 'AUDITOR', password: '123', unidade: 'Master' },

@@ -4,14 +4,13 @@ import {
   HardHat, LayoutDashboard, ListChecks, Check, X, Plus, Save, Edit2,
   Users, Settings, Shield, Package, ShoppingCart, Leaf, ArrowUp, ArrowDown,
   LogOut, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
-  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock
+  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS } from "./data";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "./db";
+import { api } from "./api";
 
 // --- CONSTANTES DE CONFIGURAÇÃO (FORA DO COMPONENTE PARA PERFORMANCE) ---
-const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '490', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
+const UNIDADES_DISPONIVEIS = ['994', '300', '350', '490', '550', '590', '991', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
 const PILAR_ORDER = ['Pessoas', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
 const BLOCO_ORDER = [
@@ -58,6 +57,73 @@ const LogoIcon = ({ className }: { className?: string }) => (
     </defs>
   </svg>
 );
+
+const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
+  <div className={`flex items-center gap-3 sm:gap-5 ${className} select-none`}>
+    <div className="flex flex-col relative">
+      <div className="flex items-end space-x-1 sm:space-x-1.5 mb-[-0.5rem] sm:mb-[-0.75rem] ml-10 sm:ml-12 relative z-10">
+        <span className="text-[1.35rem] sm:text-3xl font-black text-gray-900 dark:text-white italic drop-shadow-sm tracking-tight" style={{ fontFamily: 'system-ui, sans-serif' }}>Top</span>
+        <div className="flex space-x-0.5 pb-1 sm:pb-1.5">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <svg key={star} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center space-x-1 sm:space-x-1.5 mt-[-2px]">
+        <LogoIcon className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-sm" />
+        <span className="text-3xl sm:text-[2.75rem] leading-none font-black tracking-tighter text-gray-900 dark:text-white drop-shadow-md pb-0.5" style={{ fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'lowercase' }}>magalog</span>
+      </div>
+    </div>
+    <div className="flex flex-col justify-center border-l-2 border-gray-300 dark:border-zinc-700 pl-3 sm:pl-4 h-full py-1">
+      <span className="text-sm sm:text-base font-bold text-gray-700 dark:text-zinc-200 leading-tight tracking-tight">Programa de</span>
+      <span className="text-sm sm:text-base font-bold text-gray-700 dark:text-zinc-200 leading-tight tracking-tight">Excelência</span>
+    </div>
+  </div>
+);
+
+const CustomTrophy = ({ className, gold = false, silver = false, bronze = false }: { className?: string, gold?: boolean, silver?: boolean, bronze?: boolean }) => {
+  let mainColor = '#FACC15'; // Gold
+  let borderHighlight = '#FEF08A';
+
+  if (silver) {
+    mainColor = '#CBD5E1';
+    borderHighlight = '#F8FAFC';
+  } else if (bronze) {
+    mainColor = '#D97706';
+    borderHighlight = '#FDE68A';
+  }
+
+  return (
+    <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+      {/* Handles */}
+      <path d="M 24 30 C 0 30 0 60 38 58" fill="none" stroke="#27272a" strokeWidth="9" strokeLinecap="round" />
+      <path d="M 24 30 C 0 30 0 60 38 58" fill="none" stroke={mainColor} strokeWidth="4" strokeLinecap="round" />
+
+      <path d="M 76 30 C 100 30 100 60 62 58" fill="none" stroke="#27272a" strokeWidth="9" strokeLinecap="round" />
+      <path d="M 76 30 C 100 30 100 60 62 58" fill="none" stroke={mainColor} strokeWidth="4" strokeLinecap="round" />
+
+      {/* Stem */}
+      <rect x="42" y="65" width="16" height="15" fill={mainColor} stroke="#27272a" strokeWidth="5" strokeLinejoin="round" />
+
+      {/* Lower Base */}
+      <path d="M 30 85 L 70 85 L 70 95 L 30 95 Z" fill="#27272a" stroke="#27272a" strokeWidth="4" strokeLinejoin="round" />
+      {/* Upper Base */}
+      <path d="M 38 75 L 62 75 L 62 85 L 38 85 Z" fill="#3f3f46" stroke="#27272a" strokeWidth="4" strokeLinejoin="round" />
+
+      {/* Bowl */}
+      <path d="M 20 20 L 80 20 C 80 50 65 70 50 70 C 35 70 20 50 20 20 Z" fill={mainColor} stroke="#27272a" strokeWidth="5" strokeLinejoin="round" />
+
+      {/* Highlight inside Bowl */}
+      <path d="M 28 30 C 28 45 35 55 42 62" fill="none" stroke={borderHighlight} strokeWidth="4" strokeLinecap="round" />
+      <circle cx="34" cy="53" r="2.5" fill={borderHighlight} />
+
+      {/* Top Rim */}
+      <line x1="18" y1="20" x2="82" y2="20" stroke="#27272a" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  );
+};
 
 const DebouncedTextarea = ({
   value,
@@ -153,15 +219,35 @@ export default function App() {
   // --- ESTADOS DO SISTEMA ---
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [activeTab, setActiveTab] = useState('home');
-  const usersList = useLiveQuery(() => db.users.toArray()) || [];
+
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [baseItems, setBaseItems] = useState<ChecklistItem[]>([]);
+  const [items, setItems] = useState<ChecklistItem[]>([]);
 
   // --- ESTADOS DO CHECKLIST ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const baseItems = useLiveQuery(() => db.baseItems.toArray()) || [];
-  const items = useLiveQuery(() => db.items.toArray()) || [];
   const [formData, setFormData] = useState<Partial<ChecklistItem>>({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+
+  const loadData = async () => {
+    try {
+      const [u, b, i] = await Promise.all([
+        api.getUsers(),
+        api.getBaseItems(),
+        api.getChecklists()
+      ]);
+      setUsersList(u);
+      setBaseItems(b);
+      setItems(i);
+    } catch (e) {
+      console.error("Erro ao carregar dados da API:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
@@ -182,7 +268,7 @@ export default function App() {
     const syncChecklists = async () => {
       if (baseItems.length === 0) return;
 
-      const currentItems = await db.items.toArray();
+      const currentItems = items; // From state
 
       // Otimização: Criar mapas para busca O(1)
       const itemsMap = new Map<string, ChecklistItem>();
@@ -247,8 +333,8 @@ export default function App() {
               existingItem.order !== baseItem.order ||
               existingItem.descricao !== baseItem.descricao ||
               existingItem.exigeEvidencia !== baseItem.exigeEvidencia ||
-              existingItem.nossaAcao !== baseItem.nossaAcao ||
-              existingItem.score !== baseItem.score;
+              (existingItem.nossaAcao || '') !== (baseItem.nossaAcao || '') ||
+              String(existingItem.score) !== String(baseItem.score);
 
             if (hasChanged) {
               itemsToPut.push({
@@ -278,11 +364,17 @@ export default function App() {
         }
       }
 
+      let shouldReload = false;
       if (itemsToPut.length > 0) {
-        await db.items.bulkPut(itemsToPut);
+        await api.bulkPutChecklists(itemsToPut);
+        shouldReload = true;
       }
       if (itemsToDelete.length > 0) {
-        await db.items.bulkDelete(itemsToDelete);
+        await api.bulkDeleteChecklists(itemsToDelete);
+        shouldReload = true;
+      }
+      if (shouldReload) {
+        loadData();
       }
     };
 
@@ -333,7 +425,8 @@ export default function App() {
         const base64String = reader.result as string;
         setCurrentUser(prev => prev ? { ...prev, photo: base64String } : null);
         if (currentUser) {
-          await db.users.update(currentUser.id, { photo: base64String });
+          await api.updateUser(currentUser.id, { photo: base64String });
+          loadData();
         }
       };
       reader.readAsDataURL(file);
@@ -348,12 +441,14 @@ export default function App() {
       delete payload.id; // Evita erro de sobrescrita de chave primária (ex: tentar mudar '6994-1' para '1')
 
       if (editingId) {
-        await db.baseItems.update(editingId, payload);
+        await api.updateBaseItem(editingId, payload);
 
-        const allItems = await db.items.toArray();
-        const itemsToUpdate = allItems.filter(item => item.id.endsWith(`-${editingId}`));
+        const itemsToUpdate = items
+          .filter(item => item.id.endsWith(`-${editingId}`))
+          .map(item => ({ id: item.id, ...payload }));
+
         if (itemsToUpdate.length > 0) {
-          await Promise.all(itemsToUpdate.map(item => db.items.update(item.id, payload)));
+          await api.bulkPutChecklists(itemsToUpdate);
         }
       } else {
         const newId = Date.now().toString();
@@ -363,17 +458,18 @@ export default function App() {
           order: baseItems.length + 1,
           ...payload
         } as ChecklistItem;
-        await db.baseItems.add(newItem);
+        await api.createBaseItem(newItem);
 
         const units = Array.from(new Set(usersList.map(u => u.unidade))).filter(u => u !== 'Master');
         const newItems = units.map(unit => ({ ...newItem, id: `${unit}-${newId}`, unidade: unit, assigneeId: '' }));
         if (newItems.length > 0) {
-          await db.items.bulkAdd(newItems);
+          await api.bulkAddChecklists(newItems);
         }
       }
       setIsModalOpen(false);
       setEditingId(null);
       setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1.0', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+      loadData();
     } catch (error) {
       console.error("Erro ao salvar item da base:", error);
       alert("Houve um erro ao efetuar o salvamento. Verifique se os dados estão corretos.");
@@ -393,46 +489,54 @@ export default function App() {
   };
 
   const handleAssignItem = async (itemId: string, assigneeId: string) => {
-    await db.items.update(itemId, { assigneeId });
+    await api.updateChecklist(itemId, { assigneeId });
+    loadData();
   };
 
   const handleUpdateItemField = async (itemId: string, field: keyof ChecklistItem, value: string) => {
-    await db.items.update(itemId, { [field]: value } as any);
+    await api.updateChecklist(itemId, { [field]: value } as any);
+    loadData();
   };
 
   const handleEvaluateItem = async (itemId: string, aderente: boolean) => {
-    await db.items.update(itemId, {
+    await api.updateChecklist(itemId, {
       completed: true,
       aderente,
       completedAt: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
     });
+    loadData();
   };
 
   const handleUndoEvaluation = async (itemId: string) => {
-    const item = await db.items.get(itemId);
+    const item = items.find(i => i.id === itemId);
     if (item) {
-      const updatedItem = { ...item, completed: false };
-      delete updatedItem.aderente;
-      delete updatedItem.completedAt;
-      await db.items.put(updatedItem);
+      await api.updateChecklist(itemId, {
+        completed: false,
+        aderente: null as any,
+        completedAt: null as any
+      });
+      loadData();
     }
   };
 
   const handleEvaluateAuditoria = async (itemId: string, aderente: boolean) => {
-    await db.items.update(itemId, {
+    await api.updateChecklist(itemId, {
       auditoriaRealizada: true,
       auditoriaAderente: aderente,
       auditoriaCompletedAt: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
     } as any);
+    loadData();
   };
 
   const handleUndoAuditoria = async (itemId: string) => {
-    const item = await db.items.get(itemId);
+    const item = items.find(i => i.id === itemId);
     if (item) {
-      const updatedItem = { ...item, auditoriaRealizada: false };
-      delete updatedItem.auditoriaAderente;
-      delete updatedItem.auditoriaCompletedAt;
-      await db.items.put(updatedItem);
+      await api.updateChecklist(itemId, {
+        auditoriaRealizada: false,
+        auditoriaAderente: null as any,
+        auditoriaCompletedAt: null as any
+      } as any);
+      loadData();
     }
   };
 
@@ -440,29 +544,30 @@ export default function App() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUserId) {
-      const existingUser = await db.users.get(editingUserId);
+      const existingUser = usersList.find(u => u.id === editingUserId);
       const updatedUser = { ...existingUser, ...userFormData } as User;
-      await db.users.put(updatedUser);
+      await api.updateUser(editingUserId, updatedUser);
       if (currentUser?.id === editingUserId) {
         setCurrentUser({ ...currentUser, ...userFormData });
       }
     } else {
       const newId = Date.now().toString();
       const newUser: User = { id: newId, ...userFormData } as User;
-      await db.users.add(newUser);
+      await api.createUser(newUser);
 
       // Check if the new user's unit already has items
       const unitExists = items.some(item => item.unidade === newUser.unidade);
       if (!unitExists && newUser.unidade && newUser.unidade !== 'Master') {
         const newItems = baseItems.map(item => ({ ...item, id: `${newUser.unidade}-${item.id}`, unidade: newUser.unidade, assigneeId: '' }));
         if (newItems.length > 0) {
-          await db.items.bulkAdd(newItems);
+          await api.bulkAddChecklists(newItems);
         }
       }
     }
 
     setIsUserModalOpen(false);
     setUserFormData({ name: '', email: '', role: 'COLABORADOR', password: '', photo: '', unidade: '' });
+    loadData();
   };
 
   const handleEditUser = (user: User) => {
@@ -484,7 +589,8 @@ export default function App() {
       return;
     }
     if (window.confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) {
-      await db.users.delete(userId);
+      await api.deleteUser(userId);
+      loadData();
     }
   };
 
@@ -757,6 +863,14 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => setActiveTab('rank')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'rank' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
+              >
+                <Trophy className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Top Magalog</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('checklist')}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors h-9 box-border ${activeTab === 'checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80' : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50'}`}
               >
@@ -1023,6 +1137,158 @@ export default function App() {
                     </motion.div>
                   );
                 })}
+              </div>
+            </div>
+          ) : activeTab === 'rank' ? (
+            <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                  <TopMagalogLogo />
+                  <p className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1">Acompanhamento consolidado de Aderência Oficial por CD e Pilar.</p>
+                </div>
+
+                {/* Legenda de Classificação */}
+                <div className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px]">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                      <div className="w-4 h-4 rounded-full bg-red-600 shadow-sm"></div>
+                      <span className="text-gray-200 font-bold">&lt; 40% &rarr;</span>
+                      <span className="text-blue-200 font-bold">Não aderente</span>
+                      <span className="text-gray-400 text-xs">(Fundo Vermelho)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                      <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div>
+                      <span className="text-gray-200 font-bold">40% a 59.9% &rarr;</span>
+                      <span className="text-blue-200 font-bold">Qualificado</span>
+                      <span className="text-gray-400 text-xs">(Fundo Amarelo)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                      <div className="w-4 h-4 rounded-full bg-green-500 shadow-sm"></div>
+                      <span className="text-gray-200 font-bold">&ge; 60% &rarr;</span>
+                      <span className="text-blue-200 font-bold">Certificado</span>
+                      <span className="text-gray-400 text-xs">(Fundo Verde Esmeralda)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-center text-sm text-gray-600 dark:text-zinc-300">
+                    <thead className="bg-[#1e293b] text-white font-medium whitespace-nowrap">
+                      <tr>
+                        <th className="px-6 py-4 text-left border-r border-gray-700 sticky left-0 bg-[#1e293b] uppercase tracking-wider text-xs">UNIDADE</th>
+                        <th className="px-6 py-4 font-bold border-r border-gray-700 uppercase tracking-wider text-xs">Aderência Geral</th>
+                        {PILAR_ORDER.map(pilar => (
+                          <th key={pilar} className="px-4 py-4 uppercase tracking-wider text-xs">{pilar}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                      {(() => {
+                        // Primeiro, calcula o score de todas as unidades
+                        const unitsWithScores = UNIDADES_DISPONIVEIS.map(unidade => {
+                          const unitItems = items.filter(i => i.unidade === unidade && i.ativo);
+                          const totalGeral = unitItems.length;
+                          const conformesGeral = unitItems.filter(i => i.completed && i.aderente).length;
+                          const aderenciaGeral = totalGeral === 0 ? 0 : (conformesGeral / totalGeral) * 100;
+                          return { unidade, unitItems, totalGeral, conformesGeral, aderenciaGeral };
+                        }).filter(u => u.unitItems.length > 0); // Remove unidades sem dados
+
+                        // Ordena para definir o ranking (do maior para o menor)
+                        const sortedUnits = [...unitsWithScores].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
+
+                        // Mapeia cada unidade para sua posição no ranking com visual de medalha e número
+                        const getRankIcon = (unidade: string) => {
+                          const index = sortedUnits.findIndex(u => u.unidade === unidade);
+                          if (index === 0) return (
+                            <div className="flex items-center space-x-1.5 bg-yellow-400 text-yellow-950 px-2.5 py-1 rounded-full border-2 border-yellow-500 shadow-sm transform scale-105" title="1º Lugar">
+                              <span className="font-extrabold text-sm leading-none pl-0.5">1º</span>
+                              <CustomTrophy gold className="w-5 h-5 drop-shadow-md" />
+                            </div>
+                          );
+                          if (index === 1) return (
+                            <div className="flex items-center space-x-1.5 bg-slate-300 text-slate-800 px-2 py-0.5 rounded-full border-2 border-slate-400 shadow-sm opacity-90" title="2º Lugar">
+                              <span className="font-bold text-xs leading-none pl-0.5">2º</span>
+                              <CustomTrophy silver className="w-4 h-4 drop-shadow-md" />
+                            </div>
+                          );
+                          if (index === 2) return (
+                            <div className="flex items-center space-x-1 bg-orange-500 text-orange-50 px-2 py-0.5 rounded-full border-2 border-orange-600 shadow-sm opacity-90" title="3º Lugar">
+                              <span className="font-bold text-xs leading-none pl-0.5">3º</span>
+                              <CustomTrophy bronze className="w-4 h-4 drop-shadow-md" />
+                            </div>
+                          );
+                          return null;
+                        };
+
+                        return sortedUnits.map(({ unidade, unitItems, aderenciaGeral }) => {
+                          const totalGeral = unitItems.length;
+                          const conformesGeral = unitItems.filter(i => i.completed && i.aderente).length;
+
+                          return (
+                            <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
+                              <td className="px-6 py-5 text-left font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10">
+                                <div className="flex items-center space-x-2">
+                                  <span>CD {unidade}</span>
+                                  {getRankIcon(unidade)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 font-bold border-r border-gray-200 dark:border-zinc-700 bg-blue-50/30 dark:bg-blue-900/5">
+                                <div className="flex flex-col items-center justify-center">
+                                  <span className={`px-3 py-1.5 rounded-md text-sm shadow-sm ${aderenciaGeral >= 60 ? 'bg-emerald-500 text-white' :
+                                    aderenciaGeral >= 40 ? 'bg-yellow-400 text-yellow-950 font-bold' :
+                                      'bg-red-500 text-white'
+                                    }`}>
+                                    {aderenciaGeral.toFixed(1).replace('.', ',')}%
+                                  </span>
+                                  {totalGeral > 0 && (
+                                    <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
+                                      <span className={conformesGeral === totalGeral ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{conformesGeral}</span>
+                                      <span className="text-gray-400 dark:text-zinc-500">/</span>
+                                      <span className="text-gray-500 dark:text-zinc-400">{totalGeral}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              {PILAR_ORDER.map(pilar => {
+                                const pilarItems = unitItems.filter(i => i.pilar === pilar);
+                                const pTotal = pilarItems.length;
+                                const pConformes = pilarItems.filter(i => i.completed && i.aderente).length;
+                                const pAderencia = pTotal === 0 ? 0 : (pConformes / pTotal) * 100;
+
+                                return (
+                                  <td key={`${unidade}-${pilar}`} className="px-4 py-5 border-b border-gray-100 dark:border-zinc-800/80">
+                                    {pTotal > 0 ? (
+                                      <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 shadow-sm transition-colors border border-transparent hover:border-gray-200 dark:hover:border-zinc-700">
+                                        <span className={`text-sm font-bold px-2 py-1 rounded shadow-sm ${pAderencia >= 60 ? 'bg-emerald-500 text-white' :
+                                          pAderencia >= 40 ? 'bg-yellow-400 text-yellow-950' :
+                                            'bg-red-500 text-white'
+                                          }`}>
+                                          {pAderencia.toFixed(1).replace('.', ',')}%
+                                        </span>
+                                        <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
+                                          <span className={pConformes === pTotal ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pConformes}</span>
+                                          <span className="text-gray-400 dark:text-zinc-500">/</span>
+                                          <span className="text-gray-500 dark:text-zinc-400">{pTotal}</span>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-300 dark:text-zinc-700 flex justify-center">-</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           ) : activeTab === 'base-checklist' && (currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') ? (
@@ -1852,11 +2118,12 @@ export default function App() {
                             reader.onloadend = async () => {
                               if (!selectedItemForEvidence) return;
                               const newEvidence = { name: file.name, url: reader.result as string, category: selectedEvidenceCategory || '' };
-                              const item = await db.items.get(selectedItemForEvidence.id);
+                              const item = items.find(i => i.id === selectedItemForEvidence.id);
                               if (item) {
                                 const newEvidencias = [...(item.evidencias || []), newEvidence];
                                 setSelectedItemForEvidence({ ...item, evidencias: newEvidencias });
-                                await db.items.update(item.id, { evidencias: newEvidencias });
+                                await api.updateChecklist(item.id, { evidencias: newEvidencias } as any);
+                                loadData();
                               }
                             };
                             reader.readAsDataURL(file);
@@ -1910,14 +2177,12 @@ export default function App() {
                                   <button
                                     onClick={async () => {
                                       if (!selectedItemForEvidence) return;
-                                      const item = await db.items.get(selectedItemForEvidence.id);
+                                      const item = items.find(i => i.id === selectedItemForEvidence.id);
                                       if (item && item.evidencias) {
-                                        const originalIndex = item.evidencias.findIndex(e => e.name === ev.name && e.url === ev.url);
-                                        if (originalIndex !== -1) {
-                                          const newEvidencias = item.evidencias.filter((_, index) => index !== originalIndex);
-                                          setSelectedItemForEvidence({ ...item, evidencias: newEvidencias });
-                                          await db.items.update(item.id, { evidencias: newEvidencias });
-                                        }
+                                        const newEvidencias = item.evidencias.filter(e => e.url !== ev.url);
+                                        await api.updateChecklist(item.id, { evidencias: newEvidencias } as any);
+                                        setSelectedItemForEvidence({ ...item, evidencias: newEvidencias });
+                                        loadData();
                                       }
                                     }}
                                     className="flex items-center space-x-1 px-2 py-1.5 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 rounded transition-colors"
