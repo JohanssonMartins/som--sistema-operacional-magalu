@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  role     String
+  unidade  String
+  password String?
+  photo    String?
+}
+
+model ChecklistItem {
+  id                       String   @id @default(uuid())
+  code                     String
+  pilar                    String
+  bloco                    String
+  trilha                   String
+  item                     String
+  descricao                String
+  score                    String
+  exigeEvidencia           Boolean  @default(false)
+  ativo                    Boolean  @default(true)
+  order                    Int
+  assigneeId               String?
+  assigneeId2              String?
+  assigneeId3              String?
+  completed                Boolean? @default(false)
+  aderente                 Boolean?
+  completedAt              String?
+  nossaAcao                String?
+  periodoAcao              String?
+  justificativaResponsavel String?
+  prioridade               String?
+  prazo                    String?
+  unidade                  String?
+  auditoriaTexto           String?
+  auditoriaRealizada       Boolean? @default(false)
+  auditoriaAderente        Boolean?
+  auditoriaCompletedAt     String?
+  
+  // Relations
+  evidencias               Evidencia[]
+}
+
+model Evidencia {
+  id              String        @id @default(uuid())
+  name            String
+  url             String
+  category        String
+  checklistItemId String
+  checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id])
+}
+
+// We will replicate the "BaseItem" from Dexie to be able to create new units
+model BaseChecklistItem {
+  id             String  @id @default(uuid())
+  code           String
+  pilar          String
+  bloco          String
+  trilha         String
+  item           String
+  descricao      String
+  score          String
+  exigeEvidencia Boolean @default(false)
+  ativo          Boolean @default(true)
+  order          Int
+}

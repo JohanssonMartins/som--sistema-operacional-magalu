@@ -46,3 +46,5 @@ Thumbs.db
 .eslintcache
 tmp/
 temp/
+
+/src/generated/prisma

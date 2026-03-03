@@ -1479,12 +1479,13 @@ export default function App() {
                                           <button
                                             key={cat.id}
                                             onClick={() => {
-                                              if (checkItem.completed && !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')) return;
+                                              const canAccess = currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3;
+                                              if (!canAccess) return;
                                               setSelectedItemForEvidence(checkItem);
                                               setSelectedEvidenceCategory(cat.id);
                                               setIsEvidenceModalOpen(true);
                                             }}
-                                            disabled={(checkItem.completed && currentUser.role !== 'AUDITOR' && currentUser.role !== 'ADMIN') || !(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR')}
+                                            disabled={!(currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === checkItem.assigneeId || currentUser.id === checkItem.assigneeId2 || currentUser.id === checkItem.assigneeId3)}
                                             className="flex flex-col items-center justify-start w-20 text-center group relative disabled:opacity-40 disabled:cursor-not-allowed"
                                           >
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm mb-1 transition-transform group-hover:scale-110 ${cat.bg}`}>
@@ -1838,7 +1839,7 @@ export default function App() {
 
                 <div className="p-6 space-y-6">
                   {/* Upload Section - Permite apenas quem pode editar */}
-                  {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) ? (
+                  {((!selectedItemForEvidence.completed || currentUser.role === 'ADMIN') && (currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) ? (
                     <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <input
                         type="file"
@@ -1905,7 +1906,7 @@ export default function App() {
                                 <a href={ev.url} download={ev.name} className="p-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 rounded transition-colors" title="Baixar">
                                   <ArrowDown className="w-4 h-4" />
                                 </a>
-                                {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || (currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) && (
+                                {((!selectedItemForEvidence.completed || currentUser.role === 'ADMIN') && (currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DO_CD' || currentUser.role === 'DONO_DO_PILAR' || currentUser.id === selectedItemForEvidence.assigneeId || currentUser.id === selectedItemForEvidence.assigneeId2 || currentUser.id === selectedItemForEvidence.assigneeId3)) && (
                                   <button
                                     onClick={async () => {
                                       if (!selectedItemForEvidence) return;
