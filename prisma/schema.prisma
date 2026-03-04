@@ -62,7 +62,6 @@ model Evidencia {
   checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id])
 }
 
-// We will replicate the "BaseItem" from Dexie to be able to create new units
 model BaseChecklistItem {
   id             String  @id @default(uuid())
   code           String
@@ -75,4 +74,41 @@ model BaseChecklistItem {
   exigeEvidencia Boolean @default(false)
   ativo          Boolean @default(true)
   order          Int
+  nossaAcao      String?
+}
+
+// Modelos para a Autoauditoria Mensal
+model Autoauditoria {
+  id          String   @id @default(uuid())
+  unidade     String
+  mesAno      String   // Ex: "Fevereiro-2026"
+  status      String   @default("Pendente de Auditoria") // Pendente de Auditoria, Auditado, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  items       AutoauditoriaItem[]
+  
+  @@unique([unidade, mesAno])
+}
+
+model AutoauditoriaItem {
+  id              String        @id @default(uuid())
+  autoauditoriaId String
+  autoauditoria   Autoauditoria @relation(fields: [autoauditoriaId], references: [id], onDelete: Cascade)
+  
+  baseItemId      String
+  score           String?
+  nossaAcao       String?
+  
+  evidencias      EvidenciaAutoauditoria[]
+
+  @@unique([autoauditoriaId, baseItemId])
+}
+
+model EvidenciaAutoauditoria {
+  id                  String            @id @default(uuid())
+  name                String
+  url                 String
+  autoauditoriaItemId String
+  autoauditoriaItem   AutoauditoriaItem @relation(fields: [autoauditoriaItemId], references: [id], onDelete: Cascade)
 }

@@ -36,6 +36,14 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/base-items/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
         return res.json();
     },
+    deletePilar: async (pilar: string) => {
+        const res = await fetch(`${API_BASE_URL}/base-items/pilar/${encodeURIComponent(pilar)}`, { method: 'DELETE' });
+        return res.json();
+    },
+    deleteBaseItem: async (id: string) => {
+        const res = await fetch(`${API_BASE_URL}/base-items/${id}`, { method: 'DELETE' });
+        return res.json();
+    },
 
     // Checklists
     getChecklists: async (): Promise<ChecklistItem[]> => {
@@ -57,6 +65,17 @@ export const api = {
     },
     bulkPutChecklists: async (items: any[]) => {
         const res = await fetch(`${API_BASE_URL}/checklists/bulk-put`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(items) });
+        return res.json();
+    },
+
+    // Autoauditoria Mensal
+    getAutoauditoria: async (unidade: string, mesAno: string) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/${unidade}/${mesAno}`);
+        if (!res.ok) throw new Error('Failed to fetch autoauditoria');
+        return res.json();
+    },
+    saveAutoauditoria: async (data: any) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         return res.json();
     }
 };

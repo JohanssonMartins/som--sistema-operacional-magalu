@@ -50,6 +50,30 @@ export type ChecklistItem = {
   auditoriaCompletedAt?: string;
 };
 
+export type EvidenciaAutoauditoria = {
+  id?: string;
+  name: string;
+  url: string; // Pode ser a URL ou base64
+};
+
+export type AutoauditoriaItem = {
+  id?: string;
+  baseItemId: string;
+  score?: string;
+  nossaAcao?: string;
+  evidencias?: EvidenciaAutoauditoria[];
+};
+
+export type Autoauditoria = {
+  id?: string;
+  unidade: string;
+  mesAno: string;
+  status?: string;
+  items: AutoauditoriaItem[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export const INITIAL_CHECKLIST: ChecklistItem[] = [
   { id: '1', pilar: 'Pessoas', bloco: 'Reconhecimento', trilha: 'Básico bem feito', item: 'Programa de reconhecimento formalizado e divulgado?', descricao: 'Verificar se existe um programa de reconhecimento (ex: funcionário do mês, bônus) e se o time o conhece.', score: '1.0', exigeEvidencia: true, ativo: true, order: 1, code: 'PES-REC-01' },
   { id: '2', pilar: 'Pessoas', bloco: 'Reconhecimento', trilha: 'Básico bem feito', item: 'Ações de reconhecimento são executadas na frequência definida?', descricao: 'Conferir se as cerimônias ou pagamentos de reconhecimento ocorrem conforme o planejado.', score: '1.0', exigeEvidencia: true, ativo: true, order: 2, code: 'PES-REC-02' },
