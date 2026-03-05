@@ -4,13 +4,56 @@ import {
   HardHat, LayoutDashboard, ListChecks, Check, X, Plus, Save, Edit2,
   Users, Settings, Shield, Package, ShoppingCart, Leaf, ArrowUp, ArrowDown,
   LogOut, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
-  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal, Upload
+  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal, Upload, PanelLeftClose, Menu
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
 
-// --- CONSTANTES DE CONFIGURAÇÃO (FORA DO COMPONENTE PARA PERFORMANCE) ---
-const UNIDADES_DISPONIVEIS = ['994', '300', '350', '490', '550', '590', '991', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
+const UNIDADES_DISPONIVEIS = ['50', '94', '95', '300', '350', '490', '550', '590', '991', '994', '1100', '1250', '1440', '1500', '1800', '2500', '2650', '2900', '5200'];
+
+export const CD_NAMES: Record<string, string> = {
+  '50': '50 - Ribeirão Preto - SP',
+  '94': '94 - Londrina - PR',
+  '95': '95 - Campo Grande - MS',
+  '300': '300 - Louveira - SP',
+  '350': '350 - Contagem - MG',
+  '490': '490 - Viana - ES',
+  '550': '550 - Itajaí - SC',
+  '590': '590 - Guarulhos - SP',
+  '991': '991 - Alhandra - PB',
+  '994': '994 - Maracanau - CE',
+  '1100': '1100 - Hidrolandia - GO',
+  '1250': '1250 - Teresina - PI',
+  '1440': '1440 - Nova Sta Rita - RS',
+  '1500': '1500 - Candeias - BA',
+  '1800': '1800 - Cuiabá - MT',
+  '2500': '2500 - Duque de Caxias - RJ',
+  '2650': '2650 - Benevides - PA',
+  '2900': '2900 - Araucária - PR',
+  '5200': '5200 - Gravataí - RS'
+};
+
+export const CD_REGIONS: Record<string, { divisional: string, divisao: string }> = {
+  '50': { divisional: 'Nesello', divisao: 'SP' },
+  '94': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
+  '95': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '300': { divisional: 'Nesello', divisao: 'SP' },
+  '350': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
+  '490': { divisional: 'Christian', divisao: 'Sul / Sudeste' }, // ES -> Sudeste
+  '550': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
+  '590': { divisional: 'Nesello', divisao: 'SP' },
+  '991': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '994': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '1100': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '1250': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '1440': { divisional: 'Christian', divisao: 'Sul / Sudeste' }, // RS -> Sul
+  '1500': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '1800': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '2500': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
+  '2650': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
+  '2900': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
+  '5200': { divisional: 'Christian', divisao: 'Sul / Sudeste' }
+};
 
 const PILAR_ORDER = ['Pessoas', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
 const BLOCO_ORDER = [
@@ -313,6 +356,7 @@ export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [activeTab, setActiveTab] = useState('home');
   const [selectedUnit, setSelectedUnit] = useState<string>('Todas');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [usersList, setUsersList] = useState<User[]>([]);
   const [baseItems, setBaseItems] = useState<ChecklistItem[]>([]);
@@ -1056,17 +1100,29 @@ export default function App() {
       <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex text-gray-900 dark:text-zinc-100 font-sans transition-colors duration-300 relative overflow-hidden">
 
         {/* Sidebar Navigation */}
-        <aside className="w-64 bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-colors duration-300 z-50 backdrop-blur-xl">
+        <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl`}>
 
-          {/* Logo Area */}
-          <div className="h-[72px] flex items-center justify-center px-4 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="flex items-center space-x-3">
-              <LogoIcon className="w-10 h-10" />
-              <div className="flex flex-col items-start leading-none">
-                <span className="font-black italic text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] drop-shadow-sm pb-1">S.O.M</span>
-                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-[-2px] tracking-wide whitespace-nowrap">Sistema Operacional Magalu</span>
+          {/* Logo Area & Toggle */}
+          <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 border-b border-gray-200 dark:border-zinc-800/80 shrink-0`}>
+
+            {!isSidebarCollapsed && (
+              <div className="flex items-center space-x-3 cursor-pointer overflow-hidden" onClick={() => setActiveTab('home')}>
+                <LogoIcon className="w-10 h-10 shrink-0" />
+                <div className="flex flex-col items-start leading-none relative w-full pt-1.5 pb-2">
+                  <span className="font-black italic text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] drop-shadow-sm pb-1">S.O.M</span>
+                  <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-[-2px] tracking-wide whitespace-nowrap">Sistema Operacional Magalu</span>
+                  {/* Logo bottom line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] rounded-full opacity-90 shadow-[0_1px_2px_rgba(255,59,48,0.3)]"></div>
+                </div>
               </div>
-            </div>
+            )}
+
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className={`p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors ${isSidebarCollapsed ? '' : ''}`}
+            >
+              {isSidebarCollapsed ? <Menu className="w-6 h-6" /> : <PanelLeftClose className="w-5 h-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />}
+            </button>
           </div>
 
           {/* Unit Dropdown */}
@@ -1083,14 +1139,23 @@ export default function App() {
                   <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${isUnitDropdownOpen ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'}`}>
                     <Package className="w-4 h-4" />
                   </div>
-                  <div className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500 truncate w-full">Unidade</span>
-                    <span className="text-[13px] font-semibold text-gray-800 dark:text-zinc-200 truncate w-full mt-0.5">
-                      {selectedUnit === 'Todas' ? 'Todos os CDs' : `CD ${selectedUnit}`}
-                    </span>
-                  </div>
+                  {!isSidebarCollapsed && (
+                    <div className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500 truncate w-full">CD</span>
+                      <div className="flex flex-col w-full mt-0.5">
+                        <span className="text-[13px] font-bold text-gray-800 dark:text-zinc-200 truncate w-full">
+                          {selectedUnit === 'Todas' ? 'Todos os CDs' : `CD ${selectedUnit}`}
+                        </span>
+                        {selectedUnit !== 'Todas' && CD_NAMES[selectedUnit] && (
+                          <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate w-full">
+                            {CD_NAMES[selectedUnit].split(' - ').slice(1).join(' - ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {(currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL') && (
+                {(!isSidebarCollapsed && (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL')) && (
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ml-1 ${isUnitDropdownOpen ? 'rotate-180' : ''}`} />
                 )}
               </button>
@@ -1121,13 +1186,18 @@ export default function App() {
                       <button
                         key={u}
                         onClick={() => { setSelectedUnit(u); setIsUnitDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${selectedUnit === u
+                        className={`w-full flex items-start gap-3 px-3 py-2 text-sm transition-colors ${selectedUnit === u
                           ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
                           : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
                           }`}
                       >
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${selectedUnit === u ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
-                        CD {u}
+                        <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${selectedUnit === u ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
+                        <div className="flex flex-col items-start text-left w-full leading-snug">
+                          <span className="font-bold">CD {u}</span>
+                          <span className={`${selectedUnit === u ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-zinc-400'} text-[11px] font-medium`}>
+                            {CD_NAMES[u] ? CD_NAMES[u].split(' - ').slice(1).join(' - ') : u}
+                          </span>
+                        </div>
                       </button>
                     ))}
                   </motion.div>
@@ -1137,75 +1207,77 @@ export default function App() {
           </div>
 
           {/* Navigation Links */}
-          <div className="flex-1 overflow-y-auto no-scrollbar py-4 px-3 space-y-1.5 mask-linear-vertical">
+          <div className={`flex-1 overflow-y-auto no-scrollbar py-4 px-3 space-y-1.5 mask-linear-vertical ${isSidebarCollapsed ? 'items-center flex flex-col' : ''}`}>
             <button
               onClick={() => setActiveTab('home')}
-              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'home' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
+              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'home' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <LayoutDashboard className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'home' ? 'text-blue-600 dark:text-blue-400 scale-110' : ''}`} />
-              <span className="truncate">Dashboard</span>
+              {!isSidebarCollapsed && <span className="truncate">Dashboard</span>}
             </button>
 
             <button
               onClick={() => setActiveTab('rank')}
-              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'rank' ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
+              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'rank' ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <Trophy className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'rank' ? 'text-amber-600 dark:text-amber-400 scale-110' : ''}`} />
-              <span className="truncate">Top Magalog</span>
+              {!isSidebarCollapsed && <span className="truncate">Top Magalog</span>}
             </button>
 
             <button
               onClick={() => setActiveTab('checklist')}
-              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'checklist' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
+              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'checklist' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <ListChecks className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'checklist' ? 'text-emerald-600 dark:text-emerald-400 scale-110' : ''}`} />
-              <span className="truncate">Preencher Check-List</span>
+              {!isSidebarCollapsed && <span className="truncate">Preencher Check-List</span>}
             </button>
 
             <button
               onClick={() => setActiveTab('autoauditoria')}
-              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'autoauditoria' ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
+              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'autoauditoria' ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <CheckCircle2 className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'autoauditoria' ? 'text-purple-600 dark:text-purple-400 scale-110' : ''}`} />
-              <span className="truncate">Autoauditoria</span>
+              {!isSidebarCollapsed && <span className="truncate">Autoauditoria</span>}
             </button>
 
             {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') && (
-              <div className="pt-2"> {/* Espaçador */}
+              <div className="pt-2 w-full"> {/* Espaçador */}
                 <button
                   onClick={() => setActiveTab('base-checklist')}
-                  className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'base-checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
+                  className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'base-checklist' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
                 >
                   <Database className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'base-checklist' ? 'scale-110' : ''}`} />
-                  <span className="truncate">Base Check-List</span>
+                  {!isSidebarCollapsed && <span className="truncate">Base Check-List</span>}
                 </button>
               </div>
             )}
 
             {currentUser.role === 'ADMIN' && (
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'users' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}
-              >
-                <Users className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'users' ? 'scale-110' : ''}`} />
-                <span className="truncate">Usuários</span>
-              </button>
+              <div className="w-full">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'users' ? 'text-gray-900 dark:text-white bg-gray-200 dark:bg-zinc-800/80 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
+                >
+                  <Users className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'users' ? 'scale-110' : ''}`} />
+                  {!isSidebarCollapsed && <span className="truncate">Usuários</span>}
+                </button>
+              </div>
             )}
           </div>
 
           {/* Footer Actions */}
           <div className="p-3 border-t border-gray-200 dark:border-zinc-800/80 bg-gray-50 dark:bg-zinc-950/80 shrink-0">
             {/* Quick Actions (Theme & Notifications) */}
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2'} mb-3`}>
               <button
                 onClick={toggleTheme}
-                className="flex-[0.5] flex justify-center p-2.5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm"
+                className={`${isSidebarCollapsed ? 'w-full' : 'flex-[0.5]'} flex justify-center p-2.5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm`}
                 title="Alternar Tema"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              <div className="relative flex-[0.5]">
+              <div className={`relative ${isSidebarCollapsed ? 'w-full' : 'flex-[0.5]'}`}>
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className="w-full flex justify-center p-2.5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm relative"
@@ -1288,7 +1360,7 @@ export default function App() {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="w-full flex items-center justify-between p-2 rounded-xl border border-gray-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 bg-transparent hover:shadow-sm"
+                className={`w-full flex items-center p-2 rounded-xl border border-gray-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 bg-transparent hover:shadow-sm ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
                   <div
@@ -1314,19 +1386,23 @@ export default function App() {
                       className="hidden"
                     />
                   </div>
-                  <div className="flex flex-col items-start leading-tight overflow-hidden text-left">
-                    <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate w-full">{currentUser.name}</span>
-                    <span className={`text-[9px] font-black uppercase tracking-wider truncate w-full mt-0.5 ${currentUser.role === 'ADMIN' ? 'text-blue-600 dark:text-blue-400' :
-                      currentUser.role === 'GERENTE_DIVISIONAL' ? 'text-purple-600 dark:text-purple-400' :
-                        currentUser.role === 'GERENTE_DO_CD' ? 'text-amber-600 dark:text-amber-400' :
-                          currentUser.role === 'DONO_DO_PILAR' ? 'text-orange-600 dark:text-orange-400' :
-                            'text-emerald-600 dark:text-emerald-400'
-                      }`}>
-                      {currentUser.role.replace(/_/g, ' ')}
-                    </span>
-                  </div>
+                  {!isSidebarCollapsed && (
+                    <div className="flex flex-col items-start leading-tight overflow-hidden text-left">
+                      <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate w-full">{currentUser.name}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-wider truncate w-full mt-0.5 ${currentUser.role === 'ADMIN' ? 'text-blue-600 dark:text-blue-400' :
+                        currentUser.role === 'GERENTE_DIVISIONAL' ? 'text-purple-600 dark:text-purple-400' :
+                          currentUser.role === 'GERENTE_DO_CD' ? 'text-amber-600 dark:text-amber-400' :
+                            currentUser.role === 'DONO_DO_PILAR' ? 'text-orange-600 dark:text-orange-400' :
+                              'text-emerald-600 dark:text-emerald-400'
+                        }`}>
+                        {currentUser.role.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                {!isSidebarCollapsed && (
+                  <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                )}
               </button>
 
               <AnimatePresence>
@@ -1553,10 +1629,15 @@ export default function App() {
 
                           return (
                             <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
-                              <td className="px-6 py-5 text-left font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10">
-                                <div className="flex items-center space-x-2">
-                                  {getRankIcon(unidade)}
-                                  <span>CD {unidade}</span>
+                              <td className="px-6 py-5 font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10 w-48">
+                                <div className="flex flex-col items-center justify-center space-y-1">
+                                  <div className="flex items-center space-x-2">
+                                    {getRankIcon(unidade)}
+                                    <span className="whitespace-nowrap">CD {unidade}</span>
+                                  </div>
+                                  <div className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400 text-center tracking-wide">
+                                    {CD_REGIONS[unidade]?.divisao || 'Geral'}
+                                  </div>
                                 </div>
                               </td>
                               <td className="px-6 py-5 font-bold border-r border-gray-200 dark:border-zinc-700 bg-blue-50/30 dark:bg-blue-900/5">
@@ -2251,10 +2332,10 @@ export default function App() {
                     <thead className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 font-bold">
                       <tr>
                         <th className="px-6 py-4 text-left">Pilar Estratégico</th>
-                        <th className="px-6 py-4 text-emerald-600 dark:text-emerald-400">Conformidade Plena</th>
-                        <th className="px-6 py-4 text-amber-600 dark:text-amber-400">Conformidade Parcial</th>
-                        <th className="px-6 py-4 text-red-600 dark:text-red-400">Não Conforme</th>
-                        <th className="px-6 py-4">Índice de Aderência</th>
+                        <th className="px-6 py-4 text-emerald-600 dark:text-emerald-400" title="Conformidade Plena">Conforme</th>
+                        <th className="px-6 py-4 text-amber-600 dark:text-amber-400" title="Conformidade Parcial">Parcial</th>
+                        <th className="px-6 py-4 text-red-600 dark:text-red-400" title="Não Conforme">Não Conforme</th>
+                        <th className="px-6 py-4" title="Índice de Aderência">Aderência</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
@@ -2633,26 +2714,12 @@ export default function App() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Unidade/CD</label>
-                    <select required value={userFormData.unidade} onChange={(e) => setUserFormData({ ...userFormData, unidade: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer">
+                    <select required value={userFormData.unidade} onChange={(e) => setUserFormData({ ...userFormData, unidade: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer truncate">
                       <option value="" disabled>Selecione um CD</option>
                       <option value="Master">Master</option>
-                      <option value="50">50</option>
-                      <option value="94">94</option>
-                      <option value="300">300</option>
-                      <option value="350">350</option>
-                      <option value="490">490</option>
-                      <option value="550">550</option>
-                      <option value="590">590</option>
-                      <option value="991">991</option>
-                      <option value="994">994</option>
-                      <option value="1100">1100</option>
-                      <option value="1250">1250</option>
-                      <option value="1500">1500</option>
-                      <option value="1800">1800</option>
-                      <option value="2500">2500</option>
-                      <option value="2650">2650</option>
-                      <option value="2900">2900</option>
-                      <option value="5200">5200</option>
+                      {UNIDADES_DISPONIVEIS.map(u => (
+                        <option key={u} value={u} className="truncate">CD {CD_NAMES[u] || u}</option>
+                      ))}
                     </select>
                   </div>
 
