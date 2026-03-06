@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'AUDITOR' | 'GERENTE_DIVISIONAL' | 'GERENTE_DO_CD' | 'DONO_DO_PILAR' | 'COLABORADOR';
+export type Role = 'ADMIN' | 'AUDITOR' | 'DIRETORIA' | 'GERENTE_DIVISIONAL' | 'GERENTE_DO_CD' | 'DONO_DO_PILAR' | 'COLABORADOR';
 
 export type User = {
   id: string;

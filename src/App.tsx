@@ -1129,11 +1129,11 @@ export default function App() {
           <div className="px-3 py-4 border-b border-gray-100 dark:border-zinc-800/50 shrink-0">
             <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
+                onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
                 className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border transition-all duration-200 ${isUnitDropdownOpen
                   ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 ring-2 ring-blue-500/20'
                   : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-sm'
-                  } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'AUDITOR' && currentUser?.role !== 'GERENTE_DIVISIONAL') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+                  } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'AUDITOR' && currentUser?.role !== 'GERENTE_DIVISIONAL' && currentUser?.role !== 'DIRETORIA') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
               >
                 <div className="flex items-center gap-3 overflow-hidden flex-1">
                   <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${isUnitDropdownOpen ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'}`}>
@@ -1155,7 +1155,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                {(!isSidebarCollapsed && (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL')) && (
+                {(!isSidebarCollapsed && (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA')) && (
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ml-1 ${isUnitDropdownOpen ? 'rotate-180' : ''}`} />
                 )}
               </button>
@@ -1240,7 +1240,7 @@ export default function App() {
               {!isSidebarCollapsed && <span className="truncate">Autoauditoria</span>}
             </button>
 
-            {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') && (
+            {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'DIRETORIA' || currentUser.role === 'GERENTE_DO_CD') && (
               <div className="pt-2 w-full"> {/* Espaçador */}
                 <button
                   onClick={() => setActiveTab('base-checklist')}
@@ -1390,7 +1390,7 @@ export default function App() {
                     <div className="flex flex-col items-start leading-tight overflow-hidden text-left">
                       <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate w-full">{currentUser.name}</span>
                       <span className={`text-[9px] font-black uppercase tracking-wider truncate w-full mt-0.5 ${currentUser.role === 'ADMIN' ? 'text-blue-600 dark:text-blue-400' :
-                        currentUser.role === 'GERENTE_DIVISIONAL' ? 'text-purple-600 dark:text-purple-400' :
+                        currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'DIRETORIA' ? 'text-purple-600 dark:text-purple-400' :
                           currentUser.role === 'GERENTE_DO_CD' ? 'text-amber-600 dark:text-amber-400' :
                             currentUser.role === 'DONO_DO_PILAR' ? 'text-orange-600 dark:text-orange-400' :
                               'text-emerald-600 dark:text-emerald-400'
@@ -1696,7 +1696,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ) : activeTab === 'base-checklist' && (currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'GERENTE_DO_CD') ? (
+          ) : activeTab === 'base-checklist' && (currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'DIRETORIA' || currentUser.role === 'GERENTE_DO_CD') ? (
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -2198,7 +2198,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ) : activeTab === 'users' && (currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL') ? (
+          ) : activeTab === 'users' && (currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'DIRETORIA') ? (
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -2248,7 +2248,7 @@ export default function App() {
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
                               user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                                user.role === 'GERENTE_DIVISIONAL' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                                user.role === 'GERENTE_DIVISIONAL' || user.role === 'DIRETORIA' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
                                   user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
                                     user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
                                       'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
@@ -2740,6 +2740,7 @@ export default function App() {
                       <option value="DONO_DO_PILAR">Dono do Pilar (Edita e atribui no Check-List)</option>
                       <option value="GERENTE_DO_CD">Gerente do CD (Pode editar Check-List)</option>
                       <option value="GERENTE_DIVISIONAL">Gerente Divisional (Visualiza todas as unidades, não edita)</option>
+                      <option value="DIRETORIA">Diretoria (Visualiza todas as unidades, não edita)</option>
                       <option value="ADMIN">Administrador (Acesso Total)</option>
                       <option value="AUDITOR">Auditor (Validação de Check-list)</option>
                     </select>
