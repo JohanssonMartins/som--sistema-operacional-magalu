@@ -174,6 +174,24 @@ app.post('/api/checklists/bulk-put', async (req, res) => {
 });
 
 // Autoauditoria Mensal
+app.get('/api/autoauditoria/all/:mesAno', async (req, res) => {
+    try {
+        const { mesAno } = req.params;
+        console.log('GET ALL AUTOAUDITORIA FOR:', mesAno);
+        const autoauditorias = await prisma.autoauditoria.findMany({
+            where: { mesAno },
+            include: {
+                items: true
+            }
+        });
+        console.log(`FOUND ${autoauditorias.length} RECORDS`);
+        res.json(autoauditorias);
+    } catch (error) {
+        console.error('GET ALL AUTOAUDITORIA ERROR:', error);
+        res.status(500).json({ error: 'Erro ao buscar todas as autoauditorias' });
+    }
+});
+
 app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
     try {
         const { unidade, mesAno } = req.params;

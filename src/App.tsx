@@ -9,22 +9,19 @@ import {
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
 
-const UNIDADES_DISPONIVEIS = ['50', '94', '95', '300', '350', '490', '550', '590', '991', '994', '1100', '1250', '1440', '1500', '1800', '2500', '2650', '2900', '5200'];
+const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
 export const CD_NAMES: Record<string, string> = {
   '50': '50 - Ribeirão Preto - SP',
   '94': '94 - Londrina - PR',
-  '95': '95 - Campo Grande - MS',
   '300': '300 - Louveira - SP',
   '350': '350 - Contagem - MG',
-  '490': '490 - Viana - ES',
   '550': '550 - Itajaí - SC',
   '590': '590 - Guarulhos - SP',
   '991': '991 - Alhandra - PB',
   '994': '994 - Maracanau - CE',
   '1100': '1100 - Hidrolandia - GO',
   '1250': '1250 - Teresina - PI',
-  '1440': '1440 - Nova Sta Rita - RS',
   '1500': '1500 - Candeias - BA',
   '1800': '1800 - Cuiabá - MT',
   '2500': '2500 - Duque de Caxias - RJ',
@@ -36,17 +33,14 @@ export const CD_NAMES: Record<string, string> = {
 export const CD_REGIONS: Record<string, { divisional: string, divisao: string }> = {
   '50': { divisional: 'Nesello', divisao: 'SP' },
   '94': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
-  '95': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '300': { divisional: 'Nesello', divisao: 'SP' },
   '350': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
-  '490': { divisional: 'Christian', divisao: 'Sul / Sudeste' }, // ES -> Sudeste
   '550': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
   '590': { divisional: 'Nesello', divisao: 'SP' },
   '991': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '994': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '1100': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '1250': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
-  '1440': { divisional: 'Christian', divisao: 'Sul / Sudeste' }, // RS -> Sul
   '1500': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '1800': { divisional: 'Paiva', divisao: 'NE/NO/CO' },
   '2500': { divisional: 'Christian', divisao: 'Sul / Sudeste' },
@@ -232,14 +226,14 @@ const AutoauditoriaRow = React.memo(({
         </select>
       </td>
       <td className="px-6 py-4">
-        <input
-          type="text"
-          placeholder={canEdit ? "Descreva a ação tomada..." : ""}
+        <DebouncedTextarea
           value={localNossaAcao}
-          disabled={!canEdit}
-          onChange={(e) => handleNossaAcaoChange(e.target.value)}
+          onChange={(val) => handleNossaAcaoChange(val)}
           onBlur={handleNossaAcaoBlur}
+          disabled={!canEdit}
+          placeholder={canEdit ? "Descreva a ação tomada..." : ""}
           className={`w-full min-w-[200px] bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-white transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed bg-gray-100 dark:bg-zinc-900' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'}`}
+          rows={1}
         />
       </td>
       <td className="px-6 py-4">
@@ -264,6 +258,7 @@ const AutoauditoriaRow = React.memo(({
 const DebouncedTextarea = ({
   value,
   onChange,
+  onBlur,
   placeholder,
   className,
   rows = 2,
@@ -271,6 +266,7 @@ const DebouncedTextarea = ({
 }: {
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   className?: string;
   rows?: number;
@@ -278,10 +274,23 @@ const DebouncedTextarea = ({
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
+
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustHeight();
+  }, [localValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -298,12 +307,15 @@ const DebouncedTextarea = ({
 
   return (
     <textarea
+      ref={textareaRef}
       value={localValue}
       onChange={handleChange}
+      onBlur={onBlur}
       placeholder={placeholder}
-      className={className}
+      className={`${className} overflow-hidden resize-none transition-[height] duration-200`}
       rows={rows}
       disabled={disabled}
+      style={{ minHeight: `${rows * 1.5}rem` }}
     />
   );
 };
@@ -376,6 +388,8 @@ export default function App() {
     return `${mes.charAt(0).toUpperCase() + mes.slice(1)}-${ano}`;
   });
   const [autoauditoriaData, setAutoauditoriaData] = useState<Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>>({});
+  const [allAutoauditorias, setAllAutoauditorias] = useState<any[]>([]);
+  const [selectedAutoauditoriaPilar, setSelectedAutoauditoriaPilar] = useState('Todos');
   const [isSavingAutoauditoria, setIsSavingAutoauditoria] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
 
@@ -486,6 +500,16 @@ export default function App() {
     return () => clearTimeout(timeoutId);
   }, [autoauditoriaData, currentAutoauditoriaUnit, autoauditoriaMesAno, currentUser]);
 
+  const loadAllAutoauditorias = async (mesAno: string) => {
+    try {
+      const data = await api.getAllAutoauditorias(mesAno);
+      setAllAutoauditorias(data || []);
+    } catch (e) {
+      console.error("Erro ao carregar todas as autoauditorias:", e);
+      setAllAutoauditorias([]);
+    }
+  };
+
   const loadData = async () => {
     try {
       const [u, b, i] = await Promise.all([
@@ -503,6 +527,7 @@ export default function App() {
 
   useEffect(() => {
     loadData();
+    loadAllAutoauditorias(autoauditoriaMesAno);
   }, []);
 
   useEffect(() => {
@@ -510,11 +535,7 @@ export default function App() {
 
     if (activeTab === 'autoauditoria' && currentUser) {
       if (currentAutoauditoriaUnit && currentAutoauditoriaUnit !== 'Todas' && currentAutoauditoriaUnit !== 'Master') {
-        // Carrega imediatamente ao entrar na aba
         loadAutoauditoria(currentAutoauditoriaUnit, autoauditoriaMesAno);
-
-        // Configura o pooling (polling) para buscar atualizações a cada 5 segundos
-        // Isso permite que se outro usuário salvar, a tela atualize (quase) em tempo real
         intervalId = setInterval(() => {
           loadAutoauditoria(currentAutoauditoriaUnit, autoauditoriaMesAno, true);
         }, 5000);
@@ -523,13 +544,14 @@ export default function App() {
       }
     }
 
-    // Limpa o intervalo quando a aba mudar, o componente desmontar, ou os filtros mudarem
+    if (activeTab === 'home' || activeTab === 'autoauditoria') {
+      loadAllAutoauditorias(autoauditoriaMesAno);
+    }
+
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [activeTab, currentUser, autoauditoriaMesAno, currentAutoauditoriaUnit]);
+  }, [activeTab, autoauditoriaMesAno, currentAutoauditoriaUnit]);
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -928,21 +950,45 @@ export default function App() {
     const aderMedia = tItems === 0 ? 0 : (tAder / tItems) * 100;
     const sGeral = aderMedia >= 80 ? 'Aderente' : 'Não Aderente';
 
-    const currentPilares = Array.from(new Set(aItems.map(i => i.pilar))).sort((a, b) => getPilarWeight(a) - getPilarWeight(b));
+    const currentPilares = PILAR_ORDER;
 
     const rPorPilar = currentPilares.map(pilar => {
-      const pilarItems = aItems.filter(i => i.pilar === pilar);
-      const pTotal = pilarItems.length;
-      const pRespondidos = pilarItems.filter(i => i.completed).length;
-      const pAderentes = pilarItems.filter(i => i.completed && i.aderente).length;
-      const pNaoAderentes = pRespondidos - pAderentes;
-      const pAuditoriasRealizadas = pilarItems.filter(i => i.auditoriaRealizada).length;
-      const pAuditoriasConformes = pilarItems.filter(i => i.auditoriaRealizada && i.auditoriaAderente).length;
+      const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
+      const pilarUnitItems = aItems.filter(i => i.pilar === pilar);
 
+      const pTotal = pilarUnitItems.length;
+      const pRespondidos = pilarUnitItems.filter(i => i.completed).length;
+      const pAderentes = pilarUnitItems.filter(i => i.completed && i.aderente).length;
+      const pNaoAderentes = pRespondidos - pAderentes;
+
+      // Calculo de Auditoria Oficial baseado em allAutoauditorias
+      let totalPoints = 0;
+      let possiblePoints = 0;
+
+      if (selectedUnit === 'Todas') {
+        // Média de todos os CDs que tem autoauditoria realizada
+        allAutoauditorias.forEach(audit => {
+          pilarBaseItems.forEach(bi => {
+            const ai = audit.items?.find((item: any) => item.baseItemId === bi.id);
+            if (ai) {
+              possiblePoints += 3;
+              if (ai.score === '3') totalPoints += 3;
+              else if (ai.score === '1') totalPoints += 1;
+            }
+          });
+        });
+      } else {
+        const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit);
+        possiblePoints = pilarBaseItems.length * 3;
+        pilarBaseItems.forEach(bi => {
+          const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
+          if (ai?.score === '3') totalPoints += 3;
+          else if (ai?.score === '1') totalPoints += 1;
+        });
+      }
+
+      const pAuditoriaOficial = possiblePoints === 0 ? 0 : (totalPoints / possiblePoints) * 100;
       const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
-      // Adereência oficial deve calcular os conformes sobre os totais (ou sobre os realizados?)
-      // Aderência normal é sobre o total de itens para espelhar a nota final do CD
-      const pAuditoriaOficial = pTotal === 0 ? 0 : (pAuditoriasConformes / pTotal) * 100;
       const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
       const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
 
@@ -970,14 +1016,62 @@ export default function App() {
       resumoPorPilar: rPorPilar,
       pilares: currentPilares
     };
-  }, [items, selectedUnit]);
+  }, [items, selectedUnit, allAutoauditorias, baseItems]);
 
-  // Se não houver usuário logado, mostramos a tela de login (acima)
-  // Mas por segurança, garantimos que as variáveis existam para o restante do render
   const {
     visibleItems, activeItems, totalItems, totalRespondidos, totalAderentes,
     progressoTotal, aderenciaMedia, statusGeral, resumoPorPilar, pilares
   } = dashboardStats;
+
+  // --- MATRIZ DE ADERÊNCIA CONSOLIDADA (P/ Home Visão Empresa) ---
+  const matrixStats = React.useMemo(() => {
+    const allPilars = PILAR_ORDER;
+    const matrix: Record<string, Record<string, string>> = {};
+
+    // Group units by division
+    const divisions: Record<string, string[]> = {};
+    UNIDADES_DISPONIVEIS.forEach(unit => {
+      const division = CD_REGIONS[unit]?.divisao || 'Outros';
+      if (!divisions[division]) divisions[division] = [];
+      divisions[division].push(unit);
+
+      // Pre-calculate matrix data for this unit using allAutoauditorias
+      matrix[unit] = {};
+      const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unit));
+
+      allPilars.forEach(pilar => {
+        const pilarBaseItems = baseItems.filter(i => i.pilar === pilar);
+        if (pilarBaseItems.length === 0) {
+          matrix[unit][pilar] = '0';
+          return;
+        }
+
+        let totalPoints = 0;
+        pilarBaseItems.forEach(bi => {
+          const auditItem = unitAudit?.items?.find((ai: any) => ai.baseItemId === bi.id);
+          const score = String(auditItem?.score || '');
+          if (score === '3') totalPoints += 3;
+          else if (score === '1') totalPoints += 1;
+        });
+
+        const maxPoints = pilarBaseItems.length * 3;
+        const percentage = maxPoints === 0 ? '0' : Math.round((totalPoints / maxPoints) * 100).toString();
+        matrix[unit][pilar] = percentage;
+      });
+    });
+
+    // Order divisions: SP first, then others
+    const orderedDivisions = Object.keys(divisions).sort((a, b) => {
+      if (a === 'SP') return -1;
+      if (b === 'SP') return 1;
+      return a.localeCompare(b);
+    });
+
+    const flatOrderedUnits = orderedDivisions.flatMap(div => divisions[div]);
+    const divFirstUnits = new Set(orderedDivisions.map(div => divisions[div][0]));
+
+    return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix };
+  }, [baseItems, allAutoauditorias, autoauditoriaMesAno]);
 
   // --- TELA DE LOGIN ---
   if (!currentUser) {
@@ -1179,7 +1273,7 @@ export default function App() {
                         : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${selectedUnit === 'Todas' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
+                      <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${selectedUnit === 'Todas' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-zinc-700'}`} />
                       Todos os CDs
                     </button>
                     {UNIDADES_DISPONIVEIS.map(u => (
@@ -1536,6 +1630,76 @@ export default function App() {
                   );
                 })}
               </div>
+
+              {/* Matriz de Aderência Consolidada - Visão Empresa */}
+              {selectedUnit === 'Todas' && (
+                <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-lg mt-8">
+                  <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-200 flex items-center gap-2">
+                      <BarChart className="w-5 h-5 text-amber-500" /> Matriz de Aderência Consolidada
+                    </h3>
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Aderência Oficial (% por CD)</span>
+                  </div>
+                  <div className="overflow-x-auto no-scrollbar">
+                    <table className="w-full text-center text-[11px] sm:text-sm border-collapse">
+                      <thead className="bg-[#1e293b] text-white">
+                        <tr className="bg-[#0f172a] text-[10px] uppercase tracking-tighter sm:tracking-normal">
+                          <th className="px-2 py-2 border-b border-gray-700 sticky left-0 z-20 w-[120px] sm:w-[180px] bg-[#0f172a]"></th>
+                          {matrixStats.orderedDivisions.map((div, idx) => (
+                            <th
+                              key={div}
+                              colSpan={matrixStats.divisions[div].length}
+                              className={`px-1 py-2 border-b border-gray-700 border-r border-gray-800 ${idx > 0 ? 'border-l-2 border-amber-500/30 bg-[#161e2e]' : ''}`}
+                            >
+                              <span className="opacity-80">{div}</span>
+                            </th>
+                          ))}
+                        </tr>
+                        <tr>
+                          <th className="px-2 py-3 border border-gray-700 font-bold bg-[#1e293b] sticky left-0 z-20 w-[120px] sm:w-[180px] shadow-[2px_0_5px_rgba(0,0,0,0.2)]">Pilar</th>
+                          {matrixStats.flatOrderedUnits.map(unit => {
+                            const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
+                            return (
+                              <th
+                                key={unit}
+                                className={`px-1 py-1 sm:py-3 border border-gray-700 font-bold min-w-[38px] sm:min-w-[42px] ${isFirstInDiv ? 'border-l-4 border-gray-600/50' : ''}`}
+                              >
+                                {unit}
+                              </th>
+                            );
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                        {matrixStats.allPilars.map(pilar => (
+                          <tr key={pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <td className="px-2 py-3 border border-gray-200 dark:border-zinc-800 font-bold text-left bg-gray-50 dark:bg-zinc-950/50 sticky left-0 z-10 text-gray-900 dark:text-white whitespace-nowrap shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                              {pilar}
+                            </td>
+                            {matrixStats.flatOrderedUnits.map(unit => {
+                              const value = parseInt(matrixStats.matrix[unit][pilar] || '0');
+                              const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
+                              let bgColor = 'text-gray-900 dark:text-white';
+                              if (value >= 70) bgColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
+                              else if (value >= 50) bgColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
+                              else if (value > 0) bgColor = 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
+
+                              return (
+                                <td
+                                  key={`${unit}-${pilar}`}
+                                  className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                                >
+                                  {value}%
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           ) : activeTab === 'rank' ? (
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
@@ -1972,7 +2136,7 @@ export default function App() {
 
                                 {/* Row 3: Action Headers */}
                                 <tr className="bg-gray-100 dark:bg-zinc-800/80 text-center text-xs font-bold italic text-gray-700 dark:text-zinc-300">
-                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-emerald-600 dark:text-emerald-400">Nossa ação</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-emerald-600 dark:text-emerald-400">Plano de ação / Obs</td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Prioridade</td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Prazo</td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Atribuído a</td>
@@ -2289,9 +2453,31 @@ export default function App() {
                 </div>
                 <div className="flex space-x-4 items-center">
                   <select
+                    value={selectedUnit}
+                    onChange={(e) => setSelectedUnit(e.target.value)}
+                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
+                  >
+                    <option value="Todas">Selecionar CD</option>
+                    {UNIDADES_DISPONIVEIS.map(u => (
+                      <option key={u} value={u}>{CD_NAMES[u] || u}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={selectedAutoauditoriaPilar}
+                    onChange={(e) => setSelectedAutoauditoriaPilar(e.target.value)}
+                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
+                  >
+                    <option value="Todos">Filtrar Pilar</option>
+                    {pilares.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+
+                  <select
                     value={autoauditoriaMesAno}
                     onChange={(e) => setAutoauditoriaMesAno(e.target.value)}
-                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
                   >
                     {[0, 1, 2, 3, 4, 5].map((offset) => {
                       const d = new Date();
@@ -2339,92 +2525,94 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                      {pilares.map(pilar => {
-                        const pilarItems = baseItems.filter(item => item.pilar === pilar);
-                        if (pilarItems.length === 0) return null;
+                      {pilares
+                        .filter(pilar => selectedAutoauditoriaPilar === 'Todos' || pilar === selectedAutoauditoriaPilar)
+                        .map(pilar => {
+                          const pilarItems = baseItems.filter(item => item.pilar === pilar);
+                          if (pilarItems.length === 0) return null;
 
-                        let atende = 0;
-                        let parcial = 0;
-                        let naoAtende = 0;
-                        let totalPoints = 0;
-                        let answeredCount = 0;
+                          let atende = 0;
+                          let parcial = 0;
+                          let naoAtende = 0;
+                          let totalPoints = 0;
+                          let answeredCount = 0;
 
-                        pilarItems.forEach(item => {
-                          const score = autoauditoriaData[item.id]?.score;
-                          if (score === '3' || score === '1' || score === '0') {
-                            answeredCount++;
+                          pilarItems.forEach(item => {
+                            const score = autoauditoriaData[item.id]?.score;
+                            if (score === '3' || score === '1' || score === '0') {
+                              answeredCount++;
+                            }
+
+                            if (score === '3') {
+                              atende++;
+                              totalPoints += 3;
+                            } else if (score === '1') {
+                              parcial++;
+                              totalPoints += 1;
+                            } else if (score === '0') {
+                              naoAtende++;
+                            }
+                          });
+
+                          const maxPoints = pilarItems.length * 3;
+                          const aderencia = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
+                          const progresso = pilarItems.length > 0 ? (answeredCount / pilarItems.length) * 100 : 0;
+
+                          let aderenciaColor = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'; // < 50%
+                          if (aderencia >= 70) {
+                            aderenciaColor = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+                          } else if (aderencia >= 50) {
+                            aderenciaColor = 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800';
                           }
 
-                          if (score === '3') {
-                            atende++;
-                            totalPoints += 3;
-                          } else if (score === '1') {
-                            parcial++;
-                            totalPoints += 1;
-                          } else if (score === '0') {
-                            naoAtende++;
-                          }
-                        });
+                          let pilarDashboardName = pilar;
+                          if (pilar === 'Cliente') pilarDashboardName = 'Clientes';
+                          else if (pilar === 'Sustentabilidade') pilarDashboardName = 'Segurança';
 
-                        const maxPoints = pilarItems.length * 3;
-                        const aderencia = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
-                        const progresso = pilarItems.length > 0 ? (answeredCount / pilarItems.length) * 100 : 0;
+                          const dashCard = dashboardData.find(c => c.title === pilarDashboardName);
+                          const Icon = dashCard?.icon || Circle;
+                          const iconColor = dashCard?.color || 'bg-gray-500';
+                          const barColor = dashCard?.autoColor || 'bg-blue-500';
 
-                        let aderenciaColor = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'; // < 50%
-                        if (aderencia >= 70) {
-                          aderenciaColor = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
-                        } else if (aderencia >= 50) {
-                          aderenciaColor = 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800';
-                        }
-
-                        let pilarDashboardName = pilar;
-                        if (pilar === 'Cliente') pilarDashboardName = 'Clientes';
-                        else if (pilar === 'Sustentabilidade') pilarDashboardName = 'Segurança';
-
-                        const dashCard = dashboardData.find(c => c.title === pilarDashboardName);
-                        const Icon = dashCard?.icon || Circle;
-                        const iconColor = dashCard?.color || 'bg-gray-500';
-                        const barColor = dashCard?.autoColor || 'bg-blue-500';
-
-                        return (
-                          <tr key={pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                            <td className="px-6 py-4 text-left">
-                              <div className="flex items-center space-x-3">
-                                <div className={`flex-shrink-0 p-1.5 rounded-md text-white ${iconColor}`}>
-                                  <Icon className="w-4 h-4" />
-                                </div>
-                                <div className="flex flex-col w-full min-w-[150px]">
-                                  <span className="font-medium text-gray-900 dark:text-zinc-200 mb-1">{pilar}</span>
-                                  <div className="w-full">
-                                    <div className="flex justify-between text-[10px] text-gray-500 dark:text-zinc-400 font-medium mb-1 pr-4">
-                                      <span>{Math.round(progresso)}% concl.</span>
-                                      <span>{answeredCount}/{pilarItems.length}</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden" title={`${answeredCount} de ${pilarItems.length} respondidas`}>
-                                      <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(progresso, 100)}%` }}
-                                        transition={{ duration: 1, ease: "easeOut" }}
-                                        className={`h-full bg-blue-500 rounded-full`}
-                                      />
+                          return (
+                            <tr key={pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                              <td className="px-6 py-4 text-left">
+                                <div className="flex items-center space-x-3">
+                                  <div className={`flex-shrink-0 p-1.5 rounded-md text-white ${iconColor}`}>
+                                    <Icon className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex flex-col w-full min-w-[150px]">
+                                    <span className="font-medium text-gray-900 dark:text-zinc-200 mb-1">{pilar}</span>
+                                    <div className="w-full">
+                                      <div className="flex justify-between text-[10px] text-gray-500 dark:text-zinc-400 font-medium mb-1 pr-4">
+                                        <span>{Math.round(progresso)}% concl.</span>
+                                        <span>{answeredCount}/{pilarItems.length}</span>
+                                      </div>
+                                      <div className="h-1.5 w-full bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden" title={`${answeredCount} de ${pilarItems.length} respondidas`}>
+                                        <motion.div
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${Math.min(progresso, 100)}%` }}
+                                          transition={{ duration: 1, ease: "easeOut" }}
+                                          className={`h-full bg-blue-500 rounded-full`}
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">{atende}</td>
-                            <td className="px-6 py-4 font-bold text-amber-600 dark:text-amber-400">{parcial}</td>
-                            <td className="px-6 py-4 font-bold text-red-600 dark:text-red-400">{naoAtende}</td>
-                            <td className="px-6 py-4">
-                              <div className="flex justify-center">
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${aderenciaColor}`}>
-                                  {aderencia.toFixed(1).replace('.', ',')}%
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              </td>
+                              <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">{atende}</td>
+                              <td className="px-6 py-4 font-bold text-amber-600 dark:text-amber-400">{parcial}</td>
+                              <td className="px-6 py-4 font-bold text-red-600 dark:text-red-400">{naoAtende}</td>
+                              <td className="px-6 py-4">
+                                <div className="flex justify-center">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${aderenciaColor}`}>
+                                    {aderencia.toFixed(1).replace('.', ',')}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -2440,54 +2628,56 @@ export default function App() {
                         <th className="px-6 py-4">Trilha</th>
                         <th className="px-6 py-4 min-w-[300px]">Pergunta/Verificação</th>
                         <th className="px-6 py-4">Score</th>
-                        <th className="px-6 py-4 min-w-[200px]">Nossa ação</th>
+                        <th className="px-6 py-4 min-w-[200px]">Plano de ação / Obs</th>
                         <th className="px-6 py-4">Evidência</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                      {baseItems.map((baseItem) => {
-                        const scoreValue = autoauditoriaData[baseItem.id]?.score || '';
-                        const nossaAcaoValue = autoauditoriaData[baseItem.id]?.nossaAcao || '';
-                        const canEdit = currentUser &&
-                          ['ADMIN', 'GERENTE_DO_CD', 'DONO_DO_PILAR'].includes(currentUser?.role || '') &&
-                          (currentUser?.role === 'ADMIN' || currentUser?.unidade === currentAutoauditoriaUnit);
+                      {baseItems
+                        .filter(item => selectedAutoauditoriaPilar === 'Todos' || item.pilar === selectedAutoauditoriaPilar)
+                        .map((baseItem) => {
+                          const scoreValue = autoauditoriaData[baseItem.id]?.score || '';
+                          const nossaAcaoValue = autoauditoriaData[baseItem.id]?.nossaAcao || '';
+                          const canEdit = currentUser &&
+                            ['ADMIN', 'GERENTE_DO_CD', 'DONO_DO_PILAR'].includes(currentUser?.role || '') &&
+                            (currentUser?.role === 'ADMIN' || currentUser?.unidade === currentAutoauditoriaUnit);
 
-                        return (
-                          <AutoauditoriaRow
-                            key={baseItem.id}
-                            item={baseItem}
-                            canEdit={!!canEdit}
-                            scoreValue={scoreValue}
-                            nossaAcaoValue={nossaAcaoValue}
-                            onScoreChange={(itemId, newScore) => {
-                              pendingAutoauditoriaEdits.current.add(itemId);
-                              needsAutoauditoriaSave.current = true;
-                              setAutoauditoriaData(prev => ({
-                                ...prev,
-                                [itemId]: {
-                                  ...(prev[itemId] || { nossaAcao: '', evidencias: [] }),
-                                  score: newScore
-                                }
-                              }));
-                            }}
-                            onNossaAcaoChange={(itemId, newAcao) => {
-                              // Tranca o sync de polling enquanto o usuário digita
-                              pendingAutoauditoriaEdits.current.add(itemId);
-                            }}
-                            onNossaAcaoBlur={(itemId, finalAcao) => {
-                              pendingAutoauditoriaEdits.current.add(itemId);
-                              needsAutoauditoriaSave.current = true;
-                              setAutoauditoriaData(prev => ({
-                                ...prev,
-                                [itemId]: {
-                                  ...(prev[itemId] || { score: '', evidencias: [] }),
-                                  nossaAcao: finalAcao
-                                }
-                              }));
-                            }}
-                          />
-                        );
-                      })}
+                          return (
+                            <AutoauditoriaRow
+                              key={baseItem.id}
+                              item={baseItem}
+                              canEdit={!!canEdit}
+                              scoreValue={scoreValue}
+                              nossaAcaoValue={nossaAcaoValue}
+                              onScoreChange={(itemId, newScore) => {
+                                pendingAutoauditoriaEdits.current.add(itemId);
+                                needsAutoauditoriaSave.current = true;
+                                setAutoauditoriaData(prev => ({
+                                  ...prev,
+                                  [itemId]: {
+                                    ...(prev[itemId] || { nossaAcao: '', evidencias: [] }),
+                                    score: newScore
+                                  }
+                                }));
+                              }}
+                              onNossaAcaoChange={(itemId, newAcao) => {
+                                // Tranca o sync de polling enquanto o usuário digita
+                                pendingAutoauditoriaEdits.current.add(itemId);
+                              }}
+                              onNossaAcaoBlur={(itemId, finalAcao) => {
+                                pendingAutoauditoriaEdits.current.add(itemId);
+                                needsAutoauditoriaSave.current = true;
+                                setAutoauditoriaData(prev => ({
+                                  ...prev,
+                                  [itemId]: {
+                                    ...(prev[itemId] || { score: '', evidencias: [] }),
+                                    nossaAcao: finalAcao
+                                  }
+                                }));
+                              }}
+                            />
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -2599,7 +2789,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-zinc-300 flex items-center gap-2">
-                      <span>Nossa ação (Padrão)</span>
+                      <span>Plano de ação / Obs (Padrão)</span>
                       <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal italic">- Opcional</span>
                     </label>
                     <textarea value={formData.nossaAcao || ''} onChange={(e) => setFormData({ ...formData, nossaAcao: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all min-h-[60px]" placeholder="Ação padrão a ser tomada que será distribuída para todos..." />

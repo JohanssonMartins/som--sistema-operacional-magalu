@@ -70,8 +70,13 @@ export const api = {
 
     // Autoauditoria Mensal
     getAutoauditoria: async (unidade: string, mesAno: string) => {
-        const res = await fetch(`${API_BASE_URL}/autoauditoria/${unidade}/${mesAno}`);
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/${encodeURIComponent(unidade)}/${encodeURIComponent(mesAno)}`);
         if (!res.ok) throw new Error('Failed to fetch autoauditoria');
+        return res.json();
+    },
+    getAllAutoauditorias: async (mesAno: string) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/all/${encodeURIComponent(mesAno)}`);
+        if (!res.ok) throw new Error('Failed to fetch all autoauditorias');
         return res.json();
     },
     saveAutoauditoria: async (data: any) => {
