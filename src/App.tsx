@@ -1199,6 +1199,10 @@ export default function App() {
                   <span className="text-blue-600 dark:text-blue-400 font-medium">Admin</span>
                   <span className="text-gray-500 dark:text-zinc-400">admin@magalu.com / 123</span>
                 </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" onClick={() => { setLoginEmail('diretoria@magalu.com'); setLoginPassword('123'); }}>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">Diretoria</span>
+                  <span className="text-gray-500 dark:text-zinc-400">diretoria@magalu.com / 123</span>
+                </div>
                 <div className="flex justify-between items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" onClick={() => { setLoginEmail('divisional@magalu.com'); setLoginPassword('123'); }}>
                   <span className="text-purple-600 dark:text-purple-400 font-medium">G. Divisional</span>
                   <span className="text-gray-500 dark:text-zinc-400">divisional@...</span>
