@@ -372,10 +372,12 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- ESTADOS DO SISTEMA ---
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('som_theme') as 'dark' | 'light') || 'light');
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('som_activeTab') || 'home');
   const [selectedUnit, setSelectedUnit] = useState<string>(() => localStorage.getItem('som_selectedUnit') || 'Todas');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('som_sidebarCollapsed') === 'true');
+
+  const isPrivileged = currentUser && ['ADMIN', 'AUDITOR', 'GERENTE_DIVISIONAL', 'DIRETORIA'].includes(currentUser.role);
 
   const [usersList, setUsersList] = useState<User[]>([]);
   const [baseItems, setBaseItems] = useState<ChecklistItem[]>([]);
@@ -593,6 +595,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('som_sidebarCollapsed', String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('som_theme', theme);
+  }, [theme]);
+
+  // Força a unidade do usuário se ele não for privilegiado
+  useEffect(() => {
+    if (currentUser && !isPrivileged && currentUser.unidade && currentUser.unidade !== 'Master') {
+      if (selectedUnit !== currentUser.unidade) {
+        setSelectedUnit(currentUser.unidade);
+      }
+    }
+  }, [currentUser, isPrivileged, selectedUnit]);
 
   // --- SINCRONIZAÇÃO AUTOMÁTICA DE NOVAS UNIDADES/ITENS ---
   useEffect(() => {
@@ -1253,11 +1268,11 @@ export default function App() {
           <div className="px-3 py-4 border-b border-gray-100 dark:border-zinc-800/50 shrink-0">
             <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA') && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
+                onClick={() => isPrivileged && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
                 className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border transition-all duration-200 ${isUnitDropdownOpen
                   ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 ring-2 ring-blue-500/20'
                   : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-sm'
-                  } ${(currentUser?.role !== 'ADMIN' && currentUser?.role !== 'AUDITOR' && currentUser?.role !== 'GERENTE_DIVISIONAL' && currentUser?.role !== 'DIRETORIA') ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+                  } ${!isPrivileged ? 'cursor-default opacity-80 border-dashed bg-gray-50/50 dark:bg-zinc-800/20 grayscale-[0.2]' : 'cursor-pointer'}`}
               >
                 <div className="flex items-center gap-3 overflow-hidden flex-1">
                   <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${isUnitDropdownOpen ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'}`}>
@@ -1279,7 +1294,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                {(!isSidebarCollapsed && (currentUser?.role === 'ADMIN' || currentUser?.role === 'AUDITOR' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA')) && (
+                {(!isSidebarCollapsed && isPrivileged) && (
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ml-1 ${isUnitDropdownOpen ? 'rotate-180' : ''}`} />
                 )}
               </button>
@@ -2510,12 +2525,19 @@ export default function App() {
                   <select
                     value={selectedUnit}
                     onChange={(e) => setSelectedUnit(e.target.value)}
-                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
+                    disabled={!isPrivileged}
+                    className={`bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium ${!isPrivileged ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`}
                   >
-                    <option value="Todas">Selecionar CD</option>
-                    {UNIDADES_DISPONIVEIS.map(u => (
-                      <option key={u} value={u}>{CD_NAMES[u] || u}</option>
-                    ))}
+                    {!isPrivileged ? (
+                      <option value={selectedUnit}>{CD_NAMES[selectedUnit] || selectedUnit}</option>
+                    ) : (
+                      <>
+                        <option value="Todas">Selecionar CD</option>
+                        {UNIDADES_DISPONIVEIS.map(u => (
+                          <option key={u} value={u}>{CD_NAMES[u] || u}</option>
+                        ))}
+                      </>
+                    )}
                   </select>
 
                   <select
