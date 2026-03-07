@@ -1318,13 +1318,6 @@ export default function App() {
               {!isSidebarCollapsed && <span className="truncate">Top Magalog</span>}
             </button>
 
-            <button
-              onClick={() => setActiveTab('checklist')}
-              className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'checklist' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
-            >
-              <ListChecks className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'checklist' ? 'text-emerald-600 dark:text-emerald-400 scale-110' : ''}`} />
-              {!isSidebarCollapsed && <span className="truncate">Preencher Check-List</span>}
-            </button>
 
             <button
               onClick={() => setActiveTab('autoauditoria')}
