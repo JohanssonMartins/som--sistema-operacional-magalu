@@ -358,7 +358,14 @@ const EVIDENCE_CATEGORIES = [
 
 export default function App() {
   // --- ESTADOS DE AUTENTICAÇÃO ---
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('som_user');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loginEmail, setLoginEmail] = useState('admin@magalu.com');
   const [loginPassword, setLoginPassword] = useState('123');
   const [loginError, setLoginError] = useState('');
@@ -366,9 +373,9 @@ export default function App() {
 
   // --- ESTADOS DO SISTEMA ---
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedUnit, setSelectedUnit] = useState<string>('Todas');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('som_activeTab') || 'home');
+  const [selectedUnit, setSelectedUnit] = useState<string>(() => localStorage.getItem('som_selectedUnit') || 'Todas');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('som_sidebarCollapsed') === 'true');
 
   const [usersList, setUsersList] = useState<User[]>([]);
   const [baseItems, setBaseItems] = useState<ChecklistItem[]>([]);
@@ -574,6 +581,19 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Efeitos para persistir mudanças de estado em tempo real
+  useEffect(() => {
+    localStorage.setItem('som_activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('som_selectedUnit', selectedUnit);
+  }, [selectedUnit]);
+
+  useEffect(() => {
+    localStorage.setItem('som_sidebarCollapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
   // --- SINCRONIZAÇÃO AUTOMÁTICA DE NOVAS UNIDADES/ITENS ---
   useEffect(() => {
     const syncChecklists = async () => {
@@ -714,9 +734,15 @@ export default function App() {
     const user = usersList.find(u => u.email === loginEmail && u.password === loginPassword);
     if (user) {
       setCurrentUser(user);
-      setSelectedUnit(user.unidade === 'Master' ? 'Todas' : (user.unidade || 'Todas'));
+      localStorage.setItem('som_user', JSON.stringify(user));
+
+      const targetUnit = user.unidade === 'Master' ? 'Todas' : (user.unidade || 'Todas');
+      setSelectedUnit(targetUnit);
+      localStorage.setItem('som_selectedUnit', targetUnit);
+
       setLoginError('');
       setActiveTab('home');
+      localStorage.setItem('som_activeTab', 'home');
     } else {
       setLoginError('E-mail ou senha incorretos.');
     }
@@ -725,6 +751,10 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     setLoginPassword('');
+    localStorage.removeItem('som_user');
+    // Opcional: Limpar outros estados ao deslogar? Geralmente sim para segurança
+    localStorage.removeItem('som_activeTab');
+    localStorage.removeItem('som_selectedUnit');
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
