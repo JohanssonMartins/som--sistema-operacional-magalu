@@ -1261,7 +1261,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute left-0 mt-2 w-full max-h-[250px] overflow-y-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-[60] py-2 no-scrollbar scroll-smooth"
+                    className={`absolute left-0 mt-2 ${isSidebarCollapsed ? 'w-[260px]' : 'w-full'} max-h-[250px] overflow-y-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-[60] py-2 no-scrollbar scroll-smooth`}
                   >
                     <div className="px-3 pb-2 mb-2 border-b border-gray-100 dark:border-zinc-800/50">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Selecione a Visão</span>
@@ -1751,14 +1751,34 @@ export default function App() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                       {(() => {
-                        // Primeiro, calcula o score de todas as unidades
+                        // Primeiro, calcula o score de todas as unidades usando o sistema de pontos (Aderência Oficial)
                         const unitsWithScores = UNIDADES_DISPONIVEIS.map(unidade => {
-                          const unitItems = items.filter(i => i.unidade === unidade && i.ativo);
-                          const totalGeral = unitItems.length;
-                          const conformesGeral = unitItems.filter(i => i.completed && i.aderente).length;
-                          const aderenciaGeral = totalGeral === 0 ? 0 : (conformesGeral / totalGeral) * 100;
-                          return { unidade, unitItems, totalGeral, conformesGeral, aderenciaGeral };
-                        }).filter(u => u.unitItems.length > 0); // Remove unidades sem dados
+                          const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
+                          const activeBaseItems = baseItems.filter(i => i.ativo);
+
+                          let totalPoints = 0;
+                          let conformesCount = 0;
+
+                          activeBaseItems.forEach(bi => {
+                            const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
+                            if (ai?.score === '3') {
+                              totalPoints += 3;
+                              conformesCount++;
+                            } else if (ai?.score === '1') {
+                              totalPoints += 1;
+                            }
+                          });
+
+                          const maxPoints = activeBaseItems.length * 3;
+                          const aderenciaGeral = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
+
+                          return {
+                            unidade,
+                            totalGeral: activeBaseItems.length,
+                            conformesGeral: conformesCount,
+                            aderenciaGeral
+                          };
+                        }).filter(u => u.totalGeral > 0);
 
                         // Ordena para definir o ranking (do maior para o menor)
                         const sortedUnits = [...unitsWithScores].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
@@ -1787,9 +1807,7 @@ export default function App() {
                           return null;
                         };
 
-                        return sortedUnits.map(({ unidade, unitItems, aderenciaGeral }) => {
-                          const totalGeral = unitItems.length;
-                          const conformesGeral = unitItems.filter(i => i.completed && i.aderente).length;
+                        return sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, conformesGeral }) => {
 
                           return (
                             <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
@@ -1823,14 +1841,28 @@ export default function App() {
                                 </div>
                               </td>
                               {PILAR_ORDER.map(pilar => {
-                                const pilarItems = unitItems.filter(i => i.pilar === pilar);
-                                const pTotal = pilarItems.length;
-                                const pConformes = pilarItems.filter(i => i.completed && i.aderente).length;
-                                const pAderencia = pTotal === 0 ? 0 : (pConformes / pTotal) * 100;
+                                const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
+                                const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
+
+                                let pilarPoints = 0;
+                                let pilarConformes = 0;
+
+                                pilarBaseItems.forEach(bi => {
+                                  const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
+                                  if (ai?.score === '3') {
+                                    pilarPoints += 3;
+                                    pilarConformes++;
+                                  } else if (ai?.score === '1') {
+                                    pilarPoints += 1;
+                                  }
+                                });
+
+                                const pilarMaxPoints = pilarBaseItems.length * 3;
+                                const pAderencia = pilarMaxPoints === 0 ? 0 : (pilarPoints / pilarMaxPoints) * 100;
 
                                 return (
                                   <td key={`${unidade}-${pilar}`} className="px-4 py-5 border-b border-gray-100 dark:border-zinc-800/80">
-                                    {pTotal > 0 ? (
+                                    {pilarMaxPoints > 0 ? (
                                       <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 shadow-sm transition-colors border border-transparent hover:border-gray-200 dark:hover:border-zinc-700">
                                         <span className={`text-sm font-bold px-2 py-1 rounded shadow-sm ${pAderencia === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
                                           pAderencia >= 70 ? 'bg-emerald-500 text-white' :
@@ -1840,9 +1872,9 @@ export default function App() {
                                           {pAderencia.toFixed(1).replace('.', ',')}%
                                         </span>
                                         <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
-                                          <span className={pConformes === pTotal ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pConformes}</span>
+                                          <span className={pilarConformes === pilarBaseItems.length ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pilarConformes}</span>
                                           <span className="text-gray-400 dark:text-zinc-500">/</span>
-                                          <span className="text-gray-500 dark:text-zinc-400">{pTotal}</span>
+                                          <span className="text-gray-500 dark:text-zinc-400">{pilarBaseItems.length}</span>
                                         </div>
                                       </div>
                                     ) : (
