@@ -387,7 +387,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<ChecklistItem>>({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+  const [formData, setFormData] = useState<Partial<ChecklistItem>>({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', exigeEvidencia: false, ativo: true, nossaAcao: '' });
 
   // --- ESTADOS DA AUTOAUDITORIA ---
   const [autoauditoriaMesAno, setAutoauditoriaMesAno] = useState(() => {
@@ -654,7 +654,6 @@ export default function App() {
                 trilha: baseItem.trilha,
                 item: baseItem.item,
                 descricao: baseItem.descricao,
-                score: baseItem.score,
                 exigeEvidencia: baseItem.exigeEvidencia,
                 ativo: baseItem.ativo,
                 order: baseItem.order
@@ -679,8 +678,7 @@ export default function App() {
               existingItem.order !== baseItem.order ||
               existingItem.descricao !== baseItem.descricao ||
               existingItem.exigeEvidencia !== baseItem.exigeEvidencia ||
-              (existingItem.nossaAcao || '') !== (baseItem.nossaAcao || '') ||
-              String(existingItem.score) !== String(baseItem.score);
+              (existingItem.nossaAcao || '') !== (baseItem.nossaAcao || '');
 
             if (hasChanged) {
               itemsToPut.push({
@@ -690,7 +688,6 @@ export default function App() {
                 trilha: baseItem.trilha,
                 item: baseItem.item,
                 descricao: baseItem.descricao,
-                score: baseItem.score,
                 exigeEvidencia: baseItem.exigeEvidencia,
                 ativo: baseItem.ativo,
                 order: baseItem.order,
@@ -823,7 +820,7 @@ export default function App() {
       }
       setIsModalOpen(false);
       setEditingId(null);
-      setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+      setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', exigeEvidencia: false, ativo: true, nossaAcao: '' });
       loadData();
     } catch (error) {
       console.error("Erro ao salvar item da base:", error);
@@ -838,7 +835,7 @@ export default function App() {
   };
 
   const openNewBaseItemModal = () => {
-    setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', score: '1', exigeEvidencia: false, ativo: true, nossaAcao: '' });
+    setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', exigeEvidencia: false, ativo: true, nossaAcao: '' });
     setEditingId(null);
     setIsModalOpen(true);
   };
@@ -1961,7 +1958,7 @@ export default function App() {
                         <th className="px-6 py-4">Pilar</th>
                         <th className="px-6 py-4">Bloco</th>
                         <th className="px-6 py-4">Item</th>
-                        <th className="px-6 py-4">Score</th>
+
                         <th className="px-6 py-4">Evidência</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4 text-right">Ações</th>
@@ -1976,11 +1973,7 @@ export default function App() {
                           <td className="px-6 py-4">
                             <div className="max-w-xs truncate" title={baseItem.item}>{baseItem.item}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded text-xs font-bold border border-blue-200 dark:border-blue-500/20">
-                              {baseItem.score}
-                            </span>
-                          </td>
+
                           <td className="px-6 py-4">
                             {baseItem.exigeEvidencia ? (
                               <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-1 rounded text-xs font-medium">

@@ -43,7 +43,6 @@ async function migrateData() {
                     trilha: item.trilha,
                     item: item.item,
                     descricao: item.descricao,
-                    score: item.score,
                     exigeEvidencia: Boolean(item.exigeEvidencia),
                     ativo: Boolean(item.ativo),
                     order: item.order,

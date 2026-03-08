@@ -40,7 +40,6 @@ async function main() {
                     trilha: item.trilha,
                     item: item.item,
                     descricao: item.descricao,
-                    score: item.score,
                     exigeEvidencia: item.exigeEvidencia,
                     ativo: item.ativo,
                     order: item.order
