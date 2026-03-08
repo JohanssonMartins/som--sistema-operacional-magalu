@@ -1796,15 +1796,17 @@ export default function App() {
                           const activeBaseItems = baseItems.filter(i => i.ativo);
 
                           let totalPoints = 0;
-                          let conformesCount = 0;
+                          let respondidosCount = 0;
 
                           activeBaseItems.forEach(bi => {
                             const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
                             if (ai?.score === '3') {
                               totalPoints += 3;
-                              conformesCount++;
                             } else if (ai?.score === '1') {
                               totalPoints += 1;
+                            }
+                            if (ai && ai.score && ai.score !== '') {
+                              respondidosCount++;
                             }
                           });
 
@@ -1814,7 +1816,7 @@ export default function App() {
                           return {
                             unidade,
                             totalGeral: activeBaseItems.length,
-                            conformesGeral: conformesCount,
+                            respondidosGeral: respondidosCount,
                             aderenciaGeral
                           };
                         }).filter(u => u.totalGeral > 0);
@@ -1846,7 +1848,7 @@ export default function App() {
                           return null;
                         };
 
-                        return sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, conformesGeral }) => {
+                        return sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, respondidosGeral }) => {
 
                           return (
                             <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
@@ -1872,7 +1874,7 @@ export default function App() {
                                   </span>
                                   {totalGeral > 0 && (
                                     <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
-                                      <span className={conformesGeral === totalGeral ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{conformesGeral}</span>
+                                      <span className={respondidosGeral === totalGeral ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{respondidosGeral}</span>
                                       <span className="text-gray-400 dark:text-zinc-500">/</span>
                                       <span className="text-gray-500 dark:text-zinc-400">{totalGeral}</span>
                                     </div>
@@ -1884,15 +1886,17 @@ export default function App() {
                                 const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
 
                                 let pilarPoints = 0;
-                                let pilarConformes = 0;
+                                let pilarRespondidos = 0;
 
                                 pilarBaseItems.forEach(bi => {
                                   const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
                                   if (ai?.score === '3') {
                                     pilarPoints += 3;
-                                    pilarConformes++;
                                   } else if (ai?.score === '1') {
                                     pilarPoints += 1;
+                                  }
+                                  if (ai && ai.score && ai.score !== '') {
+                                    pilarRespondidos++;
                                   }
                                 });
 
@@ -1911,7 +1915,7 @@ export default function App() {
                                           {pAderencia.toFixed(1).replace('.', ',')}%
                                         </span>
                                         <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
-                                          <span className={pilarConformes === pilarBaseItems.length ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pilarConformes}</span>
+                                          <span className={pilarRespondidos === pilarBaseItems.length ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pilarRespondidos}</span>
                                           <span className="text-gray-400 dark:text-zinc-500">/</span>
                                           <span className="text-gray-500 dark:text-zinc-400">{pilarBaseItems.length}</span>
                                         </div>
