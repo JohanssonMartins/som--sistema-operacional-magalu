@@ -2709,6 +2709,7 @@ export default function App() {
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                       {baseItems
                         .filter(item => selectedAutoauditoriaPilar === 'Todos' || item.pilar === selectedAutoauditoriaPilar)
+                        .sort((a, b) => a.pilar.localeCompare(b.pilar))
                         .map((baseItem) => {
                           const scoreValue = autoauditoriaData[baseItem.id]?.score || '';
                           const nossaAcaoValue = autoauditoriaData[baseItem.id]?.nossaAcao || '';
