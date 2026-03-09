@@ -277,8 +277,81 @@ app.post('/api/autoauditoria', async (req, res) => {
     }
 });
 
+import multer from 'multer';
+import { googleDriveService } from './services/googleDriveService';
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 15 * 1024 * 1024, // Limite padrao de 15MB
+    }
+});
+
+app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (req: express.Request, res: express.Response) => {
+    try {
+        const file = req.file;
+        const { unidade, mesAno, pilar, bloco, pergunta, baseItemId } = req.body;
+
+        if (!file || !unidade || !mesAno || !pilar || !bloco || !pergunta || !baseItemId) {
+            return res.status(400).json({ error: 'Faltam dados essenciais para o upload.' });
+        }
+
+        console.log(`[Drive Upload] Iniciando upload para: ${mesAno} > ${pilar} > ${bloco} > ${pergunta}`);
+
+        // 1. Resolve toda a hierarquia de pastas no drive
+        const parentFolderId = await googleDriveService.resolveFolderPath(mesAno, pilar, bloco, pergunta);
+
+        // 2. Faz o upload do arquivo
+        const dataOriginal = new Date().getTime();
+        const finalFileName = `${dataOriginal}_${file.originalname}`;
+        const webViewLink = await googleDriveService.uploadFile(file.buffer, finalFileName, file.mimetype, parentFolderId);
+
+        // 3. Atualizar o banco de dados (relacionar a URL de evidência com a AutoAuditoriaItem)
+        // Precisamos garantir que a autoauditoria pai existe antes de atrelarmos 
+        const autoauditoria = await prisma.autoauditoria.upsert({
+            where: {
+                unidade_mesAno: { unidade, mesAno }
+            },
+            update: {},
+            create: {
+                unidade,
+                mesAno,
+                status: 'Pendente de Auditoria'
+            }
+        });
+
+        // Upsert do Item que vai levar a evidencia (tabela pai da evidencia)
+        const autoauditoriaItem = await prisma.autoauditoriaItem.upsert({
+            where: {
+                autoauditoriaId_baseItemId: {
+                    autoauditoriaId: autoauditoria.id,
+                    baseItemId: baseItemId
+                }
+            },
+            update: {}, // Mantemos score e acao anterior
+            create: {
+                autoauditoriaId: autoauditoria.id,
+                baseItemId: baseItemId
+            }
+        });
+
+        // Finalmente, cria a evidencia apontando a url
+        const evidencia = await prisma.evidenciaAutoauditoria.create({
+            data: {
+                autoauditoriaItemId: autoauditoriaItem.id,
+                url: webViewLink,
+                name: file.originalname,
+            }
+        });
+
+        res.json({ success: true, url: webViewLink, evidencia });
+
+    } catch (error: any) {
+        console.error('[Drive Upload] Error:', error);
+        res.status(500).json({ error: 'Falha no upload para o Drive', details: error?.message });
+    }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-//app.listen(PORT, () => { console.log(Server is running on port ${PORT}); });

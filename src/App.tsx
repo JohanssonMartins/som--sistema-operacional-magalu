@@ -169,7 +169,11 @@ const AutoauditoriaRow = React.memo(({
   nossaAcaoValue,
   onScoreChange,
   onNossaAcaoChange,
-  onNossaAcaoBlur
+  onNossaAcaoBlur,
+  // Props novas inseridas
+  unidade,
+  mesAno,
+  existingEvidenciaUrl
 }: {
   item: ChecklistItem;
   canEdit: boolean;
@@ -178,13 +182,24 @@ const AutoauditoriaRow = React.memo(({
   onScoreChange: (itemId: string, newScore: string) => void;
   onNossaAcaoChange: (itemId: string, newAcao: string) => void;
   onNossaAcaoBlur: (itemId: string, finalAcao: string) => void;
+  unidade: string;
+  mesAno: string;
+  existingEvidenciaUrl?: string; // Trazida do loadAutoauditoria
 }) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
+  const [isUploading, setIsUploading] = useState(false);
+  const [evidenciaUrl, setEvidenciaUrl] = useState<string | undefined>(existingEvidenciaUrl);
 
   // Sync prop -> local state ONLY when parent value explicitly changes via polling or load
   useEffect(() => {
     setLocalNossaAcao(nossaAcaoValue);
   }, [nossaAcaoValue]);
+
+  useEffect(() => {
+    if (existingEvidenciaUrl) {
+      setEvidenciaUrl(existingEvidenciaUrl);
+    }
+  }, [existingEvidenciaUrl]);
 
   const handleNossaAcaoChange = (val: string) => {
     setLocalNossaAcao(val);
@@ -194,6 +209,35 @@ const AutoauditoriaRow = React.memo(({
   const handleNossaAcaoBlur = () => {
     if (localNossaAcao !== nossaAcaoValue) {
       onNossaAcaoBlur(item.id, localNossaAcao);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('unidade', unidade);
+      formData.append('mesAno', mesAno);
+      formData.append('pilar', item.pilar);
+      formData.append('bloco', item.bloco);
+      formData.append('pergunta', item.item);
+      formData.append('baseItemId', item.id);
+
+      const res = await api.uploadEvidenciaGoogleDrive(formData);
+      if (res.success && res.url) {
+        setEvidenciaUrl(res.url);
+      }
+    } catch (error) {
+      console.error('Erro no upload da evidência:', error);
+      alert('Falha ao enviar arquivo para o Google Drive. Verifique o console.');
+    } finally {
+      setIsUploading(false);
+      // Limpa input
+      e.target.value = '';
     }
   };
 
@@ -237,16 +281,25 @@ const AutoauditoriaRow = React.memo(({
         />
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center space-x-2">
-          <label className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}>
-            <Upload className="w-3.5 h-3.5" /> <span>Anexar</span>
+        <div className="flex flex-col space-y-2">
+          {evidenciaUrl && (
+            <a
+              href={evidenciaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+            >
+              Ver Evidência Salva
+            </a>
+          )}
+          <label className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}>
+            <Upload className="w-3.5 h-3.5" />
+            <span>{isUploading ? 'Enviando...' : (evidenciaUrl ? 'Substituir' : 'Anexar')}</span>
             <input
               type="file"
               className="hidden"
-              disabled={!canEdit}
-              onChange={(e) => {
-                if (canEdit) alert('Upload de arquivo local. A implementação de envio (base64 ou formData) será adicionada na parte final.');
-              }}
+              disabled={!canEdit || isUploading}
+              onChange={handleFileUpload}
             />
           </label>
         </div>
@@ -2707,6 +2760,8 @@ export default function App() {
                         .map((baseItem) => {
                           const scoreValue = autoauditoriaData[baseItem.id]?.score || '';
                           const nossaAcaoValue = autoauditoriaData[baseItem.id]?.nossaAcao || '';
+                          const evidenciaItemDB = autoauditoriaData[baseItem.id]?.evidencias?.[0];
+                          const existingUrl = evidenciaItemDB?.url || undefined;
                           const canEdit = currentUser &&
                             ['ADMIN', 'GERENTE_DO_CD', 'DONO_DO_PILAR'].includes(currentUser?.role || '') &&
                             (currentUser?.role === 'ADMIN' || currentUser?.unidade === currentAutoauditoriaUnit);
@@ -2718,6 +2773,9 @@ export default function App() {
                               canEdit={!!canEdit}
                               scoreValue={scoreValue}
                               nossaAcaoValue={nossaAcaoValue}
+                              unidade={currentAutoauditoriaUnit}
+                              mesAno={autoauditoriaMesAno}
+                              existingEvidenciaUrl={existingUrl}
                               onScoreChange={(itemId, newScore) => {
                                 pendingAutoauditoriaEdits.current.add(itemId);
                                 needsAutoauditoriaSave.current = true;

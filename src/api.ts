@@ -87,5 +87,16 @@ export const api = {
     saveAutoauditoria: async (data: any) => {
         const res = await fetch(`${API_BASE_URL}/autoauditoria`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         return res.json();
+    },
+    uploadEvidenciaGoogleDrive: async (formData: FormData) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/evidencia/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to upload evidence');
+        }
+        return res.json();
     }
 };
