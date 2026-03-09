@@ -2174,9 +2174,6 @@ export default function App() {
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300">
                                     Item a Verificar
                                   </td>
-                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300 w-24">
-                                    Score
-                                  </td>
                                   <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-center text-orange-500 text-lg">Auditoria</td>
                                 </tr>
 
@@ -2185,9 +2182,6 @@ export default function App() {
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">
                                     <div className="font-bold text-gray-900 dark:text-white">{checkItem.item}</div>
                                     <div className="text-xs text-gray-600 dark:text-zinc-400 mt-1">{checkItem.descricao}</div>
-                                  </td>
-                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-center text-xl font-bold text-gray-900 dark:text-white">
-                                    {checkItem.score}
                                   </td>
                                   <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 p-2">
                                     <DebouncedTextarea
