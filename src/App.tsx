@@ -414,7 +414,10 @@ export default function App() {
 
   const loadAutoauditoria = async (unidade: string, mesAno: string, isPolling = false) => {
     try {
-      if (!isPolling) isInitialLoad.current = true;
+      if (!isPolling) {
+        isInitialLoad.current = true;
+        setAutoauditoriaData({});
+      }
       const data = await api.getAutoauditoria(unidade, mesAno);
       if (data && data.items) {
         // Usa a função setState em formato callback para evitar sobrescrever a digitação atual do usuário
