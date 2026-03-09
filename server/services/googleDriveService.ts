@@ -49,6 +49,8 @@ export const googleDriveService = {
                 q: query,
                 fields: 'files(id, name)',
                 spaces: 'drive',
+                supportsAllDrives: true,
+                includeItemsFromAllDrives: true
             });
 
             if (response.data.files && response.data.files.length > 0) {
@@ -65,7 +67,8 @@ export const googleDriveService = {
 
             const folder = await drive.files.create({
                 requestBody: fileMetadata,
-                fields: 'id'
+                fields: 'id',
+                supportsAllDrives: true
             });
 
             return folder.data.id!;
@@ -111,6 +114,7 @@ export const googleDriveService = {
             requestBody: fileMetadata,
             media: media,
             fields: 'id, webViewLink, webContentLink',
+            supportsAllDrives: true
         });
 
         // É preciso garantir que todos tenham permissão de leitura nesse arquivo caso o root não propague
@@ -120,7 +124,8 @@ export const googleDriveService = {
             requestBody: {
                 role: 'reader',
                 type: 'anyone'
-            }
+            },
+            supportsAllDrives: true
         });
 
         return response.data.webViewLink!;
