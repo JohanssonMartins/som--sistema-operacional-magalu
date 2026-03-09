@@ -1992,14 +1992,14 @@ export default function App() {
                           <td className="px-6 py-4 text-right flex items-center justify-end space-x-1">
                             <button
                               onClick={() => handleDeleteBaseItem(baseItem.id, baseItem.code)}
-                              className="p-2 text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              className="p-2 text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors"
                               title="Excluir Item Base"
                             >
                               <X className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleEditBaseItem(baseItem)}
-                              className="p-2 text-gray-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-400/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              className="p-2 text-gray-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-400/10 rounded-md transition-colors"
                               title="Editar Item Base"
                             >
                               <Edit2 className="w-4 h-4" />
