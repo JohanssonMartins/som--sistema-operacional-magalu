@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 // O ID da Pasta Raiz que recebemos do usuário
-const ROOT_FOLDER_ID = '11vMfFvWuiA-Uy4zGA-AZLClttliQBjlr';
+const ROOT_FOLDER_ID = '1Qpca6t0KjkiqJBadOYOQ2uvgaq9XgGiO';
 
 // Credenciais puxadas do JSON (local) ou Variável de Ambiente (Produção)
 let credentials: any;
