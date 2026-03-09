@@ -2866,15 +2866,7 @@ export default function App() {
                     <textarea value={formData.nossaAcao || ''} onChange={(e) => setFormData({ ...formData, nossaAcao: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all min-h-[60px]" placeholder="Ação padrão a ser tomada que será distribuída para todos..." />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Score (Peso)</label>
-                      <select required value={formData.score} onChange={(e) => setFormData({ ...formData, score: e.target.value })} className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all appearance-none cursor-pointer">
-                        <option value="1">1</option>
-                        <option value="3">3</option>
-                        <option value="0">0</option>
-                      </select>
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2 flex flex-col justify-center pt-6">
                       <label className="flex items-center space-x-3 cursor-pointer group w-fit">
                         <div className="relative flex items-center justify-center">
