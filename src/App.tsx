@@ -461,7 +461,7 @@ export default function App() {
     }
   };
 
-  const currentAutoauditoriaUnit = selectedUnit === 'Todas' ? (currentUser?.unidade || 'Todas') : selectedUnit;
+  const currentAutoauditoriaUnit = selectedUnit;
 
   // Usa debounce no useEffect para ouvir alterações em autoauditoriaData e auto-salvar
   useEffect(() => {
