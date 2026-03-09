@@ -1,11 +1,31 @@
 import { google, drive_v3 } from 'googleapis';
 import stream from 'stream';
 
+import fs from 'fs';
+import path from 'path';
+
 // O ID da Pasta Raiz que recebemos do usuário
 const ROOT_FOLDER_ID = '11vMfFvWuiA-Uy4zGA-AZLClttliQBjlr';
 
-// Credenciais puxadas do JSON passado
-import credentials from '../../som-sistema-operacional-magalu-b93bcdee0bff.json';
+// Credenciais puxadas do JSON (local) ou Variável de Ambiente (Produção)
+let credentials: any;
+
+if (process.env.GOOGLE_CREDENTIALS) {
+    try {
+        credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    } catch (e) {
+        console.error("Erro ao parsear GOOGLE_CREDENTIALS:", e);
+    }
+} else {
+    // Tenta ler o arquivo local se não tiver na env
+    try {
+        const filePath = path.join(process.cwd(), 'som-sistema-operacional-magalu-b93bcdee0bff.json');
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        credentials = JSON.parse(fileContent);
+    } catch (e) {
+        console.warn("Arquivo de credenciais do Google Drive não encontrado localmente.");
+    }
+}
 
 // Iniciar a autenticação
 const auth = new google.auth.GoogleAuth({
