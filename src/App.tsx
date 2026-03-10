@@ -1419,7 +1419,7 @@ export default function App() {
               className={`flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'autoauditoria' ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 font-bold tracking-tight shadow-sm' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'} ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <CheckCircle2 className={`w-5 h-5 shrink-0 transition-transform ${activeTab === 'autoauditoria' ? 'text-purple-600 dark:text-purple-400 scale-110' : ''}`} />
-              {!isSidebarCollapsed && <span className="truncate">Autoauditoria</span>}
+              {!isSidebarCollapsed && <span className="truncate">Autoperformance</span>}
             </button>
 
             {(currentUser.role === 'ADMIN' || currentUser.role === 'GERENTE_DIVISIONAL' || currentUser.role === 'DIRETORIA' || currentUser.role === 'GERENTE_DO_CD') && (
@@ -1626,9 +1626,9 @@ export default function App() {
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div>
                 <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
-                  Auditoria - <span className="text-xl font-medium text-gray-700 dark:text-gray-300">{selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}</span>
+                  Performance - <span className="text-xl font-medium text-gray-700 dark:text-gray-300">{selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}</span>
                 </h2>
-                <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após auditoria oficial</p>
+                <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após performance oficial</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1681,7 +1681,7 @@ export default function App() {
                           </div>
                           <div>
                             <div className="flex justify-between text-xs mb-1">
-                              <span className="text-gray-500 dark:text-zinc-400">Auto Auditoria</span>
+                              <span className="text-gray-500 dark:text-zinc-400">Auto Performance</span>
                               <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualAutoAuditoria}%</span>
                             </div>
                             <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -1690,7 +1690,7 @@ export default function App() {
                           </div>
                           <div>
                             <div className="flex justify-between text-xs mb-1">
-                              <span className="text-gray-500 dark:text-zinc-400">Auditoria Oficial</span>
+                              <span className="text-gray-500 dark:text-zinc-400">Performance Oficial</span>
                               <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualOficialAuditoria}%</span>
                             </div>
                             <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -2227,7 +2227,7 @@ export default function App() {
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2 font-bold italic text-center text-gray-700 dark:text-zinc-300">
                                     Item a Verificar
                                   </td>
-                                  <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-center text-orange-500 text-lg">Auditoria</td>
+                                  <td colSpan={5} className="border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-center text-orange-500 text-lg">Performance</td>
                                 </tr>
 
                                 {/* Row 2: Item content & Score value */}
@@ -2256,7 +2256,7 @@ export default function App() {
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Atribuído a</td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Período da ação</td>
                                   <td className="border border-gray-300 dark:border-zinc-700 p-2">Status</td>
-                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-orange-500">Auditoria check</td>
+                                  <td className="border border-gray-300 dark:border-zinc-700 p-2 text-orange-500">Performance check</td>
                                 </tr>
 
                                 {/* Row 4: Action Values */}
