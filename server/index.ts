@@ -296,10 +296,10 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
             return res.status(400).json({ error: 'Faltam dados essenciais para o upload.' });
         }
 
-        console.log(`[Drive Upload] Iniciando upload para: ${mesAno} > ${pilar} > ${bloco} > ${pergunta}`);
+        console.log(`[Drive Upload] Iniciando upload para: ${mesAno} > CD ${unidade} > ${pilar} > ${bloco} > ${pergunta}`);
 
         // 1. Resolve toda a hierarquia de pastas no drive
-        const parentFolderId = await googleDriveService.resolveFolderPath(mesAno, pilar, bloco, pergunta);
+        const parentFolderId = await googleDriveService.resolveFolderPath(mesAno, unidade, pilar, bloco, pergunta);
 
         // 2. Faz o upload do arquivo
         const dataOriginal = new Date().getTime();

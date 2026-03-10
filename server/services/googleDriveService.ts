@@ -79,13 +79,14 @@ export const googleDriveService = {
     },
 
     /**
-     * Garante toda a estrutura de pastas Mês > Pilar > Bloco > Pergunta
+     * Garante toda a estrutura de pastas Mês > CD > Pilar > Bloco > Pergunta
      */
-    async resolveFolderPath(mesAno: string, pilar: string, bloco: string, pergunta: string): Promise<string> {
+    async resolveFolderPath(mesAno: string, unidade: string, pilar: string, bloco: string, pergunta: string): Promise<string> {
         const limpaNome = (str: string) => str.substring(0, 50).replace(/[\\/:*?"<>|]/g, '');
 
         const mesId = await this.getOrCreateFolder(limpaNome(mesAno), ROOT_FOLDER_ID);
-        const pilarId = await this.getOrCreateFolder(limpaNome(pilar), mesId);
+        const unidadeId = await this.getOrCreateFolder(limpaNome(`CD ${unidade}`), mesId);
+        const pilarId = await this.getOrCreateFolder(limpaNome(pilar), unidadeId);
         const blocoId = await this.getOrCreateFolder(limpaNome(bloco), pilarId);
         const perguntaId = await this.getOrCreateFolder(limpaNome(pergunta), blocoId);
 
