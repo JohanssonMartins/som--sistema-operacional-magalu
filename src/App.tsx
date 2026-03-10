@@ -196,9 +196,9 @@ const AutoauditoriaRow = React.memo(({
   }, [nossaAcaoValue]);
 
   useEffect(() => {
-    if (existingEvidenciaUrl) {
-      setEvidenciaUrl(existingEvidenciaUrl);
-    }
+    // Quando mudamos de filial ou mês, o item pai manda uma prop nova (com url nova ou undefined se não houver).
+    // Atualiza o estado local independente de ser undefined para "limpar" a url do CD anterior.
+    setEvidenciaUrl(existingEvidenciaUrl);
   }, [existingEvidenciaUrl]);
 
   const handleNossaAcaoChange = (val: string) => {
