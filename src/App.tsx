@@ -70,55 +70,48 @@ const getBlocoWeight = (bloco: string) => {
 
 const LogoIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="38" y="22" width="55" height="13" rx="6.5" fill="url(#grad1)" />
-    <rect x="20" y="41" width="72" height="13" rx="6.5" fill="url(#grad2)" />
-    <rect x="28" y="60" width="63" height="13" rx="6.5" fill="url(#grad3)" />
-    <rect x="20" y="79" width="68" height="13" rx="6.5" fill="url(#grad4)" />
+    {/* Outer Arc */}
+    <path d="M 30 80 A 40 40 0 1 1 80 30" stroke="url(#gradLogo1)" strokeWidth="8" strokeLinecap="round" />
+    <circle cx="30" cy="80" r="4" fill="#f59e0b" />
+
+    {/* Middle Arc */}
+    <path d="M 70 20 A 30 30 0 1 1 20 70" stroke="url(#gradLogo2)" strokeWidth="8" strokeLinecap="round" />
+    <circle cx="70" cy="20" r="4" fill="#d946ef" />
+
+    {/* Inner Arc */}
+    <path d="M 40 65 A 20 20 0 1 1 65 40" stroke="url(#gradLogo3)" strokeWidth="8" strokeLinecap="round" />
+
     <defs>
-      <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#FDE047" />
-        <stop offset="100%" stopColor="#F59E0B" />
+      <linearGradient id="gradLogo1" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#ef4444" />
       </linearGradient>
-      <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#FF4B4B" />
-        <stop offset="100%" stopColor="#F43F5E" />
+      <linearGradient id="gradLogo2" x1="1" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#d946ef" />
+        <stop offset="100%" stopColor="#6366f1" />
       </linearGradient>
-      <linearGradient id="grad3" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#F43F5E" />
-        <stop offset="100%" stopColor="#D946EF" />
-      </linearGradient>
-      <linearGradient id="grad4" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#2DD4BF" />
-        <stop offset="100%" stopColor="#14B8A6" />
+      <linearGradient id="gradLogo3" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#06b6d4" />
       </linearGradient>
     </defs>
   </svg>
 );
 
+
 const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
-  <div className={`flex items-center gap-3 sm:gap-5 ${className} select-none`}>
-    <div className="flex flex-col relative">
-      <div className="flex items-end space-x-1 sm:space-x-1.5 mb-[-0.5rem] sm:mb-[-0.75rem] ml-10 sm:ml-12 relative z-10">
-        <span className="text-[1.35rem] sm:text-3xl font-black text-gray-900 dark:text-white italic drop-shadow-sm tracking-tight" style={{ fontFamily: 'system-ui, sans-serif' }}>Top</span>
-        <div className="flex space-x-0.5 pb-1 sm:pb-1.5">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <svg key={star} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center space-x-1 sm:space-x-1.5 mt-[-2px]">
-        <LogoIcon className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-sm" />
-        <span className="text-3xl sm:text-[2.75rem] leading-none font-black tracking-tighter text-gray-900 dark:text-white drop-shadow-md pb-0.5" style={{ fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'lowercase' }}>magalog</span>
-      </div>
+  <div className={`flex flex-col ${className} select-none`}>
+    <div className="flex items-center gap-4">
+      <span className="text-6xl font-bold text-[#0080ff] tracking-tighter">S</span>
+      <LogoIcon className="w-20 h-20" />
+      <span className="text-6xl font-bold text-[#0080ff] tracking-tighter">M</span>
     </div>
-    <div className="flex flex-col justify-center border-l-2 border-gray-300 dark:border-zinc-700 pl-3 sm:pl-4 h-full py-1">
-      <span className="text-sm sm:text-base font-bold text-gray-700 dark:text-zinc-200 leading-tight tracking-tight">Programa de</span>
-      <span className="text-sm sm:text-base font-bold text-gray-700 dark:text-zinc-200 leading-tight tracking-tight">Excelência</span>
+    <div className="mt-2 pl-1">
+      <span className="text-[14px] font-bold tracking-[0.35em] text-[#0080ff] uppercase">Sistema Operacional Magalog</span>
     </div>
   </div>
 );
+
 
 const CustomTrophy = ({ className, gold = false, silver = false, bronze = false }: { className?: string, gold?: boolean, silver?: boolean, bronze?: boolean }) => {
   let mainColor = '#FACC15'; // Gold
@@ -1192,15 +1185,16 @@ export default function App() {
             </div>
 
             <div className="flex flex-col items-center mb-8">
-              <div className="flex items-center space-x-3">
-                <LogoIcon className="w-14 h-14" />
-                <div className="flex flex-col items-start">
-                  <span className="font-black italic text-4xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] drop-shadow-sm leading-none">S.O.M</span>
-                  <span className="text-base font-medium text-gray-600 dark:text-zinc-300 mt-1 tracking-wide whitespace-nowrap">Sistema Operacional Magalu</span>
-                  <div className="h-1 w-full mt-2 rounded-full bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff]"></div>
-                </div>
+              <div className="flex items-center gap-4">
+                <span className="text-7xl font-bold text-[#0080ff] tracking-tighter">S</span>
+                <LogoIcon className="w-20 h-20" />
+                <span className="text-7xl font-bold text-[#0080ff] tracking-tighter">M</span>
+              </div>
+              <div className="mt-4">
+                <span className="text-[12px] font-bold tracking-[0.4em] text-[#0080ff] uppercase whitespace-nowrap">Sistema Operacional Magalog</span>
               </div>
             </div>
+
 
             <form onSubmit={handleLogin} className="space-y-5">
               {loginError && (
@@ -1295,16 +1289,18 @@ export default function App() {
           <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 border-b border-gray-200 dark:border-zinc-800/80 shrink-0`}>
 
             {!isSidebarCollapsed && (
-              <div className="flex items-center space-x-3 cursor-pointer overflow-hidden" onClick={() => setActiveTab('home')}>
-                <LogoIcon className="w-10 h-10 shrink-0" />
-                <div className="flex flex-col items-start leading-none relative w-full pt-1.5 pb-2">
-                  <span className="font-black italic text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] drop-shadow-sm pb-1">S.O.M</span>
-                  <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-[-2px] tracking-wide whitespace-nowrap">Sistema Operacional Magalu</span>
-                  {/* Logo bottom line */}
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#ffcf00] via-[#ff3b30] to-[#c800ff] rounded-full opacity-90 shadow-[0_1px_2px_rgba(255,59,48,0.3)]"></div>
+              <div className="flex flex-col items-start cursor-pointer overflow-hidden py-2" onClick={() => setActiveTab('home')}>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-[#0080ff] tracking-tighter">S</span>
+                  <LogoIcon className="w-8 h-8" />
+                  <span className="text-2xl font-bold text-[#0080ff] tracking-tighter">M</span>
+                </div>
+                <div className="mt-1">
+                  <span className="text-[7px] font-bold tracking-[0.2em] text-[#0080ff] uppercase whitespace-nowrap">Sistema Operacional Magalog</span>
                 </div>
               </div>
             )}
+
 
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
