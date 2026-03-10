@@ -68,21 +68,86 @@ const getBlocoWeight = (bloco: string) => {
   return idx === -1 ? 999 : idx;
 };
 
-const MainLogo = ({ className = '' }: { className?: string }) => (
-  <img
-    src="/static/LogoSOMl.png"
-    alt="S.O.M Logo"
-    className={className}
-    onError={(e) => {
-      // Fallback if image fails to load
-      e.currentTarget.src = 'https://via.placeholder.com/200x80?text=S.O.M';
-    }}
-  />
+const LogoIconSVG = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="logoIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FACC15" />
+        <stop offset="20%" stopColor="#FB923C" />
+        <stop offset="40%" stopColor="#FB7185" />
+        <stop offset="60%" stopColor="#E879F9" />
+        <stop offset="80%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#22D3EE" />
+      </linearGradient>
+      <linearGradient id="textGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#00AEEF" />
+        <stop offset="100%" stopColor="#006CEE" />
+      </linearGradient>
+    </defs>
+
+    {/* Outer Arc (starts at left) */}
+    <path
+      d="M 15 50 A 35 35 0 1 1 35 80"
+      stroke="url(#logoIconGradient)"
+      strokeWidth="6"
+      strokeLinecap="round"
+    />
+    <circle cx="15" cy="50" r="4" fill="#FACC15" />
+
+    {/* Middle Arc (starts at top) */}
+    <path
+      d="M 50 22 A 28 28 0 1 1 28 50"
+      stroke="url(#logoIconGradient)"
+      strokeWidth="6"
+      strokeLinecap="round"
+    />
+    <circle cx="50" cy="22" r="4" fill="#C084FC" />
+
+    {/* Inner Arc (starts at bottom) */}
+    <path
+      d="M 50 78 A 21 21 0 1 1 71 50"
+      stroke="url(#logoIconGradient)"
+      strokeWidth="6"
+      strokeLinecap="round"
+    />
+    <circle cx="50" cy="78" r="4" fill="#9333EA" />
+
+    {/* Center Eye (Refining the gap) */}
+    <path
+      d="M 50 38 A 12 12 0 0 1 62 50"
+      stroke="#006CEE"
+      strokeWidth="4"
+      strokeLinecap="round"
+      opacity="0.6"
+    />
+  </svg>
 );
+
+const MainLogo = ({ className = '', size = 'medium' }: { className?: string, size?: 'small' | 'medium' | 'large' }) => {
+  const isSmall = size === 'small';
+  const isLarge = size === 'large';
+
+  return (
+    <div className={`flex flex-col items-center justify-center ${className} select-none`}>
+      <div className="flex items-center gap-0.5 leading-none mb-1">
+        <span className={`font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent ${isSmall ? 'text-4xl' : isLarge ? 'text-8xl' : 'text-6xl'}`}>
+          S
+        </span>
+        <LogoIconSVG className={isSmall ? 'w-10 h-10' : isLarge ? 'w-24 h-24' : 'w-16 h-16'} />
+        <span className={`font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent ${isSmall ? 'text-4xl' : isLarge ? 'text-8xl' : 'text-6xl'}`}>
+          M
+        </span>
+      </div>
+      <div className={`text-[#006CEE] font-bold tracking-[0.25em] text-center uppercase ${isSmall ? 'text-[8px] mt-0' : isLarge ? 'text-base mt-2' : 'text-[10px] mt-1'}`}>
+        SISTEMA OPERACIONAL MAGALOG
+      </div>
+    </div>
+  );
+};
 
 const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
   <div className={`flex flex-col items-center ${className} select-none`}>
-    <MainLogo className="h-28 w-auto object-contain" />
+    <MainLogo size="medium" />
   </div>
 );
 
@@ -1160,7 +1225,7 @@ export default function App() {
             </div>
 
             <div className="flex flex-col items-center mb-10">
-              <MainLogo className="h-32 w-auto object-contain" />
+              <MainLogo size="large" />
             </div>
 
 
@@ -1262,7 +1327,7 @@ export default function App() {
 
             {!isSidebarCollapsed && (
               <div className="flex flex-col items-center cursor-pointer overflow-hidden py-4 w-full" onClick={() => setActiveTab('home')}>
-                <MainLogo className="h-14 w-auto object-contain" />
+                <MainLogo size="small" />
               </div>
             )}
 
