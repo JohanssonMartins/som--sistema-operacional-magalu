@@ -71,53 +71,50 @@ const getBlocoWeight = (bloco: string) => {
 const LogoIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="gradPurple" x1="0" y1="0" x2="1" y2="1">
+      {/* Gradients for the icon arcs */}
+      <linearGradient id="gradLogoPurpleRed" x1="0.5" y1="0" x2="0" y2="0.5">
         <stop offset="0%" stopColor="#c800ff" />
-        <stop offset="100%" stopColor="#7000ff" />
+        <stop offset="100%" stopColor="#ff1b6b" />
       </linearGradient>
-      <linearGradient id="gradOrange" x1="0" y1="1" x2="1" y2="0">
-        <stop offset="0%" stopColor="#ff9500" />
-        <stop offset="100%" stopColor="#ffcc00" />
+      <linearGradient id="gradLogoRedOrange" x1="0" y1="0.5" x2="0.5" y2="1">
+        <stop offset="0%" stopColor="#ff1b6b" />
+        <stop offset="100%" stopColor="#ff9500" />
       </linearGradient>
-      <linearGradient id="gradCyan" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#00d4ff" />
-        <stop offset="100%" stopColor="#0078ff" />
-      </linearGradient>
-      <linearGradient id="gradMagenta" x1="1" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#ff0080" />
-        <stop offset="100%" stopColor="#ff3b30" />
+      <linearGradient id="gradLogoBlueCyan" x1="0.5" y1="1" x2="1" y2="0.5">
+        <stop offset="0%" stopColor="#0078ff" />
+        <stop offset="100%" stopColor="#00d4ff" />
       </linearGradient>
     </defs>
 
-    {/* Outer Arcs with Dots */}
-    {/* Top Arc & Dot */}
-    <path d="M 75 25 A 35 35 0 0 0 25 25" stroke="url(#gradPurple)" strokeWidth="5" strokeLinecap="round" />
-    <circle cx="50" cy="15" r="4.5" fill="url(#gradPurple)" />
+    {/* Concentric Arcs and Dots */}
 
-    {/* Left Arc & Dot */}
-    <path d="M 25 25 A 35 35 0 0 0 25 75" stroke="url(#gradOrange)" strokeWidth="5" strokeLinecap="round" />
-    <circle cx="15" cy="50" r="4.5" fill="url(#gradOrange)" />
+    {/* 1. Top-Left Arc (Purple to Red) */}
+    <path d="M 50 15 A 35 35 0 0 0 15 50" stroke="url(#gradLogoPurpleRed)" strokeWidth="6" strokeLinecap="round" />
+    <circle cx="50" cy="15" r="5" fill="#c800ff" />
 
-    {/* Bottom Arc & Dot */}
-    <path d="M 25 75 A 35 35 0 0 0 75 75" stroke="url(#gradMagenta)" strokeWidth="5" strokeLinecap="round" />
-    <circle cx="50" cy="85" r="4.5" fill="url(#gradMagenta)" />
+    {/* 2. Bottom-Left Arc (Red to Orange) */}
+    <path d="M 15 50 A 35 35 0 0 0 50 85" stroke="url(#gradLogoRedOrange)" strokeWidth="6" strokeLinecap="round" />
+    <circle cx="15" cy="50" r="5" fill="#ffcc00" />
+    <circle cx="50" cy="85" r="5" fill="#ff0080" />
 
-    {/* Right Inner Detail */}
-    <path d="M 75 25 A 35 35 0 0 1 75 75" stroke="url(#gradCyan)" strokeWidth="5" strokeLinecap="round" />
-    <path d="M 65 40 A 15 15 0 0 1 65 60" stroke="url(#gradCyan)" strokeWidth="4" strokeLinecap="round" />
+    {/* 3. Right Side Outer Arc (Blue to Cyan) */}
+    <path d="M 50 85 A 35 35 0 0 0 50 15" stroke="url(#gradLogoBlueCyan)" strokeWidth="6" strokeLinecap="round" />
+
+    {/* 4. Right Side Inner Arc Detail */}
+    <path d="M 64 40 A 16 16 0 0 1 64 60" stroke="#00d4ff" strokeWidth="5" strokeLinecap="round" />
   </svg>
 );
 
 
 const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
   <div className={`flex flex-col ${className} select-none`}>
-    <div className="flex items-center gap-4">
-      <span className="text-6xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">S</span>
-      <LogoIcon className="w-20 h-20" />
-      <span className="text-6xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">M</span>
+    <div className="flex items-center gap-6">
+      <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-2">S</span>
+      <LogoIcon className="w-24 h-24" />
+      <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-2">M</span>
     </div>
-    <div className="mt-2 pl-1">
-      <span className="text-[14px] font-bold tracking-[0.45em] text-[#0078ff] uppercase font-sans">Sistema Operacional Magalog</span>
+    <div className="mt-4">
+      <span className="text-[16px] font-bold tracking-[0.55em] text-[#0078ff] uppercase font-sans whitespace-nowrap">Sistema Operacional Magalog</span>
     </div>
   </div>
 );
@@ -1194,16 +1191,17 @@ export default function App() {
               </button>
             </div>
 
-            <div className="flex flex-col items-center mb-8">
-              <div className="flex items-center gap-4">
-                <span className="text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">S</span>
-                <LogoIcon className="w-20 h-20" />
-                <span className="text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">M</span>
+            <div className="flex flex-col items-center mb-12">
+              <div className="flex items-center gap-6 scale-110">
+                <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-4">S</span>
+                <LogoIcon className="w-24 h-24" />
+                <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-4">M</span>
               </div>
-              <div className="mt-4">
-                <span className="text-[12px] font-bold tracking-[0.55em] text-[#0078ff] uppercase whitespace-nowrap pl-2">Sistema Operacional Magalog</span>
+              <div className="mt-6">
+                <span className="text-[13px] font-bold tracking-[0.65em] text-[#0078ff] uppercase whitespace-nowrap pl-2">Sistema Operacional Magalog</span>
               </div>
             </div>
+
 
 
 
@@ -1300,17 +1298,18 @@ export default function App() {
           <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 border-b border-gray-200 dark:border-zinc-800/80 shrink-0`}>
 
             {!isSidebarCollapsed && (
-              <div className="flex flex-col items-start cursor-pointer overflow-hidden py-2" onClick={() => setActiveTab('home')}>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">S</span>
-                  <LogoIcon className="w-8 h-8" />
-                  <span className="text-2xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">M</span>
+              <div className="flex flex-col items-start cursor-pointer overflow-hidden py-4 px-1" onClick={() => setActiveTab('home')}>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">S</span>
+                  <LogoIcon className="w-10 h-10" />
+                  <span className="text-3xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">M</span>
                 </div>
-                <div className="mt-1">
-                  <span className="text-[7.5px] font-bold tracking-[0.3em] text-[#0078ff] uppercase whitespace-nowrap pl-0.5">Sistema Operacional Magalog</span>
+                <div className="mt-2">
+                  <span className="text-[8px] font-bold tracking-[0.45em] text-[#0078ff] uppercase whitespace-nowrap pl-1">Sistema Operacional Magalog</span>
                 </div>
               </div>
             )}
+
 
 
 
