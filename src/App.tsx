@@ -71,37 +71,41 @@ const getBlocoWeight = (bloco: string) => {
 const LogoIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      {/* Gradients for the icon arcs */}
-      <linearGradient id="gradLogoPurpleRed" x1="0.5" y1="0" x2="0" y2="0.5">
+      <linearGradient id="gradTopRight" x1="0.5" y1="0" x2="1" y2="0.6">
         <stop offset="0%" stopColor="#c800ff" />
-        <stop offset="100%" stopColor="#ff1b6b" />
+        <stop offset="100%" stopColor="#0078ff" />
       </linearGradient>
-      <linearGradient id="gradLogoRedOrange" x1="0" y1="0.5" x2="0.5" y2="1">
-        <stop offset="0%" stopColor="#ff1b6b" />
-        <stop offset="100%" stopColor="#ff9500" />
+      <linearGradient id="gradBottomLeft" x1="0" y1="0.4" x2="0.5" y2="1">
+        <stop offset="0%" stopColor="#ffcc00" />
+        <stop offset="100%" stopColor="#ff0080" />
       </linearGradient>
-      <linearGradient id="gradLogoBlueCyan" x1="0.5" y1="1" x2="1" y2="0.5">
+      <linearGradient id="gradInnerBlue" x1="0.5" y1="0.3" x2="1" y2="0.7">
         <stop offset="0%" stopColor="#0078ff" />
-        <stop offset="100%" stopColor="#00d4ff" />
+        <stop offset="100%" stopColor="#00ffcc" />
+      </linearGradient>
+      <linearGradient id="gradMagentaLine" x1="0" y1="0" x2="0.5" y2="0.1">
+        <stop offset="0%" stopColor="#ff0080" />
+        <stop offset="100%" stopColor="#c800ff" />
       </linearGradient>
     </defs>
 
-    {/* Concentric Arcs and Dots */}
-
-    {/* 1. Top-Left Arc (Purple to Red) */}
-    <path d="M 50 15 A 35 35 0 0 0 15 50" stroke="url(#gradLogoPurpleRed)" strokeWidth="6" strokeLinecap="round" />
+    {/* Outer Arc 1: Top to Right (Purple dot at 12 to 4 o'clock) */}
+    <path d="M 50 15 A 35 35 0 0 1 80 30" stroke="url(#gradTopRight)" strokeWidth="6" strokeLinecap="round" />
     <circle cx="50" cy="15" r="5" fill="#c800ff" />
 
-    {/* 2. Bottom-Left Arc (Red to Orange) */}
-    <path d="M 15 50 A 35 35 0 0 0 50 85" stroke="url(#gradLogoRedOrange)" strokeWidth="6" strokeLinecap="round" />
+    {/* Outer Arc 2: Left to Bottom (Yellow dot at 9 to Magenta dot at 6) */}
+    <path d="M 15 50 A 35 35 0 0 0 50 85" stroke="url(#gradBottomLeft)" strokeWidth="6" strokeLinecap="round" />
     <circle cx="15" cy="50" r="5" fill="#ffcc00" />
     <circle cx="50" cy="85" r="5" fill="#ff0080" />
 
-    {/* 3. Right Side Outer Arc (Blue to Cyan) */}
-    <path d="M 50 85 A 35 35 0 0 0 50 15" stroke="url(#gradLogoBlueCyan)" strokeWidth="6" strokeLinecap="round" />
+    {/* Outer Arc 3: Partial Top Left (Small magenta/purple line) */}
+    <path d="M 22 30 A 35 35 0 0 1 40 18" stroke="url(#gradMagentaLine)" strokeWidth="6" strokeLinecap="round" />
 
-    {/* 4. Right Side Inner Arc Detail */}
-    <path d="M 64 40 A 16 16 0 0 1 64 60" stroke="#00d4ff" strokeWidth="5" strokeLinecap="round" />
+    {/* Outer Arc 4: Partial Right/Bottom (Cyan/Green line) */}
+    <path d="M 82 45 A 35 35 0 0 1 70 80" stroke="#00ffcc" strokeWidth="6" strokeLinecap="round" />
+
+    {/* Inner Arc: Right side Blue arc */}
+    <path d="M 64 40 A 16 16 0 0 1 64 60" stroke="url(#gradInnerBlue)" strokeWidth="6" strokeLinecap="round" />
   </svg>
 );
 
@@ -114,10 +118,11 @@ const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
       <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-2">M</span>
     </div>
     <div className="mt-4">
-      <span className="text-[16px] font-bold tracking-[0.55em] text-[#0078ff] uppercase font-sans whitespace-nowrap">Sistema Operacional Magalog</span>
+      <span className="text-[17px] font-bold tracking-[0.7em] text-[#0078ff] uppercase font-sans whitespace-nowrap">Sistema Operacional Magalog</span>
     </div>
   </div>
 );
+
 
 
 const CustomTrophy = ({ className, gold = false, silver = false, bronze = false }: { className?: string, gold?: boolean, silver?: boolean, bronze?: boolean }) => {
@@ -1198,9 +1203,10 @@ export default function App() {
                 <span className="text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff] py-4">M</span>
               </div>
               <div className="mt-6">
-                <span className="text-[13px] font-bold tracking-[0.65em] text-[#0078ff] uppercase whitespace-nowrap pl-2">Sistema Operacional Magalog</span>
+                <span className="text-[13px] font-bold tracking-[0.7em] text-[#0078ff] uppercase whitespace-nowrap pl-4">Sistema Operacional Magalog</span>
               </div>
             </div>
+
 
 
 
@@ -1305,10 +1311,11 @@ export default function App() {
                   <span className="text-3xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#00d4ff] to-[#0078ff]">M</span>
                 </div>
                 <div className="mt-2">
-                  <span className="text-[8px] font-bold tracking-[0.45em] text-[#0078ff] uppercase whitespace-nowrap pl-1">Sistema Operacional Magalog</span>
+                  <span className="text-[8px] font-bold tracking-[0.7em] text-[#0078ff] uppercase whitespace-nowrap pl-2">Sistema Operacional Magalog</span>
                 </div>
               </div>
             )}
+
 
 
 
