@@ -4,7 +4,7 @@ import {
   HardHat, LayoutDashboard, ListChecks, Check, Building, X, Plus, Save, Edit2,
   Users, Settings, Shield, Package, ShoppingCart, Leaf, ArrowUp, ArrowDown,
   LogOut, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
-  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal, Upload, PanelLeftClose, Menu
+  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal, Upload, PanelLeftClose, Menu, PlusCircle
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
@@ -221,9 +221,9 @@ const CustomTrophy = ({ className, gold = false, silver = false, bronze = false 
 const AutoauditoriaRow = React.memo(({
   item,
   canEdit,
-  scoreValue,
+  pontoValue,
   nossaAcaoValue,
-  onScoreChange,
+  onPontoChange,
   onNossaAcaoChange,
   onNossaAcaoBlur,
   // Props novas inseridas
@@ -233,9 +233,9 @@ const AutoauditoriaRow = React.memo(({
 }: {
   item: ChecklistItem;
   canEdit: boolean;
-  scoreValue: string;
+  pontoValue: string;
   nossaAcaoValue: string;
-  onScoreChange: (itemId: string, newScore: string) => void;
+  onPontoChange: (itemId: string, newPonto: string) => void;
   onNossaAcaoChange: (itemId: string, newAcao: string) => void;
   onNossaAcaoBlur: (itemId: string, finalAcao: string) => void;
   unidade: string;
@@ -245,6 +245,7 @@ const AutoauditoriaRow = React.memo(({
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
   const [evidenciaUrl, setEvidenciaUrl] = useState<string | undefined>(existingEvidenciaUrl);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Sync prop -> local state ONLY when parent value explicitly changes via polling or load
   useEffect(() => {
@@ -307,14 +308,14 @@ const AutoauditoriaRow = React.memo(({
       </td>
       <td className="px-6 py-4">
         <select
-          value={scoreValue}
+          value={pontoValue}
           disabled={!canEdit}
-          onChange={(e) => onScoreChange(item.id, e.target.value)}
-          className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'} ${scoreValue === '3'
+          onChange={(e) => onPontoChange(item.id, e.target.value)}
+          className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'} ${pontoValue === '3'
             ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-            : scoreValue === '1'
+            : pontoValue === '1'
               ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-              : scoreValue === '0'
+              : pontoValue === '0'
                 ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
                 : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
             }`}
@@ -326,15 +327,89 @@ const AutoauditoriaRow = React.memo(({
         </select>
       </td>
       <td className="px-6 py-4">
-        <DebouncedTextarea
-          value={localNossaAcao}
-          onChange={(val) => handleNossaAcaoChange(val)}
-          onBlur={handleNossaAcaoBlur}
-          disabled={!canEdit}
-          placeholder={canEdit ? "Descreva a ação tomada..." : ""}
-          className={`w-full min-w-[200px] bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-white transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed bg-gray-100 dark:bg-zinc-900' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'}`}
-          rows={1}
-        />
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${
+            localNossaAcao.trim() 
+              ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20' 
+              : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+          }`}
+        >
+          {localNossaAcao.trim() ? (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Ver/Editar Plano</span>
+            </>
+          ) : (
+            <>
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Adicionar Plano</span>
+            </>
+          )}
+        </button>
+
+        <AnimatePresence>
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsModalOpen(false)}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden"
+              >
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/50">
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Plano de Ação / Observações</h3>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">{item.pilar} {' > '} {item.bloco}</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Item:</label>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-950 p-3 rounded-lg border border-gray-100 dark:border-zinc-800 italic">
+                      "{item.item}"
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Descrição Detalhada:</label>
+                    <textarea
+                      value={localNossaAcao}
+                      onChange={(e) => handleNossaAcaoChange(e.target.value)}
+                      onBlur={handleNossaAcaoBlur}
+                      disabled={!canEdit}
+                      placeholder={canEdit ? "Descreva detalhadamente a ação corretiva ou observação técnica..." : "Nenhum plano registrado."}
+                      className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-900 dark:text-white transition-all min-h-[150px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105 active:scale-95 text-sm"
+                  >
+                    Salvar e Fechar
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </td>
       <td className="px-6 py-4">
         <div className="flex flex-col space-y-2">
@@ -1922,8 +1997,8 @@ export default function App() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                       {(() => {
-                        // Primeiro, calcula o score de todas as unidades usando o sistema de pontos (Aderência Oficial)
-                        const unitsWithScores = UNIDADES_DISPONIVEIS.map(unidade => {
+                        // Primeiro, calcula a pontuação de todas as unidades usando o sistema de pontos (Aderência Oficial)
+                        const unitsWithPontos = UNIDADES_DISPONIVEIS.map(unidade => {
                           const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
                           const activeBaseItems = baseItems.filter(i => i.ativo);
 
@@ -1954,7 +2029,7 @@ export default function App() {
                         }).filter(u => u.totalGeral > 0);
 
                         // Ordena para definir o ranking (do maior para o menor)
-                        const sortedUnits = [...unitsWithScores].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
+                        const sortedUnits = [...unitsWithPontos].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
 
                         // Mapeia cada unidade para sua posição no ranking com visual de medalha e número
                         const getRankIcon = (unidade: string) => {
@@ -2833,7 +2908,7 @@ export default function App() {
                             <th className="px-6 py-4">Bloco</th>
                             <th className="px-6 py-4">Trilha</th>
                             <th className="px-6 py-4 min-w-[300px]">Pergunta/Verificação</th>
-                            <th className="px-6 py-4">Score</th>
+                            <th className="px-6 py-4">Ponto</th>
                             <th className="px-6 py-4 min-w-[200px]">Plano de ação / Obs</th>
                             <th className="px-6 py-4">Evidência</th>
                           </tr>
@@ -2856,19 +2931,19 @@ export default function App() {
                                   key={baseItem.id}
                                   item={baseItem}
                                   canEdit={!!canEdit}
-                                  scoreValue={scoreValue}
+                                  pontoValue={scoreValue}
                                   nossaAcaoValue={nossaAcaoValue}
                                   unidade={currentAutoauditoriaUnit}
                                   mesAno={autoauditoriaMesAno}
                                   existingEvidenciaUrl={existingUrl}
-                                  onScoreChange={(itemId, newScore) => {
+                                  onPontoChange={(itemId, newPonto) => {
                                     pendingAutoauditoriaEdits.current.add(itemId);
                                     needsAutoauditoriaSave.current = true;
                                     setAutoauditoriaData(prev => ({
                                       ...prev,
                                       [itemId]: {
                                         ...(prev[itemId] || { nossaAcao: '', evidencias: [] }),
-                                        score: newScore
+                                        score: newPonto
                                       }
                                     }));
                                   }}
