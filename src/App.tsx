@@ -1193,6 +1193,9 @@ export default function App() {
       matrix[unit] = {};
       const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unit));
 
+      let unitTotalPoints = 0;
+      let unitMaxPoints = 0;
+
       allPilars.forEach(pilar => {
         const pilarBaseItems = baseItems.filter(i => i.pilar === pilar);
         if (pilarBaseItems.length === 0) {
@@ -1208,10 +1211,16 @@ export default function App() {
           else if (score === '1') totalPoints += 1;
         });
 
+        unitTotalPoints += totalPoints;
+        unitMaxPoints += (pilarBaseItems.length * 3);
+
         const maxPoints = pilarBaseItems.length * 3;
         const percentage = maxPoints === 0 ? '0' : Math.round((totalPoints / maxPoints) * 100).toString();
         matrix[unit][pilar] = percentage;
       });
+
+      const totalPercentage = unitMaxPoints === 0 ? '0' : Math.round((unitTotalPoints / unitMaxPoints) * 100).toString();
+      matrix[unit]['Total'] = totalPercentage;
     });
 
     // Order divisions: SP first, then others
@@ -1835,6 +1844,28 @@ export default function App() {
                             })}
                           </tr>
                         ))}
+                        <tr className="bg-gray-50 dark:bg-zinc-950/50 font-extrabold border-t-2 border-gray-300 dark:border-zinc-700">
+                          <td className="px-2 py-3 border border-gray-300 dark:border-zinc-700 text-left sticky left-0 z-10 text-blue-600 dark:text-blue-400 whitespace-nowrap bg-gray-100 dark:bg-zinc-900 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                            Aderência Total
+                          </td>
+                          {matrixStats.flatOrderedUnits.map(unit => {
+                            const value = parseInt(matrixStats.matrix[unit]['Total'] || '0');
+                            const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
+                            let bgColor = 'text-gray-900 dark:text-white';
+                            if (value >= 70) bgColor = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+                            else if (value >= 50) bgColor = 'bg-amber-500/20 text-amber-600 dark:text-amber-400';
+                            else if (value > 0) bgColor = 'bg-red-500/20 text-red-600 dark:text-red-400';
+
+                            return (
+                              <td
+                                key={`${unit}-total`}
+                                className={`px-1 py-3 border border-gray-300 dark:border-zinc-700 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                              >
+                                {value}%
+                              </td>
+                            );
+                          })}
+                        </tr>
                       </tbody>
                     </table>
                   </div>
