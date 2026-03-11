@@ -84,7 +84,7 @@ const LogoIconSVG = ({ className = '' }: { className?: string }) => (
         <stop offset="100%" stopColor="#006CEE" />
       </linearGradient>
     </defs>
-
+    
     {/* Outer Arc (starts at left) */}
     <path
       d="M 15 50 A 35 35 0 1 1 35 80"
@@ -126,7 +126,7 @@ const LogoIconSVG = ({ className = '' }: { className?: string }) => (
 const MainLogo = ({ className = '', size = 'medium' }: { className?: string, size?: 'small' | 'medium' | 'large' }) => {
   const isSmall = size === 'small';
   const isLarge = size === 'large';
-
+  
   return (
     <div className={`flex flex-col items-center justify-center ${className} select-none`}>
       <div className="flex items-center gap-0.5 leading-none mb-1">
