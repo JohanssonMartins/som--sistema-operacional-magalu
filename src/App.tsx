@@ -49,7 +49,7 @@ export const CD_REGIONS: Record<string, { divisional: string, divisao: string }>
   '5200': { divisional: 'Christian', divisao: 'Sul / Sudeste' }
 };
 
-const PILAR_ORDER = ['Pessoas', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
+const PILAR_ORDER = ['Pessoas', 'Segurança', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
 const BLOCO_ORDER = [
   'Reconhecimento', 'Carreira', 'Desenvolvimento', 'Clima', 'Retenção', 'Atração', 'Cultura', 'Diversidade',
   'Gestão de Acidente', 'Ergonomia', 'Gestão de Fornecedores', 'Segurança Sanitária', 'PAE', 'Manutenção', 'Saúde', 'Gestão Meio Ambiente', 'Comportamento Seguro',
@@ -1690,7 +1690,6 @@ export default function App() {
                   // Map card titles to base pilar names for exact matches
                   let pilarName = card.title;
                   if (card.title === 'Clientes') pilarName = 'Cliente';
-                  else if (card.title === 'Segurança') pilarName = 'Sustentabilidade'; // Base tem bloco Segurança Sanitária dentro de Sustentabilidade
 
                   const pilarInfo = resumoPorPilar.find(p => p.pilar === pilarName);
                   const actualAutoAuditoria = pilarInfo ? Math.round(pilarInfo.aderencia) : 0;
@@ -2744,7 +2743,6 @@ export default function App() {
 
                               let pilarDashboardName = pilar;
                               if (pilar === 'Cliente') pilarDashboardName = 'Clientes';
-                              else if (pilar === 'Sustentabilidade') pilarDashboardName = 'Segurança';
 
                               const dashCard = dashboardData.find(c => c.title === pilarDashboardName);
                               const Icon = dashCard?.icon || Circle;
