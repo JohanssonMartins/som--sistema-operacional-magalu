@@ -4,7 +4,7 @@ import {
   HardHat, LayoutDashboard, ListChecks, Check, Building, X, Plus, Save, Edit2,
   Users, Settings, Shield, Package, ShoppingCart, Leaf, ArrowUp, ArrowDown,
   LogOut, Mail, ShieldAlert, User as UserIcon, Bell, Sun, Moon, CheckCircle2, Circle, Database,
-  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, Lock, Trophy, Medal, Upload, PanelLeftClose, Menu, PlusCircle
+  Mic, Sliders, FileText, Award, RefreshCw, BarChart, Trash2, ChevronDown, ChevronRight, Lock, Trophy, Medal, Upload, PanelLeftClose, Menu, PlusCircle
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
@@ -585,6 +585,16 @@ export default function App() {
   const [selectedAutoauditoriaPilar, setSelectedAutoauditoriaPilar] = useState('Todos');
   const [isSavingAutoauditoria, setIsSavingAutoauditoria] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+  const [expandedPilars, setExpandedPilars] = useState<Set<string>>(new Set());
+
+  const togglePilarExpansion = (pilar: string) => {
+    setExpandedPilars(prev => {
+      const next = new Set(prev);
+      if (next.has(pilar)) next.delete(pilar);
+      else next.add(pilar);
+      return next;
+    });
+  };
 
   // Deletar Pilar
   const [isDeletePilarModalOpen, setIsDeletePilarModalOpen] = useState(false);
@@ -1256,15 +1266,20 @@ export default function App() {
   const matrixStats = React.useMemo(() => {
     const allPilars = PILAR_ORDER;
     const matrix: Record<string, Record<string, string>> = {};
-
-    // Group units by division
     const divisions: Record<string, string[]> = {};
+    const pilarToBlocks: Record<string, string[]> = {};
+
+    allPilars.forEach(pilar => {
+      const pilarBaseItems = baseItems.filter(i => i.pilar === pilar);
+      const pilarBlocks = Array.from(new Set(pilarBaseItems.map(i => i.bloco)));
+      pilarToBlocks[pilar] = pilarBlocks.sort((a, b) => getBlocoWeight(a) - getBlocoWeight(b));
+    });
+
     UNIDADES_DISPONIVEIS.forEach(unit => {
       const division = CD_REGIONS[unit]?.divisao || 'Outros';
       if (!divisions[division]) divisions[division] = [];
       divisions[division].push(unit);
 
-      // Pre-calculate matrix data for this unit using allAutoauditorias
       matrix[unit] = {};
       const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unit));
 
@@ -1273,6 +1288,22 @@ export default function App() {
 
       allPilars.forEach(pilar => {
         const pilarBaseItems = baseItems.filter(i => i.pilar === pilar);
+
+        // Calculate per bloco
+        pilarToBlocks[pilar].forEach(bloco => {
+          const blocoBaseItems = pilarBaseItems.filter(i => i.bloco === bloco);
+          let blocoPoints = 0;
+          blocoBaseItems.forEach(bi => {
+            const auditItem = unitAudit?.items?.find((ai: any) => ai.baseItemId === bi.id);
+            const score = String(auditItem?.score || '');
+            if (score === '3') blocoPoints += 3;
+            else if (score === '1') blocoPoints += 1;
+          });
+          const maxBlocoPoints = blocoBaseItems.length * 3;
+          matrix[unit][`${pilar}_${bloco}`] = maxBlocoPoints === 0 ? '0' : Math.round((blocoPoints / maxBlocoPoints) * 100).toString();
+        });
+
+        // Calculate pilar total
         if (pilarBaseItems.length === 0) {
           matrix[unit][pilar] = '0';
           return;
@@ -1308,7 +1339,7 @@ export default function App() {
     const flatOrderedUnits = orderedDivisions.flatMap(div => divisions[div]);
     const divFirstUnits = new Set(orderedDivisions.map(div => divisions[div][0]));
 
-    return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix };
+    return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix, pilarToBlocks };
   }, [baseItems, allAutoauditorias, autoauditoriaMesAno]);
 
   // --- TELA DE LOGIN ---
@@ -1896,28 +1927,67 @@ export default function App() {
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                         {matrixStats.allPilars.map(pilar => (
-                          <tr key={pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                            <td className="px-2 py-3 border border-gray-200 dark:border-zinc-800 font-bold text-left bg-gray-50 dark:bg-zinc-950/50 sticky left-0 z-10 text-gray-900 dark:text-white whitespace-nowrap shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                              {pilar}
-                            </td>
-                            {matrixStats.flatOrderedUnits.map(unit => {
-                              const value = parseInt(matrixStats.matrix[unit][pilar] || '0');
-                              const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                              let bgColor = 'text-gray-900 dark:text-white';
-                              if (value >= 70) bgColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
-                              else if (value >= 50) bgColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
-                              else if (value > 0) bgColor = 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
+                          <React.Fragment key={pilar}>
+                            <tr
+                              onClick={() => togglePilarExpansion(pilar)}
+                              className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                            >
+                              <td className="px-2 py-3 border border-gray-200 dark:border-zinc-800 font-bold text-left bg-gray-50 dark:bg-zinc-950/50 sticky left-0 z-10 text-gray-900 dark:text-white whitespace-nowrap shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <div className="flex items-center gap-1">
+                                  {expandedPilars.has(pilar) ?
+                                    <ChevronDown className="w-3 h-3 text-amber-500" /> :
+                                    <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-amber-500" />
+                                  }
+                                  {pilar}
+                                </div>
+                              </td>
+                              {matrixStats.flatOrderedUnits.map(unit => {
+                                const value = parseInt(matrixStats.matrix[unit][pilar] || '0');
+                                const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
+                                let bgColor = 'text-gray-900 dark:text-white';
+                                if (value >= 70) bgColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
+                                else if (value >= 50) bgColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
+                                else if (value > 0) bgColor = 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
 
-                              return (
-                                <td
-                                  key={`${unit}-${pilar}`}
-                                  className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
-                                >
-                                  {value}%
+                                return (
+                                  <td
+                                    key={`${unit}-${pilar}`}
+                                    className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                                  >
+                                    {value}%
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                            {/* Sub-rows for blocks */}
+                            {expandedPilars.has(pilar) && matrixStats.pilarToBlocks[pilar].map(bloco => (
+                              <motion.tr
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                key={`${pilar}-${bloco}`}
+                                className="bg-gray-100/30 dark:bg-zinc-900/40 text-[10px] sm:text-xs"
+                              >
+                                <td className="px-4 py-2 border border-gray-200 dark:border-zinc-800 text-left bg-gray-100/50 dark:bg-zinc-900/50 sticky left-0 z-10 text-gray-500 dark:text-zinc-400 whitespace-nowrap italic">
+                                  {bloco}
                                 </td>
-                              );
-                            })}
-                          </tr>
+                                {matrixStats.flatOrderedUnits.map(unit => {
+                                  const value = parseInt(matrixStats.matrix[unit][`${pilar}_${bloco}`] || '0');
+                                  const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
+                                  let textColor = 'text-gray-400 dark:text-zinc-500';
+                                  if (value > 0) textColor = 'text-gray-600 dark:text-zinc-300 font-medium';
+
+                                  return (
+                                    <td
+                                      key={`${unit}-${pilar}-${bloco}`}
+                                      className={`px-1 py-2 border border-gray-200 dark:border-zinc-800 ${textColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/20' : ''}`}
+                                    >
+                                      {value}%
+                                    </td>
+                                  );
+                                })}
+                              </motion.tr>
+                            ))}
+                          </React.Fragment>
                         ))}
                         <tr className="bg-gray-50 dark:bg-zinc-950/50 font-extrabold border-t-2 border-gray-300 dark:border-zinc-700">
                           <td className="px-2 py-3 border border-gray-300 dark:border-zinc-700 text-left sticky left-0 z-10 text-blue-600 dark:text-blue-400 whitespace-nowrap bg-gray-100 dark:bg-zinc-900 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">

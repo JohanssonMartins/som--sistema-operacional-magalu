@@ -60,6 +60,26 @@ O projeto possui um ambiente integrado de front-end e back-end.
    - Front-end: `http://localhost:3000` (ou a porta exibida no terminal)
    - API: `http://localhost:3333`
 
+## 💾 Backup e Recuperação
+
+Para evitar a perda de dados caso o limite do banco de dados (Supabase/Neon) seja atingido, você pode realizar backups locais periódicos.
+
+### Realizar Backup
+Isso criará um arquivo JSON na pasta `/backups` com todos os dados atuais do banco:
+```bash
+npx tsx scripts/backup.ts
+```
+
+### Restaurar Backup
+Isso pegará o arquivo mais recente da pasta `/backups` e o enviará para o banco configurado no `.env`:
+```bash
+npx tsx scripts/restore.ts
+```
+
+> [!TIP]
+> Recomenda-se realizar um backup semanal ou antes de grandes alterações para garantir a segurança das informações preenchidas.
+
+
 ## 📂 Estrutura do Projeto
 
 - `src/`: Código fonte do front-end (React).
