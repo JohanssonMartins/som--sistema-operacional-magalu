@@ -69,56 +69,59 @@ const getBlocoWeight = (bloco: string) => {
 };
 
 const LogoIconSVG = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
     <defs>
-      <linearGradient id="logoIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="logoIconGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#FACC15" />
-        <stop offset="20%" stopColor="#FB923C" />
-        <stop offset="40%" stopColor="#FB7185" />
-        <stop offset="60%" stopColor="#E879F9" />
-        <stop offset="80%" stopColor="#818CF8" />
-        <stop offset="100%" stopColor="#22D3EE" />
+        <stop offset="50%" stopColor="#FB923C" />
+        <stop offset="100%" stopColor="#FB7185" />
       </linearGradient>
-      <linearGradient id="textGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#00AEEF" />
-        <stop offset="100%" stopColor="#006CEE" />
+      <linearGradient id="logoIconGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#A855F7" />
+        <stop offset="33%" stopColor="#3B82F6" />
+        <stop offset="66%" stopColor="#06B6D4" />
+        <stop offset="100%" stopColor="#22C55E" />
+      </linearGradient>
+      <linearGradient id="logoIconGradient3" x1="100%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stopColor="#9333EA" />
+        <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
     </defs>
     
     {/* Outer Arc (starts at left) */}
     <path
-      d="M 15 50 A 35 35 0 1 1 35 80"
-      stroke="url(#logoIconGradient)"
-      strokeWidth="6"
+      d="M 12 50 A 38 38 0 1 1 35 83"
+      stroke="url(#logoIconGradient1)"
+      strokeWidth="8"
       strokeLinecap="round"
     />
-    <circle cx="15" cy="50" r="4" fill="#FACC15" />
+    <circle cx="12" cy="50" r="4.5" fill="#FACC15" />
 
     {/* Middle Arc (starts at top) */}
     <path
-      d="M 50 22 A 28 28 0 1 1 28 50"
-      stroke="url(#logoIconGradient)"
-      strokeWidth="6"
+      d="M 50 18 A 32 32 0 1 1 25 50"
+      stroke="url(#logoIconGradient2)"
+      strokeWidth="8"
       strokeLinecap="round"
     />
-    <circle cx="50" cy="22" r="4" fill="#C084FC" />
+    <circle cx="50" cy="18" r="4.5" fill="#A855F7" />
 
     {/* Inner Arc (starts at bottom) */}
     <path
-      d="M 50 78 A 21 21 0 1 1 71 50"
-      stroke="url(#logoIconGradient)"
-      strokeWidth="6"
+      d="M 50 82 A 25 25 0 1 1 73 50"
+      stroke="url(#logoIconGradient3)"
+      strokeWidth="8"
       strokeLinecap="round"
     />
-    <circle cx="50" cy="78" r="4" fill="#9333EA" />
+    <circle cx="50" cy="82" r="4.5" fill="#9333EA" />
 
-    {/* Center Eye (Refining the gap) */}
+    {/* Center Eye */}
     <path
-      d="M 50 38 A 12 12 0 0 1 62 50"
+      d="M 55 35 A 15 15 0 0 1 70 50"
       stroke="#006CEE"
-      strokeWidth="4"
+      strokeWidth="6"
       strokeLinecap="round"
-      opacity="0.6"
+      opacity="0.7"
     />
   </svg>
 );
@@ -129,7 +132,7 @@ const MainLogo = ({ className = '', size = 'medium' }: { className?: string, siz
   
   return (
     <div className={`flex flex-col items-center justify-center ${className} select-none`}>
-      <div className="flex items-center gap-0.5 leading-none mb-1">
+      <div className="flex items-center gap-1.5 leading-none mb-1">
         <span className={`font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent ${isSmall ? 'text-4xl' : isLarge ? 'text-8xl' : 'text-6xl'}`}>
           S
         </span>
