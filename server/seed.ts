@@ -1,5 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { MOCK_USERS, INITIAL_CHECKLIST } from '../src/data';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient({});
 
@@ -26,8 +29,20 @@ async function main() {
 
     // 2. Seed Base Items
     for (const item of INITIAL_CHECKLIST) {
-        await prisma.baseChecklistItem.create({
-            data: {
+        await prisma.baseChecklistItem.upsert({
+            where: { id: item.id },
+            update: {
+                code: item.code,
+                pilar: item.pilar,
+                bloco: item.bloco,
+                trilha: item.trilha,
+                item: item.item,
+                descricao: item.descricao,
+                exigeEvidencia: item.exigeEvidencia,
+                ativo: item.ativo,
+                order: item.order,
+            },
+            create: {
                 id: item.id,
                 code: item.code,
                 pilar: item.pilar,
@@ -58,8 +73,22 @@ async function main() {
     );
 
     for (const genItem of initialGeneratedItems) {
-        await prisma.checklistItem.create({
-            data: {
+        await prisma.checklistItem.upsert({
+            where: { id: genItem.id },
+            update: {
+                code: genItem.code,
+                pilar: genItem.pilar,
+                bloco: genItem.bloco,
+                trilha: genItem.trilha,
+                item: genItem.item,
+                descricao: genItem.descricao,
+                exigeEvidencia: genItem.exigeEvidencia,
+                ativo: genItem.ativo,
+                order: genItem.order,
+                unidade: genItem.unidade,
+                assigneeId: genItem.assigneeId !== '' ? genItem.assigneeId : null,
+            },
+            create: {
                 id: genItem.id,
                 code: genItem.code,
                 pilar: genItem.pilar,
