@@ -583,6 +583,7 @@ export default function App() {
   const [autoauditoriaData, setAutoauditoriaData] = useState<Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>>({});
   const [allAutoauditorias, setAllAutoauditorias] = useState<any[]>([]);
   const [selectedAutoauditoriaPilar, setSelectedAutoauditoriaPilar] = useState('Todos');
+  const [selectedAutoauditoriaBloco, setSelectedAutoauditoriaBloco] = useState('Todos');
   const [isSavingAutoauditoria, setIsSavingAutoauditoria] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
   const [expandedPilars, setExpandedPilars] = useState<Set<string>>(new Set());
@@ -2814,13 +2815,32 @@ export default function App() {
 
                   <select
                     value={selectedAutoauditoriaPilar}
-                    onChange={(e) => setSelectedAutoauditoriaPilar(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedAutoauditoriaPilar(e.target.value);
+                      setSelectedAutoauditoriaBloco('Todos');
+                    }}
                     className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
                   >
                     <option value="Todos">Filtrar Pilar</option>
                     {pilares.map(p => (
                       <option key={p} value={p}>{p}</option>
                     ))}
+                  </select>
+
+                  <select
+                    value={selectedAutoauditoriaBloco}
+                    onChange={(e) => setSelectedAutoauditoriaBloco(e.target.value)}
+                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm font-medium"
+                  >
+                    <option value="Todos">Filtrar Bloco</option>
+                    {Array.from(new Set(baseItems
+                      .filter(item => selectedAutoauditoriaPilar === 'Todos' || item.pilar === selectedAutoauditoriaPilar)
+                      .map(item => item.bloco)))
+                      .sort((a, b) => getBlocoWeight(a) - getBlocoWeight(b))
+                      .map(bloco => (
+                        <option key={bloco} value={bloco}>{bloco}</option>
+                      ))
+                    }
                   </select>
 
                   <select
@@ -2985,8 +3005,12 @@ export default function App() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                           {baseItems
-                            .filter(item => selectedAutoauditoriaPilar === 'Todos' || item.pilar === selectedAutoauditoriaPilar)
-                            .sort((a, b) => a.pilar.localeCompare(b.pilar))
+                            .filter(item => (selectedAutoauditoriaPilar === 'Todos' || item.pilar === selectedAutoauditoriaPilar) && (selectedAutoauditoriaBloco === 'Todos' || item.bloco === selectedAutoauditoriaBloco))
+                            .sort((a, b) => {
+                              const pilarDiff = getPilarWeight(a.pilar) - getPilarWeight(b.pilar);
+                              if (pilarDiff !== 0) return pilarDiff;
+                              return getBlocoWeight(a.bloco) - getBlocoWeight(b.bloco);
+                            })
                             .map((baseItem) => {
                               const scoreValue = autoauditoriaData[baseItem.id]?.score || '';
                               const nossaAcaoValue = autoauditoriaData[baseItem.id]?.nossaAcao || '';
