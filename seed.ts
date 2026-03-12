@@ -1,9 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { MOCK_USERS, INITIAL_CHECKLIST } from './src/data';
 
-const prisma = new PrismaClient({
-    datasourceUrl: 'postgresql://neondb_owner:npg_IDi28HaGpmbS@ep-nameless-term-acdmwfs0-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-});
+const prisma = new PrismaClient();
+
 
 async function main() {
     console.log('Iniciando seed de produção no PostgreSQL...');
