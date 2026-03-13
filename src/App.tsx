@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
+import logoImg from './assets/images/logo.png';
 
 const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
@@ -132,21 +133,15 @@ const MainLogo = ({ className = '', size = 'medium' }: { className?: string, siz
   
   return (
     <div className={`flex flex-col items-center justify-center ${className} select-none`}>
-      <div className="flex items-center gap-1.5 leading-none mb-1">
-        <span className={`font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent ${isSmall ? 'text-4xl' : isLarge ? 'text-8xl' : 'text-6xl'}`}>
-          S
-        </span>
-        <LogoIconSVG className={isSmall ? 'w-10 h-10' : isLarge ? 'w-24 h-24' : 'w-16 h-16'} />
-        <span className={`font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent ${isSmall ? 'text-4xl' : isLarge ? 'text-8xl' : 'text-6xl'}`}>
-          M
-        </span>
-      </div>
-      <div className={`text-[#006CEE] font-bold tracking-[0.25em] text-center uppercase ${isSmall ? 'text-[8px] mt-0' : isLarge ? 'text-base mt-2' : 'text-[10px] mt-1'}`}>
-        SISTEMA OPERACIONAL MAGALOG
-      </div>
+      <img 
+        src={logoImg} 
+        alt="Magalog Logo" 
+        className={`${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-16'} w-auto object-contain transition-transform duration-300 hover:scale-105`}
+      />
     </div>
   );
 };
+
 
 const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
   <div className={`flex items-center gap-4 ${className} select-none`}>
