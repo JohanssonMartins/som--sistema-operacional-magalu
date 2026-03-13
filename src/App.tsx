@@ -996,10 +996,7 @@ export default function App() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setChangePasswordError('');
-    
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangePasswordError('');
+
     
     if (!currentUser) return;
     
