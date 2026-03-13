@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
-import logoImg from './assets/images/logo.png';
+import logoImg from './assets/images/Logo.png';
 
 const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
@@ -128,15 +128,14 @@ const LogoIconSVG = ({ className = '' }: { className?: string }) => (
 );
 const MainLogo = ({ className = '', size = 'medium' }: { className?: string, size?: 'small' | 'medium' | 'large' }) => {
   const isSmall = size === 'small';
-
   const isLarge = size === 'large';
   
   return (
-    <div className={`flex flex-col items-center justify-center ${className} select-none`}>
+    <div className={`flex flex-col items-center justify-center ${className} select-none w-full overflow-hidden ${isSmall ? 'h-16' : isLarge ? 'h-40' : 'h-32'}`}>
       <img 
         src={logoImg} 
         alt="Magalog Logo" 
-        className={`${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-16'} w-auto object-contain transition-transform duration-300 hover:scale-105`}
+        className={`w-full h-full object-contain scale-[1.5] sm:scale-[1.8] origin-center transition-transform duration-300 hover:scale-[1.9]`}
       />
     </div>
   );
