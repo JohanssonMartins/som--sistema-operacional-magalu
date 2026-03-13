@@ -126,9 +126,9 @@ const LogoIconSVG = ({ className = '' }: { className?: string }) => (
     />
   </svg>
 );
-
 const MainLogo = ({ className = '', size = 'medium' }: { className?: string, size?: 'small' | 'medium' | 'large' }) => {
   const isSmall = size === 'small';
+
   const isLarge = size === 'large';
   
   return (
@@ -141,6 +141,10 @@ const MainLogo = ({ className = '', size = 'medium' }: { className?: string, siz
     </div>
   );
 };
+
+
+
+
 
 
 const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
@@ -598,6 +602,14 @@ export default function App() {
   // Deletar Pilar
   const [isDeletePilarModalOpen, setIsDeletePilarModalOpen] = useState(false);
   const [pilarToDelete, setPilarToDelete] = useState('');
+
+  // --- ESTADOS DE TROCA DE SENHA ---
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [passwordFormData, setPasswordFormData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState('');
+
+
   const [isDeletingPilar, setIsDeletingPilar] = useState(false);
 
   // Refs para rastrear edição local e evitar sobrescritas ou saves desnecessários do polling
@@ -980,6 +992,52 @@ export default function App() {
       reader.readAsDataURL(file);
     }
   };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePasswordError('');
+    
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePasswordError('');
+    
+    if (!currentUser) return;
+    
+    // Validations
+    if (passwordFormData.oldPassword !== currentUser.password) {
+      setChangePasswordError('Senha atual incorreta.');
+      return;
+    }
+    
+    if (passwordFormData.newPassword.length < 3) {
+      setChangePasswordError('A nova senha deve ter pelo menos 3 caracteres.');
+      return;
+    }
+    
+    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+      setChangePasswordError('As senhas não coincidem.');
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    try {
+      const updatedUser = { ...currentUser, password: passwordFormData.newPassword };
+      await api.updateUser(currentUser.id, updatedUser);
+      setCurrentUser(updatedUser);
+      localStorage.setItem('som_user', JSON.stringify(updatedUser));
+      
+      setIsChangePasswordModalOpen(false);
+      setPasswordFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      alert('Senha atualizada com sucesso!');
+    } catch (error) {
+      setChangePasswordError('Erro ao atualizar senha. Tente novamente.');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+
+
 
   // --- FUNÇÕES DA BASE DE CHECKLIST ---
   const handleAddBaseItem = async (e: React.FormEvent) => {
@@ -1771,7 +1829,14 @@ export default function App() {
                         <span className="text-[10px] font-bold text-gray-700 dark:text-zinc-300 uppercase bg-gray-200 dark:bg-zinc-800 px-2 py-1 rounded">{currentUser.unidade}</span>
                       </div>
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 space-y-1">
+                      <button
+                        onClick={() => { setIsChangePasswordModalOpen(true); setIsUserMenuOpen(false); }}
+                        className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center space-x-3 transition-colors font-medium border border-transparent hover:border-gray-200 dark:hover:border-zinc-700"
+                      >
+                        <Lock className="w-4 h-4 shrink-0" />
+                        <span>Trocar Senha</span>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center space-x-3 transition-colors font-medium border border-transparent hover:border-red-100 dark:hover:border-red-500/20"
@@ -3513,6 +3578,103 @@ export default function App() {
             </div>
           )}
         </AnimatePresence>
+        
+        {/* Modal Trocar Senha */}
+        <AnimatePresence>
+          {isChangePasswordModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-zinc-800"
+              >
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-500 rounded-lg text-zinc-950">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Trocar Senha</h3>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400">Atualize sua credencial de acesso</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsChangePasswordModalOpen(false)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+                  {changePasswordError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-lg flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                      <ShieldAlert className="w-4 h-4 shrink-0" />
+                      <span>{changePasswordError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Senha Atual</label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordFormData.oldPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Nova Senha</label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordFormData.newPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                      placeholder="Mínimo 3 caracteres"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Confirmar Nova Senha</label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordFormData.confirmPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                      placeholder="Repita a nova senha"
+                    />
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsChangePasswordModalOpen(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 text-sm font-bold text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isChangingPassword}
+                      className="flex-2 px-6 py-2.5 rounded-xl bg-amber-500 text-zinc-950 text-sm font-black hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                    >
+                      {isChangingPassword ? (
+                        <div className="w-4 h-4 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
+                      Atualizar Senha
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       </div >
     </div >
   );
