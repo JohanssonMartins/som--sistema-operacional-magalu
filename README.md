@@ -1,93 +1,78 @@
-# S.O.M - Sistema Operacional Magalu 🚀
+# Sistema Operacional Magalog (S.O.M)
 
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)
-![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?logo=vite)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?logo=tailwind-css)
-![Prisma](https://img.shields.io/badge/Prisma-6.1-2D3748?logo=prisma)
-![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express)
+O **Sistema Operacional Magalog (S.O.M)** é uma plataforma web desenvolvida para otimizar, auditar e gerenciar as operações diárias dos Centros de Distribuição (CDs) da Magalog. O sistema permite o acompanhamento de checklists diários, autoavaliações, metas de performance e gestão de usuários de forma intuitiva e segura.
 
-O **S.O.M (Sistema Operacional Magalu)** é uma plataforma avançada de gestão de excelência operacional e auditoria para os Centros de Distribuição (CDs) do Magalu. O sistema permite o acompanhamento em tempo real da aderência aos pilares da empresa, gestão de checklists, evidências e rankings de performance.
+## Tecnologias Principais
 
-## ✨ Funcionalidades Principais
+O projeto adota uma arquitetura moderna dividida entre Frontend, Backend e Banco de Dados:
 
-- **📊 Dashboard de Auditoria**: Visão consolidada por unidade (CD) ou visão empresa ("Todos os CDs").
-- **✅ Gestão de Checklists**: Auto-auditoria e auditoria oficial com fluxos de aprovação e bloqueio de itens concluídos.
-- **🏆 Top Magalog**: Ranking de performance dos CDs com premiações dinâmicas (Medalhas de Ouro, Prata e Bronze).
-- **🔒 Controle de Acesso (RBAC)**: Diferentes níveis de permissão (Admin, Auditor, Gerente Divisional, Gerente de CD, Dono de Pilar e Colaborador).
-- **📸 Gestão de Evidências**: Upload e visualização de fotos/documentos para comprovação de conformidade.
-- **🌓 Modo Escuro/Claro**: Interface moderna e adaptável às preferências do usuário.
+* **Frontend:** React (Vite), TailwindCSS, TypeScript, Framer Motion (Animações), Lucide React (Ícones).
+* **Backend:** Node.js, Express, Multer (Processamento de Arquivos), integração com Google Drive API.
+* **Banco de Dados:** Supabase (PostgreSQL) acessado primariamente via Prisma ORM (ou integrações diretas da API).
 
-## 🛠️ Tecnologias Utilizadas
+## Estrutura do Projeto
 
-### Front-end
-- **React 19 & TypeScript**: Core da aplicação com tipagem forte.
-- **Motion (Framer Motion)**: Animações fluidas e micro-interações.
-- **Lucide React**: Biblioteca de ícones moderna.
-- **Tailwind CSS 4**: Estilização performática e responsiva.
-- **Dexie.js**: Armazenamento local robusto (quando offline).
+O código está organizado da seguinte maneira:
 
-### Back-end
-- **Node.js & Express**: API REST para gestão de dados.
-- **Prisma ORM**: Modelagem e acesso ao banco de dados.
-- **Better-SQLite3**: Banco de dados relacional leve e rápido.
+```text
+├── src/                  # Código-fonte do Frontend (React)
+│   ├── components/       # Componentes reutilizáveis (modais, alertas)
+│   ├── App.tsx           # Ponto de entrada e rotas principais
+│   ├── api.ts            # Integrações com o Backend local (fetch)
+│   └── data.ts           # Definição de Tipos e Mock de Dados
+├── server/               # Código-fonte do Backend (Node/Express)
+│   ├── index.ts          # Arquivo principal do servidor e definição de rotas
+│   └── services/         # Lógicas complexas (ex: Google Drive Upload)
+├── prisma/               # Configuração do banco de dados (Schema e Migrations)
+├── docs/                 # Manuais técnicos e Guias de Usuário detalhados
+└── docs-arquitetura.md   # Visão macro da infraestrutura em nuvem
+```
 
-## 📋 Pré-requisitos
+## Como Rodar o Projeto Localmente
 
-- **Node.js** (versão 18 ou superior)
-- **npm** (incluso no Node.js)
+Para contribuir ou testar o projeto em sua máquina local, siga os passos abaixo:
 
-## 🚀 Como rodar o projeto
+### Pré-requisitos
+* **Node.js**: (versão 18+ recomendada)
+* Um projeto configurado no **Supabase** com as credenciais de banco de dados.
 
-O projeto possui um ambiente integrado de front-end e back-end.
+### Instalação
 
-1. **Instale as dependências**:
+1. Clone o repositório e instale as dependências:
    ```bash
    npm install
    ```
 
-2. **Inicie o servidor de banco de dados (API)**:
+2. Configure as variáveis de ambiente:
+   - Crie um arquivo `.env` na raiz do projeto (use o `.env.example` como base se existir).
+   - Preencha a URL de conexão com o Supabase:
+     ```env
+     DATABASE_URL="postgres://usuario:senha@aws-0-regiao.pooler.supabase.com:6543/postgres?pgbouncer=true"
+     ```
+
+3. Inicie o banco de dados (caso esteja rodando o Prisma localmente):
    ```bash
-   npm run server
+   npx prisma generate
+   npx prisma db push  # (Ou npx prisma migrate dev)
    ```
 
-3. **Inicie o front-end (em outro terminal)**:
-   ```bash
-   npm run dev
-   ```
+### Execução
 
-4. **Acesse no navegador**:
-   - Front-end: `http://localhost:3000` (ou a porta exibida no terminal)
-   - API: `http://localhost:3333`
+Você precisa rodar o Servidor (Backend) e a Interface (Frontend) simultaneamente:
 
-## 💾 Backup e Recuperação
-
-Para evitar a perda de dados caso o limite do banco de dados (Supabase/Neon) seja atingido, você pode realizar backups locais periódicos.
-
-### Realizar Backup
-Isso criará um arquivo JSON na pasta `/backups` com todos os dados atuais do banco:
+**Terminal 1 (Backend):**
+Roda a API na porta `3333`.
 ```bash
-npx tsx scripts/backup.ts
+npm run server
 ```
 
-### Restaurar Backup
-Isso pegará o arquivo mais recente da pasta `/backups` e o enviará para o banco configurado no `.env`:
+**Terminal 2 (Frontend):**
+Roda a interface React na porta `5173`.
 ```bash
-npx tsx scripts/restore.ts
+npm run dev
 ```
 
-> [!TIP]
-> Recomenda-se realizar um backup semanal ou antes de grandes alterações para garantir a segurança das informações preenchidas.
-
-
-## 📂 Estrutura do Projeto
-
-- `src/`: Código fonte do front-end (React).
-- `server/`: Código fonte do back-end (Express/Prisma).
-- `prisma/`: Esquemas e migrações do banco de dados.
-- `public/`: Arquivos estáticos.
-- `README.md`: Documentação do projeto.
+Abra seu navegador em [http://localhost:5173](http://localhost:5173).
 
 ---
-
-© 2026 Magalu | Desenvolvido por J's Martins
+*Documentação oficial do S.O.M - Sistema Operacional Magalog.*

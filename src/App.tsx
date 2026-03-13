@@ -131,11 +131,11 @@ const MainLogo = ({ className = '', size = 'medium' }: { className?: string, siz
   const isLarge = size === 'large';
   
   return (
-    <div className={`flex flex-col items-center justify-center ${className} select-none w-full overflow-hidden ${isSmall ? 'h-16' : isLarge ? 'h-40' : 'h-32'}`}>
+    <div className={`flex flex-col items-center justify-center ${className} select-none w-full px-4 ${isSmall ? 'h-12' : isLarge ? 'h-32' : 'h-20'}`}>
       <img 
         src={logoImg} 
         alt="Magalog Logo" 
-        className={`w-full h-full object-contain scale-[1.5] sm:scale-[1.8] origin-center transition-transform duration-300 hover:scale-[1.9]`}
+        className={`w-full h-full object-contain transition-transform duration-300 hover:scale-105`}
       />
     </div>
   );
