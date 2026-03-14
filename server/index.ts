@@ -177,6 +177,12 @@ app.post('/api/checklists/bulk-put', async (req, res) => {
 app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
     try {
         const { unidade } = req.params;
+        
+        // 1. Buscar itens base para mapear pilares
+        const baseItems = await prisma.baseChecklistItem.findMany();
+        const baseItemMap = new Map(baseItems.map(item => [item.id, item.pilar]));
+
+        // 2. Buscar auditorias da unidade selecionada
         const autoauditorias = await prisma.autoauditoria.findMany({
             where: { unidade },
             include: {
@@ -184,7 +190,53 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
             }
         });
 
+        // 3. Identificar os meses presentes para calcular média da rede
+        const uniqueMonths = [...new Set(autoauditorias.map(a => a.mesAno))];
+        
+        // 4. Buscar todas as auditorias desses meses para o benchmark
+        const allAuditsInMonths = await prisma.autoauditoria.findMany({
+            where: {
+                mesAno: { in: uniqueMonths }
+            },
+            include: {
+                items: true
+            }
+        });
+
+        // 5. Calcular média da rede por mês
+        const networkAvgByMonth: Record<string, number> = {};
+        uniqueMonths.forEach(mes => {
+            const audits = allAuditsInMonths.filter(a => a.mesAno === mes);
+            let monthTotalScore = 0;
+            let monthMaxScore = 0;
+            
+            audits.forEach(audit => {
+                audit.items.forEach(item => {
+                    const s = parseInt(item.score || '0');
+                    monthTotalScore += (isNaN(s) ? 0 : s);
+                    monthMaxScore += 3;
+                });
+            });
+            
+            networkAvgByMonth[mes] = monthMaxScore > 0 
+                ? Math.round((monthTotalScore / monthMaxScore) * 1000) / 10 
+                : 0;
+        });
+
+        // 6. Processar histórico final com pilares
         const history = autoauditorias.map(audit => {
+            const pillarScores: Record<string, { score: number, max: number }> = {};
+            
+            audit.items.forEach(item => {
+                const pilar = baseItemMap.get(item.baseItemId) || 'Outros';
+                const s = parseInt(item.score || '0');
+                const val = (isNaN(s) ? 0 : s);
+                
+                if (!pillarScores[pilar]) pillarScores[pilar] = { score: 0, max: 0 };
+                pillarScores[pilar].score += val;
+                pillarScores[pilar].max += 3;
+            });
+
             const totalScore = audit.items.reduce((acc, item) => {
                 const s = parseInt(item.score || '0');
                 return acc + (isNaN(s) ? 0 : s);
@@ -193,16 +245,23 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
             const maxScore = audit.items.length * 3;
             const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
+            const pillars: Record<string, number> = {};
+            Object.entries(pillarScores).forEach(([name, data]) => {
+                pillars[name] = data.max > 0 ? Math.round((data.score / data.max) * 1000) / 10 : 0;
+            });
+
             return {
                 mesAno: audit.mesAno,
                 performance: Math.round(performance * 10) / 10,
                 score: totalScore,
                 maxScore,
-                status: audit.status
+                status: audit.status,
+                pillars,
+                networkAvg: networkAvgByMonth[audit.mesAno] || 0
             };
         });
 
-        // Ordenação cronológica baseada no mesAno string (ex: "Janeiro-2026")
+        // Ordenação cronológica
         const monthOrder: Record<string, number> = {
             'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
             'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
@@ -211,10 +270,8 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
         history.sort((a, b) => {
             const [monthA, yearA] = a.mesAno.split('-');
             const [monthB, yearB] = b.mesAno.split('-');
-            
             const yrA = parseInt(yearA);
             const yrB = parseInt(yearB);
-            
             if (yrA !== yrB) return yrA - yrB;
             return (monthOrder[monthA] || 0) - (monthOrder[monthB] || 0);
         });

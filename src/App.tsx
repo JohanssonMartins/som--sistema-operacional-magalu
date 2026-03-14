@@ -1903,7 +1903,15 @@ export default function App() {
                       <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
                     </div>
                   ) : (
-                    <TrendChart data={historyData} />
+                    <TrendChart 
+                      data={historyData} 
+                      onPointClick={(mesAno) => {
+                        setAutoauditoriaMesAno(mesAno);
+                        setActiveTab('autoauditoria');
+                        // Scroll top to ensure they see the header
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
                   )}
                 </motion.div>
               )}
