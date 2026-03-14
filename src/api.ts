@@ -3,8 +3,8 @@ import { User, ChecklistItem } from './data';
 const envUrl = import.meta.env.VITE_API_BASE_URL;
 console.log('Environment VITE_API_BASE_URL detectado:', envUrl);
 
-// Hardcoding temporário para garantir que a Vercel sempre vai bater no backend correto
-const API_BASE_URL = envUrl || 'https://som-sistema-operacional-magalu-production.up.railway.app/api';
+// Hardcoding temporário para garantir que localmente a gente sempre bata no servidor local
+const API_BASE_URL = envUrl || 'http://localhost:3333/api';
 console.log('API_BASE_URL sendo usada pelo Frontend:', API_BASE_URL);
 
 export const api = {

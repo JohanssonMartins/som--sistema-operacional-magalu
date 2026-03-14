@@ -174,6 +174,58 @@ app.post('/api/checklists/bulk-put', async (req, res) => {
 });
 
 // Autoauditoria Mensal
+app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
+    try {
+        const { unidade } = req.params;
+        const autoauditorias = await prisma.autoauditoria.findMany({
+            where: { unidade },
+            include: {
+                items: true
+            }
+        });
+
+        const history = autoauditorias.map(audit => {
+            const totalScore = audit.items.reduce((acc, item) => {
+                const s = parseInt(item.score || '0');
+                return acc + (isNaN(s) ? 0 : s);
+            }, 0);
+            
+            const maxScore = audit.items.length * 3;
+            const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+
+            return {
+                mesAno: audit.mesAno,
+                performance: Math.round(performance * 10) / 10,
+                score: totalScore,
+                maxScore,
+                status: audit.status
+            };
+        });
+
+        // Ordenação cronológica baseada no mesAno string (ex: "Janeiro-2026")
+        const monthOrder: Record<string, number> = {
+            'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
+            'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+        };
+
+        history.sort((a, b) => {
+            const [monthA, yearA] = a.mesAno.split('-');
+            const [monthB, yearB] = b.mesAno.split('-');
+            
+            const yrA = parseInt(yearA);
+            const yrB = parseInt(yearB);
+            
+            if (yrA !== yrB) return yrA - yrB;
+            return (monthOrder[monthA] || 0) - (monthOrder[monthB] || 0);
+        });
+
+        res.json(history);
+    } catch (error) {
+        console.error('GET HISTORY ERROR:', error);
+        res.status(500).json({ error: 'Erro ao buscar histórico de auditorias' });
+    }
+});
+
 app.get('/api/autoauditoria/all/:mesAno', async (req, res) => {
     try {
         const { mesAno } = req.params;
@@ -274,44 +326,6 @@ app.post('/api/autoauditoria', async (req, res) => {
     } catch (error) {
         console.error('POST AUTOAUDITORIA ERROR:', error);
         res.status(500).json({ error: 'Erro ao salvar autoauditoria' });
-    }
-});
-
-app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
-    try {
-        const { unidade } = req.params;
-        const autoauditorias = await prisma.autoauditoria.findMany({
-            where: { unidade },
-            include: {
-                items: true
-            },
-            orderBy: {
-                createdAt: 'asc'
-            }
-        });
-
-        const history = autoauditorias.map(audit => {
-            const totalScore = audit.items.reduce((acc, item) => {
-                const s = parseInt(item.score || '0');
-                return acc + (isNaN(s) ? 0 : s);
-            }, 0);
-            
-            const maxScore = audit.items.length * 3;
-            const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-
-            return {
-                mesAno: audit.mesAno,
-                performance: Math.round(performance * 10) / 10,
-                score: totalScore,
-                maxScore,
-                status: audit.status
-            };
-        });
-
-        res.json(history);
-    } catch (error) {
-        console.error('GET HISTORY ERROR:', error);
-        res.status(500).json({ error: 'Erro ao buscar histórico de auditorias' });
     }
 });
 
