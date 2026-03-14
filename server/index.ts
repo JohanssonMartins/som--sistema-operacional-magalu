@@ -286,17 +286,19 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
 app.get('/api/autoauditoria/all/:mesAno', async (req, res) => {
     try {
         const { mesAno } = req.params;
-        console.log('GET ALL AUTOAUDITORIA FOR:', mesAno);
+        console.log(`[API] Buscando todas as autoauditorias para: ${mesAno}`);
+        
         const autoauditorias = await prisma.autoauditoria.findMany({
             where: { mesAno },
             include: {
                 items: true
             }
         });
-        console.log(`FOUND ${autoauditorias.length} RECORDS`);
+
+        console.log(`[API] Sucesso: Encontradas ${autoauditorias.length} auditorias para ${mesAno}`);
         res.json(autoauditorias);
     } catch (error) {
-        console.error('GET ALL AUTOAUDITORIA ERROR:', error);
+        console.error('[API] Erro ao buscar autoauditorias:', error);
         res.status(500).json({ error: 'Erro ao buscar todas as autoauditorias' });
     }
 });

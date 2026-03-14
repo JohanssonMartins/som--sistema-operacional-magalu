@@ -695,10 +695,9 @@ export default function App() {
           baseItemId,
           score: autoauditoriaData[baseItemId].score,
           nossaAcao: autoauditoriaData[baseItemId].nossaAcao,
-          evidencias: autoauditoriaData[baseItemId].evidencias || []
         }));
 
-        await api.saveAutoauditoria({
+        const response = await api.saveAutoauditoria({
           unidade: currentAutoauditoriaUnit,
           mesAno: autoauditoriaMesAno,
           items: itemsToSave
@@ -1359,7 +1358,9 @@ export default function App() {
       divisions[division].push(unit);
 
       matrix[unit] = {};
-      const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unit));
+      const unitAudit = allAutoauditorias.find(a => 
+        String(a.unidade) === String(unit) && a.mesAno === autoauditoriaMesAno
+      );
 
       let unitTotalPoints = 0;
       let unitMaxPoints = 0;
@@ -2186,7 +2187,9 @@ export default function App() {
                       {(() => {
                         // Primeiro, calcula a pontuação de todas as unidades usando o sistema de pontos (Aderência Oficial)
                         const unitsWithPontos = UNIDADES_DISPONIVEIS.map(unidade => {
-                          const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
+                          const unitAudit = allAutoauditorias.find(a => 
+                            String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
+                          );
                           const activeBaseItems = baseItems.filter(i => i.ativo);
 
                           let totalPoints = 0;
@@ -2277,7 +2280,9 @@ export default function App() {
                               </td>
                               {PILAR_ORDER.map(pilar => {
                                 const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
-                                const unitAudit = allAutoauditorias.find(a => String(a.unidade) === String(unidade));
+                                const unitAudit = allAutoauditorias.find(a => 
+                                  String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
+                                );
 
                                 let pilarPoints = 0;
                                 let pilarRespondidos = 0;
