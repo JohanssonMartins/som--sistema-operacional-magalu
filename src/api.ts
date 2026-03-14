@@ -88,6 +88,11 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/autoauditoria`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         return res.json();
     },
+    getHistory: async (unidade: string) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/history/${encodeURIComponent(unidade)}`);
+        if (!res.ok) throw new Error('Failed to fetch history');
+        return res.json();
+    },
     uploadEvidenciaGoogleDrive: async (formData: FormData) => {
         const res = await fetch(`${API_BASE_URL}/autoauditoria/evidencia/upload`, {
             method: 'POST',

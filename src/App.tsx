@@ -9,6 +9,7 @@ import {
 import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, AutoauditoriaItem, Autoauditoria } from "./data";
 import { api } from "./api";
 import logoImg from './assets/images/Logo.png';
+import TrendChart from "./components/TrendChart";
 
 const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
@@ -583,6 +584,8 @@ export default function App() {
   });
   const [autoauditoriaData, setAutoauditoriaData] = useState<Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>>({});
   const [allAutoauditorias, setAllAutoauditorias] = useState<any[]>([]);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [selectedAutoauditoriaPilar, setSelectedAutoauditoriaPilar] = useState('Todos');
   const [selectedAutoauditoriaBloco, setSelectedAutoauditoriaBloco] = useState('Todos');
   const [isSavingAutoauditoria, setIsSavingAutoauditoria] = useState(false);
@@ -768,6 +771,28 @@ export default function App() {
       if (intervalId) clearInterval(intervalId);
     };
   }, [activeTab, autoauditoriaMesAno, currentAutoauditoriaUnit]);
+
+  // Carregar histórico para o Dashboard de Tendências
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (activeTab === 'home' && selectedUnit !== 'Todas') {
+        try {
+          setIsLoadingHistory(true);
+          const history = await api.getHistory(selectedUnit);
+          setHistoryData(history);
+        } catch (error) {
+          console.error("Erro ao carregar histórico:", error);
+          setHistoryData([]);
+        } finally {
+          setIsLoadingHistory(false);
+        }
+      } else {
+        setHistoryData([]);
+      }
+    };
+
+    loadHistory();
+  }, [activeTab, selectedUnit]);
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -1551,7 +1576,6 @@ export default function App() {
                   </div>
                   {!isSidebarCollapsed && (
                     <div className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left">
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500 truncate w-full">CD</span>
                       <div className="flex flex-col w-full mt-0.5">
                         <span className="text-[13px] font-bold text-gray-800 dark:text-zinc-200 truncate w-full">
                           {selectedUnit === 'Todas' ? 'Todos os CDs' : `CD ${selectedUnit}`}
@@ -1858,6 +1882,31 @@ export default function App() {
                 </h2>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
               </div>
+
+              {selectedUnit !== 'Todas' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-6 shadow-lg"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-200 flex items-center gap-2">
+                      <BarChart className="w-5 h-5 text-blue-500" /> Histórico de Performance
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-500">
+                      <div className="w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500" />
+                      <span>Mensal Oficial (%)</span>
+                    </div>
+                  </div>
+                  {isLoadingHistory ? (
+                    <div className="h-[300px] flex items-center justify-center">
+                      <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+                    </div>
+                  ) : (
+                    <TrendChart data={historyData} />
+                  )}
+                </motion.div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dashboardData.map((card, idx) => {

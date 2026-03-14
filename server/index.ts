@@ -277,6 +277,44 @@ app.post('/api/autoauditoria', async (req, res) => {
     }
 });
 
+app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
+    try {
+        const { unidade } = req.params;
+        const autoauditorias = await prisma.autoauditoria.findMany({
+            where: { unidade },
+            include: {
+                items: true
+            },
+            orderBy: {
+                createdAt: 'asc'
+            }
+        });
+
+        const history = autoauditorias.map(audit => {
+            const totalScore = audit.items.reduce((acc, item) => {
+                const s = parseInt(item.score || '0');
+                return acc + (isNaN(s) ? 0 : s);
+            }, 0);
+            
+            const maxScore = audit.items.length * 3;
+            const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+
+            return {
+                mesAno: audit.mesAno,
+                performance: Math.round(performance * 10) / 10,
+                score: totalScore,
+                maxScore,
+                status: audit.status
+            };
+        });
+
+        res.json(history);
+    } catch (error) {
+        console.error('GET HISTORY ERROR:', error);
+        res.status(500).json({ error: 'Erro ao buscar histórico de auditorias' });
+    }
+});
+
 import multer from 'multer';
 import { googleDriveService } from './services/googleDriveService';
 
