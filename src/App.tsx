@@ -1854,7 +1854,7 @@ export default function App() {
             <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
               <div>
                 <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
-                  Avaliação - <span className="text-xl font-medium text-gray-700 dark:text-gray-300">{selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}</span>
+                  {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
                 </h2>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
               </div>
