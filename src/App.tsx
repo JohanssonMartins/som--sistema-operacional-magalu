@@ -1906,12 +1906,6 @@ export default function App() {
                   ) : (
                     <TrendChart 
                       data={historyData} 
-                      onPointClick={(mesAno) => {
-                        setAutoauditoriaMesAno(mesAno);
-                        setActiveTab('autoauditoria');
-                        // Scroll top to ensure they see the header
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
                     />
                   )}
                 </motion.div>

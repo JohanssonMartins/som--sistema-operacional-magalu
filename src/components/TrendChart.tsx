@@ -12,7 +12,7 @@ import {
   Legend,
   ComposedChart
 } from 'recharts';
-import { TrendingUp, Target, Users, MapPin, MousePointer2 } from 'lucide-react';
+import { TrendingUp, Target, Users, MapPin } from 'lucide-react';
 
 interface HistoryData {
   mesAno: string;
@@ -26,7 +26,6 @@ interface HistoryData {
 
 interface TrendChartProps {
   data: HistoryData[];
-  onPointClick?: (mesAno: string) => void;
 }
 
 const PILLAR_COLORS: Record<string, string> = {
@@ -38,7 +37,7 @@ const PILLAR_COLORS: Record<string, string> = {
   'Outros': '#64748b'     // Slate
 };
 
-const TrendChart: React.FC<TrendChartProps> = ({ data, onPointClick }) => {
+const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   const [showPillars, setShowPillars] = useState(false);
   const [showNetwork, setShowNetwork] = useState(true);
   const [showProjection, setShowProjection] = useState(true);
@@ -121,22 +120,11 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, onPointClick }) => {
             <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Meta: 90%</span>
         </div>
       </div>
-
       <div className="h-[350px] w-full bg-white dark:bg-zinc-900/30 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm relative group">
-        <div className="absolute top-2 right-4 flex items-center gap-1 text-[10px] text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            <MousePointer2 size={10} />
-            Clique em um ponto para detalhar
-        </div>
-
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartDataWithProjection}
             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            onClick={(state) => {
-                if (state && state.activeLabel && onPointClick) {
-                    onPointClick(state.activeLabel);
-                }
-            }}
           >
             <defs>
               <linearGradient id="colorPerf" x1="0" y1="0" x2="0" y2="1">
@@ -169,12 +157,25 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, onPointClick }) => {
               }}
               labelStyle={{ fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}
               itemStyle={{ fontSize: '12px', padding: '2px 0' }}
+              itemSorter={(item) => {
+                const order: Record<string, number> = {
+                  'Geral': 1,
+                  'Pessoas': 2,
+                  'Segurança': 3,
+                  'Processos': 4,
+                  'Financeiro': 5,
+                  'Qualidade': 6,
+                  'Média Rede': 100,
+                  'Tendência': 101,
+                };
+                return order[item.name as string] || 50;
+              }}
             />
             
             {/* Meta */}
             <ReferenceLine y={90} stroke="#ef4444" strokeDasharray="5 5" label={{ position: 'right', value: 'Meta', fill: '#ef4444', fontSize: 10, fontWeight: 'bold' }} />
 
-            {/* Performance Principal */}
+            {/* Performance Principal (Geral) - Primeira na lista do Tooltip */}
             <Area
               type="monotone"
               dataKey="performance"
@@ -186,6 +187,20 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, onPointClick }) => {
               animationDuration={1500}
               activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
             />
+
+            {/* Pilares */}
+            {showPillars && allPillars.map(pillar => (
+                <Line
+                    key={pillar}
+                    type="monotone"
+                    dataKey={`pillars.${pillar}`}
+                    name={pillar}
+                    stroke={PILLAR_COLORS[pillar] || '#64748b'}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    animationDuration={1500}
+                />
+            ))}
 
             {/* Média da Rede */}
             {showNetwork && (
@@ -213,20 +228,6 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, onPointClick }) => {
                     animationDuration={2000}
                 />
             )}
-
-            {/* Pilares */}
-            {showPillars && allPillars.map(pillar => (
-                <Line
-                    key={pillar}
-                    type="monotone"
-                    dataKey={`pillars.${pillar}`}
-                    name={pillar}
-                    stroke={PILLAR_COLORS[pillar] || '#64748b'}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    animationDuration={1500}
-                />
-            ))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
