@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Database, Check, X, Edit2, Trash2, Save } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
-import { TableSkeleton } from '../components/Skeleton';
 
 export const BaseChecklist = () => {
     const { baseItems, setBaseItems, currentUser } = useStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<Partial<ChecklistItem>>({
         pilar: '',
         bloco: '',
@@ -22,23 +20,6 @@ export const BaseChecklist = () => {
         ativo: true,
         order: 0
     });
-
-    useEffect(() => {
-        const loadBaseItems = async () => {
-            if (baseItems.length === 0) {
-                setIsLoading(true);
-                try {
-                    const b = await api.getBaseItems();
-                    setBaseItems(b);
-                } catch (e) {
-                    console.error(e);
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        };
-        loadBaseItems();
-    }, []);
 
     const handleEditItem = (item: ChecklistItem) => {
         setEditingItem(item);
@@ -94,70 +75,66 @@ export const BaseChecklist = () => {
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm p-1">
-                {isLoading ? (
-                    <TableSkeleton rows={10} cols={6} />
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
-                            <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
-                                <tr>
-                                    <th className="px-6 py-4">Pilar</th>
-                                    <th className="px-6 py-4">Bloco</th>
-                                    <th className="px-6 py-4">Item</th>
-                                    <th className="px-6 py-4">Evidência</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4 text-right">Ações</th>
+            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
+                        <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
+                            <tr>
+                                <th className="px-6 py-4">Pilar</th>
+                                <th className="px-6 py-4">Bloco</th>
+                                <th className="px-6 py-4">Item</th>
+                                <th className="px-6 py-4">Evidência</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                            {baseItems.sort((a,b) => (a.order || 0) - (b.order || 0)).map((item) => (
+                                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group">
+                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
+                                    <td className="px-6 py-4">{item.bloco}</td>
+                                    <td className="px-6 py-4 max-w-xs md:max-w-md truncate" title={item.item}>
+                                        {item.item}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {item.exigeEvidencia ? (
+                                            <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100 dark:border-emerald-500/20">
+                                                <Check className="w-3 h-3 mr-1" /> Sim
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-800/50 px-2 py-0.5 rounded text-xs font-medium border border-gray-100 dark:border-zinc-800">
+                                                <X className="w-3 h-3 mr-1" /> Não
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {item.ativo ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Ativo</span>
+                                        ) : (
+                                            <span className="text-red-500 dark:text-red-400 font-bold">Inativo</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 text-right flex justify-end space-x-1">
+                                        <button
+                                            onClick={() => handleEditItem(item)}
+                                            className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteItem(item.id)}
+                                            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                                {baseItems.sort((a,b) => (a.order || 0) - (b.order || 0)).map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
-                                        <td className="px-6 py-4">{item.bloco}</td>
-                                        <td className="px-6 py-4 max-w-xs md:max-w-md truncate" title={item.item}>
-                                            {item.item}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {item.exigeEvidencia ? (
-                                                <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100 dark:border-emerald-500/20">
-                                                    <Check className="w-3 h-3 mr-1" /> Sim
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-800/50 px-2 py-0.5 rounded text-xs font-medium border border-gray-100 dark:border-zinc-800">
-                                                    <X className="w-3 h-3 mr-1" /> Não
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {item.ativo ? (
-                                                <span className="text-emerald-600 dark:text-emerald-400 font-bold">Ativo</span>
-                                            ) : (
-                                                <span className="text-red-500 dark:text-red-400 font-bold">Inativo</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-right flex justify-end space-x-1">
-                                            <button
-                                                onClick={() => handleEditItem(item)}
-                                                className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteItem(item.id)}
-                                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
-                                                title="Excluir"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <AnimatePresence>

@@ -17,7 +17,7 @@ interface ShellProps {
 
 export const Shell: React.FC<ShellProps> = ({ children }) => {
   const { 
-    currentUser, logout, theme, setTheme, 
+    currentUser, logout, theme, toggleTheme, 
     isSidebarCollapsed, setIsSidebarCollapsed,
     selectedUnit, setSelectedUnit,
     items
@@ -175,8 +175,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         <div className="p-3 border-t border-gray-200 dark:border-zinc-800/80 bg-gray-50 dark:bg-zinc-950/80">
           <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2'}`}>
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-800"
+              onClick={toggleTheme}
+              className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm"
               title="Alternar Tema"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -221,38 +221,12 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute bottom-full left-0 mb-4 w-[240px] bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                  className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 py-2 divide-y divide-gray-100 dark:divide-zinc-800"
                 >
-                  <div className="p-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50">
-                    <p className="text-sm font-black text-gray-900 dark:text-white truncate">
-                      {currentUser?.name} ({currentUser?.role === 'ADMIN' ? 'Admin' : 'Usuário'})
-                    </p>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-500 truncate mt-0.5">{currentUser?.email}</p>
-                    
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-800 flex items-center justify-between">
-                      <span className="text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Unidade Base</span>
-                      <span className="px-2 py-0.5 bg-gray-200 dark:bg-zinc-800 rounded text-[9px] font-black text-gray-700 dark:text-zinc-300">
-                        {currentUser?.unidade || 'MASTER'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2 space-y-1">
-                    <button 
-                      onClick={() => alert('Em breve: Funcionalidade de trocar senha.')}
-                      className="w-full flex items-center px-3 py-2 text-xs text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors font-medium"
-                    >
-                      <Lock className="w-4 h-4 mr-3 text-gray-400" />
-                      Trocar Senha
-                    </button>
-                    <button 
-                      onClick={handleLogout} 
-                      className="w-full flex items-center px-3 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors font-bold"
-                    >
-                      <LogOut className="w-4 h-4 mr-3" />
-                      Sair do sistema
-                    </button>
-                  </div>
+                  <button onClick={handleLogout} className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-bold">
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Sair do Sistema
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>

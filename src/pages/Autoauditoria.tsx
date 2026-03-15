@@ -7,7 +7,6 @@ import { PILAR_ORDER } from '../constants/appConstants';
 import { getPilarWeight, getBlocoWeight } from '../utils/appUtils';
 import { AutoauditoriaRow } from '../components/AutoauditoriaRow';
 import { api } from '../api';
-import { TableSkeleton, Skeleton } from '../components/Skeleton';
 
 export const Autoauditoria = () => {
   const { 
@@ -181,34 +180,23 @@ export const Autoauditoria = () => {
       </div>
 
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-zinc-800 p-8">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
-                <Skeleton width={80} height={32} />
-                <Skeleton width={60} height={16} />
-              </div>
-            ))}
+        <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-zinc-800 border-b border-gray-200 dark:border-zinc-800 p-6 text-center">
+          <div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{progressoTotal.toFixed(1).replace('.', ',')}%</div>
+            <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Progresso</div>
+            <div className="text-xs text-gray-400 dark:text-zinc-500">({totalRespondidos}/{totalItems} itens)</div>
           </div>
-        ) : (
-          <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-zinc-800 border-b border-gray-200 dark:border-zinc-800 p-6 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{progressoTotal.toFixed(1).replace('.', ',')}%</div>
-              <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Progresso</div>
-              <div className="text-xs text-gray-400 dark:text-zinc-500">({totalRespondidos}/{totalItems} itens)</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{aderenciaMedia.toFixed(1).replace('.', ',')}%</div>
-              <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Aderência Auto</div>
-            </div>
-            <div>
-              <div className={`text-2xl font-bold ${aderenciaMedia >= 80 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {aderenciaMedia >= 80 ? 'Aderente' : 'Não Aderente'}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Status</div>
-            </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{aderenciaMedia.toFixed(1).replace('.', ',')}%</div>
+            <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Aderência Auto</div>
           </div>
-        )}
+          <div>
+            <div className={`text-2xl font-bold ${aderenciaMedia >= 80 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {aderenciaMedia >= 80 ? 'Aderente' : 'Não Aderente'}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Status</div>
+          </div>
+        </div>
 
         <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-zinc-200">Resumo por Pilar</h3>
@@ -233,38 +221,34 @@ export const Autoauditoria = () => {
         </div>
 
         <div className="overflow-x-auto">
-          {isLoading ? (
-            <TableSkeleton rows={5} cols={6} />
-          ) : (
-            <table className="w-full text-center text-sm text-gray-600 dark:text-zinc-300">
-              <thead className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 font-bold">
-                <tr>
-                  <th className="px-6 py-4 text-left">Pilar</th>
-                  <th className="px-6 py-4">Total</th>
-                  <th className="px-6 py-4 text-emerald-600">Conforme</th>
-                  <th className="px-6 py-4 text-red-600">N. Conforme</th>
-                  <th className="px-6 py-4">Aderência</th>
-                  <th className="px-6 py-4">Status</th>
+          <table className="w-full text-center text-sm text-gray-600 dark:text-zinc-300">
+            <thead className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 font-bold">
+              <tr>
+                <th className="px-6 py-4 text-left">Pilar</th>
+                <th className="px-6 py-4">Total</th>
+                <th className="px-6 py-4 text-emerald-600">Conforme</th>
+                <th className="px-6 py-4 text-red-600">N. Conforme</th>
+                <th className="px-6 py-4">Aderência</th>
+                <th className="px-6 py-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+              {resumoPorPilar.map(row => (
+                <tr key={row.pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-6 py-4 text-left font-bold text-gray-900 dark:text-zinc-100">{row.pilar}</td>
+                  <td className="px-6 py-4">{row.total}</td>
+                  <td className="px-6 py-4 font-bold text-emerald-600">{row.conforme}</td>
+                  <td className="px-6 py-4 font-bold text-red-600">{row.naoConforme}</td>
+                  <td className="px-6 py-4">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${row.status === 'Aderente' ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                      {row.status}
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                {resumoPorPilar.map(row => (
-                  <tr key={row.pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                    <td className="px-6 py-4 text-left font-bold text-gray-900 dark:text-zinc-100">{row.pilar}</td>
-                    <td className="px-6 py-4">{row.total}</td>
-                    <td className="px-6 py-4 font-bold text-emerald-600">{row.conforme}</td>
-                    <td className="px-6 py-4 font-bold text-red-600">{row.naoConforme}</td>
-                    <td className="px-6 py-4">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${row.status === 'Aderente' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -277,40 +261,36 @@ export const Autoauditoria = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            {isLoading ? (
-              <TableSkeleton rows={15} cols={7} />
-            ) : (
-              <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
-                <thead className="bg-gray-50 dark:bg-zinc-950 font-bold border-b border-gray-200 dark:border-zinc-800 uppercase text-[10px] tracking-wider text-gray-500">
-                  <tr>
-                    <th className="px-6 py-3">Pilar</th>
-                    <th className="px-6 py-3">Bloco</th>
-                    <th className="px-6 py-3">Trilha</th>
-                    <th className="px-6 py-3">Item</th>
-                    <th className="px-6 py-3 w-24">Ponto</th>
-                    <th className="px-6 py-3 w-32">Plano</th>
-                    <th className="px-6 py-3 w-40">Evidência</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/50">
-                  {filteredItems.map(item => (
-                    <AutoauditoriaRow
-                      key={item.id}
-                      item={item}
-                      canEdit={!!canEdit}
-                      pontoValue={autoauditoriaData[item.id]?.score || ''}
-                      nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || ''}
-                      onPontoChange={handlePontoChange}
-                      onNossaAcaoChange={handleNossaAcaoChange}
-                      onNossaAcaoBlur={handleNossaAcaoBlur}
-                      unidade={selectedUnit}
-                      mesAno={autoauditoriaMesAno}
-                      existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
+              <thead className="bg-gray-50 dark:bg-zinc-950 font-bold border-b border-gray-200 dark:border-zinc-800 uppercase text-[10px] tracking-wider text-gray-500">
+                <tr>
+                  <th className="px-6 py-3">Pilar</th>
+                  <th className="px-6 py-3">Bloco</th>
+                  <th className="px-6 py-3">Trilha</th>
+                  <th className="px-6 py-3">Item</th>
+                  <th className="px-6 py-3 w-24">Ponto</th>
+                  <th className="px-6 py-3 w-32">Plano</th>
+                  <th className="px-6 py-3 w-40">Evidência</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/50">
+                {filteredItems.map(item => (
+                  <AutoauditoriaRow
+                    key={item.id}
+                    item={item}
+                    canEdit={!!canEdit}
+                    pontoValue={autoauditoriaData[item.id]?.score || ''}
+                    nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || ''}
+                    onPontoChange={handlePontoChange}
+                    onNossaAcaoChange={handleNossaAcaoChange}
+                    onNossaAcaoBlur={handleNossaAcaoBlur}
+                    unidade={selectedUnit}
+                    mesAno={autoauditoriaMesAno}
+                    existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
