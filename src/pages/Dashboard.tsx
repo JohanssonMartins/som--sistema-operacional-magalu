@@ -47,23 +47,39 @@ export const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
-      <div>
-        <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
-          {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
-        </h2>
-        <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
-      </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
+            {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
+          </h2>
+          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Status de performance e aderência operacional</p>
+        </div>
 
-      <div className="flex justify-end gap-3">
-        {selectedUnit !== 'Todas' && (
-          <button 
-            onClick={() => exportUtils.exportDashboardToPDF(resumoPorPilar, dashboardStats.aderenciaMedia, autoauditoriaMesAno, selectedUnit)}
-            className="flex items-center space-x-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-all transform hover:scale-105"
-          >
-            <Download className="w-4 h-4" />
-            <span>Exportar PDF</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {selectedUnit !== 'Todas' && (
+            <button 
+              onClick={() => exportUtils.exportDashboardToPDF(resumoPorPilar, dashboardStats.aderenciaMedia, autoauditoriaMesAno, selectedUnit)}
+              className="group flex items-center space-x-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 text-gray-700 dark:text-zinc-200 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/50 active:scale-95"
+            >
+              <div className="bg-red-500/10 p-1 rounded-lg group-hover:bg-red-500/20 transition-colors">
+                <Download className="w-4 h-4 text-red-600" />
+              </div>
+              <span>Exportar PDF</span>
+            </button>
+          )}
+
+          {selectedUnit === 'Todas' && (
+            <button 
+              onClick={() => exportUtils.exportMatrixToExcel(matrixStats.matrix, matrixStats.flatOrderedUnits, matrixStats.allPilars, autoauditoriaMesAno)}
+              className="group flex items-center space-x-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 text-gray-700 dark:text-zinc-200 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/50 active:scale-95"
+            >
+              <div className="bg-emerald-500/10 p-1 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+                <Download className="w-4 h-4 text-emerald-600" />
+              </div>
+              <span>Exportar Matriz (Excel)</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {selectedUnit !== 'Todas' && (
@@ -172,18 +188,9 @@ export const Dashboard = () => {
       {selectedUnit === 'Todas' && (
         <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-lg mt-8">
           <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-200 flex items-center gap-2">
-                <BarChart className="w-5 h-5 text-amber-500" /> Matriz de Aderência Consolidada
-              </h3>
-              <button 
-                onClick={() => exportUtils.exportMatrixToExcel(matrixStats.matrix, matrixStats.flatOrderedUnits, matrixStats.allPilars, autoauditoriaMesAno)}
-                className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow-sm transition-all transform active:scale-95"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Exportar Excel</span>
-              </button>
-            </div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-200 flex items-center gap-2">
+              <BarChart className="w-5 h-5 text-amber-500" /> Matriz de Aderência Consolidada
+            </h3>
             <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Aderência Oficial (%) por CD</span>
           </div>
           <div className="overflow-x-auto no-scrollbar">

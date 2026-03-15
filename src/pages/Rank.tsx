@@ -77,7 +77,7 @@ export const Rank = () => {
           <p className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1">Acompanhamento consolidado de Aderência Oficial por CD e Pilar.</p>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
             <div className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px]">
               <div className="space-y-1.5">
                 <div className="flex items-center space-x-2">
@@ -100,12 +100,15 @@ export const Rank = () => {
                 </div>
               </div>
             </div>
+            
             <button 
                 onClick={() => exportUtils.exportRankToExcel(sortedUnits, autoauditoriaMesAno)}
-                className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-all transform hover:scale-105"
+                className="group flex items-center justify-center space-x-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 text-gray-700 dark:text-zinc-200 px-4 py-3 rounded-xl text-sm font-bold shadow-md transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/50 active:scale-95"
             >
-                <Download className="w-4 h-4" />
-                <span>Exportar Rank (Excel)</span>
+                <div className="bg-emerald-500/10 p-1 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+                  <Download className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span>Exportar Ranking (Excel)</span>
             </button>
         </div>
       </div>
