@@ -103,5 +103,23 @@ export const api = {
             throw new Error(err.error || 'Failed to upload evidence');
         }
         return res.json();
+    },
+    suggestAction: async (pilar: string, bloco: string, item: string, descricao: string) => {
+        const res = await fetch(`${API_BASE_URL}/ai/suggest-action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pilar, bloco, item, descricao })
+        });
+        if (!res.ok) throw new Error('Falha ao obter sugestão de IA');
+        return res.json();
+    },
+    analyzeEvidence: async (pilar: string, bloco: string, item: string, descricao: string, evidenceId: string) => {
+        const res = await fetch(`${API_BASE_URL}/ai/analyze-evidence`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pilar, bloco, item, descricao, evidenceId })
+        });
+        if (!res.ok) throw new Error('Falha ao analisar evidência com IA');
+        return res.json();
     }
 };

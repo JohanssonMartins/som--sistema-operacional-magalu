@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, PlusCircle, X, Upload } from 'lucide-react';
+import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2 } from 'lucide-react';
 import { ChecklistItem } from '../data';
 import { api } from '../api';
 
@@ -33,6 +33,10 @@ export const AutoauditoriaRow = React.memo(({
   const [isUploading, setIsUploading] = useState(false);
   const [evidenciaUrl, setEvidenciaUrl] = useState<string | undefined>(existingEvidenciaUrl);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [evidenceId, setEvidenceId] = useState<string | undefined>(undefined); // ID do Drive para análise
 
   useEffect(() => {
     setLocalNossaAcao(nossaAcaoValue);
@@ -71,6 +75,9 @@ export const AutoauditoriaRow = React.memo(({
       const res = await api.uploadEvidenciaGoogleDrive(formData);
       if (res.success && res.url) {
         setEvidenciaUrl(res.url);
+        if (res.evidencia && res.evidencia.name) {
+          setEvidenceId(res.evidencia.name); // O FileID foi salvo no name no server
+        }
       }
     } catch (error) {
       console.error('Erro no upload da evidência:', error);
@@ -78,6 +85,40 @@ export const AutoauditoriaRow = React.memo(({
     } finally {
       setIsUploading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleAISuggestion = async () => {
+    try {
+      setIsSuggesting(true);
+      const res = await api.suggestAction(item.pilar, item.bloco, item.item, item.descricao || '');
+      if (res.suggestion) {
+        handleNossaAcaoChange(res.suggestion);
+      }
+    } catch (error) {
+      console.error('Erro ao sugerir com IA:', error);
+      alert('Não foi possível obter sugestão da IA agora. Tente mais tarde.');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const handleAIAnalysis = async () => {
+    if (!evidenceId) {
+       alert('ID da evidência não disponível para análise.');
+       return;
+    }
+    try {
+      setIsAnalyzing(true);
+      const res = await api.analyzeEvidence(item.pilar, item.bloco, item.item, item.descricao || '', evidenceId);
+      if (res.analysis) {
+        setAiAnalysis(res.analysis);
+      }
+    } catch (error) {
+      console.error('Erro ao analisar com IA:', error);
+      alert('Não foi possível analisar a evidência agora.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -168,17 +209,33 @@ export const AutoauditoriaRow = React.memo(({
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Descrição Detalhada:</label>
-                    <textarea
-                      value={localNossaAcao}
-                      onChange={(e) => handleNossaAcaoChange(e.target.value)}
-                      onBlur={handleNossaAcaoBlur}
-                      disabled={!canEdit}
-                      placeholder={canEdit ? "Descreva detalhadamente a ação corretiva ou observação técnica..." : "Nenhum plano registrado."}
-                      className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-900 dark:text-white transition-all min-h-[150px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    />
+                  <div className="mb-4 flex justify-between items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Descrição Detalhada:</label>
+                    </div>
+                    {canEdit && (
+                      <button
+                        onClick={handleAISuggestion}
+                        disabled={isSuggesting}
+                        className="mb-2 flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md text-[10px] font-bold hover:shadow-lg disabled:opacity-50 transition-all shrink-0"
+                      >
+                        {isSuggesting ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        <span>{isSuggesting ? 'Sugestionando...' : 'Sugerir com IA'}</span>
+                      </button>
+                    )}
                   </div>
+                  <textarea
+                    value={localNossaAcao}
+                    onChange={(e) => handleNossaAcaoChange(e.target.value)}
+                    onBlur={handleNossaAcaoBlur}
+                    disabled={!canEdit}
+                    placeholder={canEdit ? "Descreva detalhadamente a ação corretiva ou observação técnica..." : "Nenhum plano registrado."}
+                    className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-900 dark:text-white transition-all min-h-[150px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  />
                 </div>
 
                 <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end">
@@ -206,6 +263,30 @@ export const AutoauditoriaRow = React.memo(({
               Ver Evidência Salva
             </a>
           )}
+          
+          {(evidenciaUrl && canEdit) && (
+            <button
+              onClick={handleAIAnalysis}
+              disabled={isAnalyzing}
+              className={`flex items-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all ${
+                aiAnalysis 
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800'
+                  : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-800 hover:bg-purple-100'
+              }`}
+              title={aiAnalysis || "Analisar evidência com Vision IA"}
+            >
+              {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3" />}
+              <span>{aiAnalysis ? 'Evidência Analisada' : 'Validar com IA'}</span>
+            </button>
+          )}
+
+          {aiAnalysis && (
+            <div className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded border border-dashed border-gray-200 dark:border-zinc-700 mt-1">
+              <span className="font-bold text-gray-700 dark:text-zinc-300">Análise IA: </span>
+              {aiAnalysis}
+            </div>
+          ) }
+
           <label className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}>
             <Upload className="w-3.5 h-3.5" />
             <span>{isUploading ? 'Enviando...' : (evidenciaUrl ? 'Substituir' : 'Anexar')}</span>

@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Users, Shield, User as UserIcon, Edit2, Trash2, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';
 import { Role, User } from '../data';
 import { UNIDADES_DISPONIVEIS } from '../constants/appConstants';
+import { TableSkeleton } from '../components/Skeleton';
 
 export const UserManagement = () => {
   const { usersList, setUsersList, currentUser } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', 
     email: '', 
@@ -18,6 +20,23 @@ export const UserManagement = () => {
     photo: '', 
     unidade: '' 
   });
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (usersList.length === 0) {
+        setIsLoading(true);
+        try {
+          const u = await api.getUsers();
+          setUsersList(u);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadUsers();
+  }, []);
 
   const handleEditUser = (user: User) => {
     setEditingUserId(user.id);
@@ -84,67 +103,71 @@ export const UserManagement = () => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
-            <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
-              <tr>
-                <th className="px-6 py-4">Nome</th>
-                <th className="px-6 py-4">E-mail</th>
-                <th className="px-6 py-4">Unidade/CD</th>
-                <th className="px-6 py-4">Nível de Acesso</th>
-                <th className="px-6 py-4 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-              {usersList.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200 flex items-center space-x-3">
-                    {user.photo ? (
-                      <img src={user.photo} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-zinc-700" />
-                    ) : (
-                      <div className="bg-gray-200 dark:bg-zinc-800 p-2 rounded-full">
-                        <UserIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
-                      </div>
-                    )}
-                    <span>{user.name}</span>
-                  </td>
-                  <td className="px-6 py-4">{user.email}</td>
-                  <td className="px-6 py-4">{user.unidade || '-'}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-                      user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
-                      user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                      user.role === 'GERENTE_DIVISIONAL' || user.role === 'DIRETORIA' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                      user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
-                      user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
-                      'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
-                    }`}>
-                      <Shield className="w-3 h-3 mr-1" />
-                      {user.role.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right flex justify-end space-x-2">
-                    <button
-                      onClick={() => handleEditUser(user)}
-                      className="p-2 text-gray-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-400/10 rounded-md transition-colors"
-                      title="Editar Usuário"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="p-2 text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors"
-                      title="Excluir Usuário"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm p-1">
+        {isLoading ? (
+          <TableSkeleton rows={8} cols={5} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
+              <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
+                <tr>
+                  <th className="px-6 py-4">Nome</th>
+                  <th className="px-6 py-4">E-mail</th>
+                  <th className="px-6 py-4">Unidade/CD</th>
+                  <th className="px-6 py-4">Nível de Acesso</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                {usersList.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200 flex items-center space-x-3">
+                      {user.photo ? (
+                        <img src={user.photo} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-zinc-700" />
+                      ) : (
+                        <div className="bg-gray-200 dark:bg-zinc-800 p-2 rounded-full">
+                          <UserIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+                        </div>
+                      )}
+                      <span>{user.name}</span>
+                    </td>
+                    <td className="px-6 py-4">{user.email}</td>
+                    <td className="px-6 py-4">{user.unidade || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
+                        user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
+                        user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                        ['GERENTE_DIVISIONAL', 'DIRETORIA'].includes(user.role) ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                        user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
+                        user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
+                        'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                      }`}>
+                        <Shield className="w-3 h-3 mr-1" />
+                        {user.role.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="p-2 text-gray-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-400/10 rounded-md transition-colors"
+                        title="Editar Usuário"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="p-2 text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-md transition-colors"
+                        title="Excluir Usuário"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

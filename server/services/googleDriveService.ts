@@ -130,5 +130,17 @@ export const googleDriveService = {
         });
 
         return response.data.webViewLink!;
+    },
+
+    /**
+     * Faz o download de um arquivo do Drive e retorna em Buffer.
+     */
+    async downloadFile(fileId: string): Promise<{ buffer: Buffer, mimeType: string }> {
+        const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'arraybuffer' });
+        const metadata = await drive.files.get({ fileId, fields: 'mimeType' });
+        return { 
+            buffer: Buffer.from(res.data as ArrayBuffer), 
+            mimeType: metadata.data.mimeType || 'image/jpeg' 
+        };
     }
 };

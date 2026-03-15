@@ -417,6 +417,7 @@ app.post('/api/autoauditoria', async (req, res) => {
 
 import multer from 'multer';
 import { googleDriveService } from './services/googleDriveService';
+import { aiService } from './services/aiService';
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -425,7 +426,7 @@ const upload = multer({
     }
 });
 
-app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (req: express.Request, res: express.Response) => {
+app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (req: any, res: any) => {
     try {
         const file = req.file;
         const { unidade, mesAno, pilar, bloco, pergunta, baseItemId } = req.body;
@@ -442,7 +443,7 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
         // 2. Faz o upload do arquivo
         const dataOriginal = new Date().getTime();
         const finalFileName = `${dataOriginal}_${file.originalname}`;
-        const webViewLink = await googleDriveService.uploadFile(file.buffer, finalFileName, file.mimetype, parentFolderId);
+        const { id: fileId, url: webViewLink } = await googleDriveService.uploadFile(file.buffer, finalFileName, file.mimetype, parentFolderId) as any;
 
         // 3. Atualizar o banco de dados (relacionar a URL de evidência com a AutoAuditoriaItem)
         // Precisamos garantir que a autoauditoria pai existe antes de atrelarmos 
@@ -478,7 +479,7 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
             data: {
                 autoauditoriaItemId: autoauditoriaItem.id,
                 url: webViewLink,
-                name: file.originalname,
+                name: fileId, // Vamos guardar o FileID do drive no campo name ou criar um novo campo
             }
         });
 
@@ -490,6 +491,45 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
     } catch (error: any) {
         console.error('[Drive Upload] Error:', error);
         res.status(500).json({ error: 'Falha no upload para o Drive', details: error?.message });
+    }
+});
+
+// AI endpoints
+app.post('/api/ai/suggest-action', async (req, res) => {
+    try {
+        const { pilar, bloco, item, descricao } = req.body;
+        if (!pilar || !item) {
+            return res.status(400).json({ error: 'Dados insuficientes para sugestão.' });
+        }
+        const suggestion = await aiService.suggestAction(pilar, bloco, item, descricao);
+        res.json({ suggestion });
+    } catch (error: any) {
+        console.error('[AI API] Error:', error);
+        res.status(500).json({ error: error.message || 'Erro ao processar sugestão de IA' });
+    }
+});
+
+app.post('/api/ai/analyze-evidence', async (req, res) => {
+    try {
+        const { pilar, bloco, item, descricao, evidenceId } = req.body;
+        if (!evidenceId) {
+            return res.status(400).json({ error: 'ID da evidência é necessário.' });
+        }
+
+        // 1. Buscar a evidência no banco para pegar o fileId se necessário, 
+        // ou assumir que evidenceId já é o ID do arquivo no Google Drive.
+        // Pelo esquema atual, a URL contém o ID. Mas vamos passar o ID direto do frontend para simplificar.
+        
+        // 2. Baixar o arquivo do Drive
+        const { buffer, mimeType } = await googleDriveService.downloadFile(evidenceId);
+
+        // 3. Analisar com Gemini Vision
+        const analysis = await aiService.analyzeEvidence(pilar, bloco, item, descricao, buffer, mimeType);
+        
+        res.json({ analysis });
+    } catch (error: any) {
+        console.error('[AI Vision API] Error:', error);
+        res.status(500).json({ error: error.message || 'Erro ao processar análise visual' });
     }
 });
 
