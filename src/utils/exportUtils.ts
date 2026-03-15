@@ -3,94 +3,111 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 /**
- * Utilitários para exportação de dados do SOM.
+ * Utilitários para exportação de dados em Excel e PDF.
  */
 export const exportUtils = {
   /**
-   * Exporta a Matrix de Aderência para Excel.
+   * Exporta a Matriz de Aderência Consolidada para Excel.
    */
   exportMatrixToExcel: (matrixData: any, flatUnits: string[], allPilars: string[], mesAno: string) => {
     const data: any[] = [];
     
-    // Header das unidades
+    // Cabeçalho
     const headerRow = ['Pilar', ...flatUnits];
     data.push(headerRow);
-
-    // Linhas de dados por pilar
+    
+    // Dados por Pilar
     allPilars.forEach(pilar => {
       const row = [pilar];
       flatUnits.forEach(unit => {
-        const val = matrixData[unit]?.[pilar] || '0%';
-        row.push(val);
+        const val = matrixData[unit]?.[pilar] || '0';
+        row.push(`${val}%`);
       });
       data.push(row);
     });
-
+    
+    // Linha de Total
     const totalRow = ['ADERÊNCIA TOTAL'];
     flatUnits.forEach(unit => {
-      const val = matrixData[unit]?.['Total'] || '0%';
-      totalRow.push(val);
+      const val = matrixData[unit]?.['Total'] || '0';
+      totalRow.push(`${val}%`);
     });
     data.push(totalRow);
 
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Matrix de Aderência");
-
-    // Estilização básica (opcional se a lib suportar, mas aqui focamos nos dados)
-    XLSX.writeFile(wb, `SOM_Matrix_Aderencia_${mesAno}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Matriz de Aderência");
+    XLSX.writeFile(wb, `SOM_Matriz_Aderencia_${mesAno}.xlsx`);
   },
 
   /**
-   * Exporta o Rank para Excel.
+   * Exporta o Ranking de Unidades para Excel.
    */
-  exportRankToExcel: (rankData: any[], mesAno: string) => {
-    const data = rankData.map(item => ({
-      'Unidade': item.unidade,
-      'Aderência Geral': `${item.aderenciaGeral.toFixed(1).replace('.', ',')}%`,
-      'Status': item.aderenciaGeral >= 70 ? 'Certificado' : (item.aderenciaGeral >= 50 ? 'Qualificado' : 'Não Aderente')
+  exportRankToExcel: (sortedUnits: any[], mesAno: string) => {
+    const data = sortedUnits.map((u, idx) => ({
+      'Posição': `${idx + 1}º`,
+      'Unidade': `CD ${u.unidade}`,
+      'Aderência Geral (%)': u.aderenciaGeral.toFixed(1),
+      'Itens Totais': u.totalGeral,
+      'Itens Respondidos': u.respondidosGeral
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ranking");
-    XLSX.writeFile(wb, `SOM_Ranking_${mesAno}.xlsx`);
+    XLSX.writeFile(wb, `SOM_Ranking_Performance_${mesAno}.xlsx`);
   },
 
   /**
    * Exporta o Dashboard (Resumo por Pilar) para PDF.
    */
   exportDashboardToPDF: (resumoPorPilar: any[], aderenciaMedia: number, mesAno: string, unidade: string) => {
-    const doc = new jsPDF() as any;
+    const doc = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4'
+    }) as any;
     
     // Título
     doc.setFontSize(18);
-    doc.text(`Relatório de Performance SOM - ${unidade}`, 14, 22);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Relatório de Performance - CD ${unidade}`, 14, 20);
     
     doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Mês/Ano: ${mesAno}`, 14, 30);
-    doc.text(`Aderência Média: ${aderenciaMedia.toFixed(1).replace('.', ',')}%`, 14, 35);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Período: ${mesAno} | Aderência Média Geral: ${aderenciaMedia.toFixed(1)}%`, 14, 28);
+    
+    doc.setLineWidth(0.5);
+    doc.line(14, 32, 196, 32);
 
-    // Tabela
-    const tableColumn = ["Pilar", "Total", "Conforme", "N. Conforme", "Aderência", "Status"];
-    const tableRows = resumoPorPilar.map(p => [
+    // Tabela de Pilares
+    const tableData = resumoPorPilar.map(p => [
       p.pilar,
+      `${p.aderencia.toFixed(1)}%`,
       p.total,
       p.conforme,
       p.naoConforme,
-      `${p.aderencia.toFixed(1).replace('.', ',')}%`,
       p.status
     ]);
 
     doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 45,
+      startY: 40,
+      head: [['Pilar', 'Aderência', 'Total Itens', 'Conf.', 'Não Conf.', 'Status']],
+      body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [30, 41, 59] }, // Cor do cabeçalho (#1e293b)
+      headStyles: { fillStyle: 'dark', fillColor: [30, 41, 59], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      styles: { fontSize: 9, cellPadding: 3 }
     });
 
-    doc.save(`SOM_Relatorio_${unidade}_${mesAno}.pdf`);
+    const finalY = doc.lastAutoTable.finalY || 150;
+    
+    // Rodapé
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('© 2026 SOM - Sistema Operacional Magalog', 14, finalY + 20);
+    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, finalY + 26);
+
+    doc.save(`Relatorio_Performance_${unidade}_${mesAno}.pdf`);
   }
 };
