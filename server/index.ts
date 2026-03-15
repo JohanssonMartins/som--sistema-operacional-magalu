@@ -1,10 +1,34 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    }
+});
+
 const prisma = new PrismaClient({});
 const PORT = Number(process.env.PORT) || 3333;
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+    console.log(`[Socket] Novo cliente conectado: ${socket.id}`);
+    socket.on('disconnect', () => {
+        console.log(`[Socket] Cliente desconectado: ${socket.id}`);
+    });
+});
+
+// Funcao utilitaria para notificar todos os clientes sobre mudancas
+const notifyDataChange = (event: string, data: any) => {
+    console.log(`[Socket] Emitindo evento: ${event}`, data);
+    io.emit(event, data);
+};
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -382,6 +406,9 @@ app.post('/api/autoauditoria', async (req, res) => {
         }
 
         res.json({ success: true, autoauditoria, itemsCount: results.length });
+        
+        // Notifica clientes em tempo real
+        notifyDataChange('autoauditoria_updated', { unidade, mesAno });
     } catch (error) {
         console.error('POST AUTOAUDITORIA ERROR:', error);
         res.status(500).json({ error: 'Erro ao salvar autoauditoria' });
@@ -456,6 +483,9 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
         });
 
         res.json({ success: true, url: webViewLink, evidencia });
+        
+        // Notifica clientes que houve upload de evidencia
+        notifyDataChange('autoauditoria_updated', { unidade, mesAno });
 
     } catch (error: any) {
         console.error('[Drive Upload] Error:', error);
@@ -463,6 +493,6 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
     }
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is running on port ${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running with Socket.io on port ${PORT}`);
 });

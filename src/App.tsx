@@ -10,6 +10,7 @@ import { ChecklistItem, INITIAL_CHECKLIST, Role, User, MOCK_USERS, Autoauditoria
 import { api } from "./api";
 import logoImg from './assets/images/Logo.png';
 import TrendChart from "./components/TrendChart";
+import { useRealtime } from "./hooks/useRealtime";
 
 const UNIDADES_DISPONIVEIS = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
 
@@ -583,6 +584,10 @@ export default function App() {
     return `${mes.charAt(0).toUpperCase() + mes.slice(1)}-${ano}`;
   });
   const [autoauditoriaData, setAutoauditoriaData] = useState<Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>>({});
+  
+  // Real-time updates
+  const { onEvent } = useRealtime();
+
   const [allAutoauditorias, setAllAutoauditorias] = useState<any[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -749,14 +754,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
     if (activeTab === 'autoauditoria' && currentUser) {
       if (currentAutoauditoriaUnit && currentAutoauditoriaUnit !== 'Todas' && currentAutoauditoriaUnit !== 'Master') {
         loadAutoauditoria(currentAutoauditoriaUnit, autoauditoriaMesAno);
-        intervalId = setInterval(() => {
-          loadAutoauditoria(currentAutoauditoriaUnit, autoauditoriaMesAno, true);
-        }, 5000);
       } else {
         setAutoauditoriaData({});
       }
@@ -765,11 +765,30 @@ export default function App() {
     if (activeTab === 'home' || activeTab === 'autoauditoria') {
       loadAllAutoauditorias(autoauditoriaMesAno);
     }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
   }, [activeTab, autoauditoriaMesAno, currentAutoauditoriaUnit]);
+
+  // Real-time Event Listeners
+  onEvent('autoauditoria_updated', (data: { unidade: string, mesAno: string }) => {
+    console.log('[Socket] Evento autoauditoria_updated recebido:', data);
+    
+    // 1. Atualiza lista global se o mês for o mesmo
+    if (data.mesAno === autoauditoriaMesAno) {
+      loadAllAutoauditorias(autoauditoriaMesAno);
+    }
+
+    // 2. Se o usuário estiver na aba de autoauditoria e for a unidade dele, recarrega detalhes
+    if (activeTab === 'autoauditoria' && data.unidade === currentAutoauditoriaUnit && data.mesAno === autoauditoriaMesAno) {
+        // Marcamos como polling=true para usar a lógica de merge e não perder o que o user está digitando
+        loadAutoauditoria(currentAutoauditoriaUnit, autoauditoriaMesAno, true);
+    }
+  });
+
+  onEvent('history_updated', (data: { unidade: string }) => {
+    if (activeTab === 'home' && data.unidade === selectedUnit) {
+        // Recarregar histórico se houver mudanças
+        api.getHistory(selectedUnit).then(setHistoryData).catch(console.error);
+    }
+  });
 
   // Carregar histórico para o Dashboard de Tendências
   useEffect(() => {
