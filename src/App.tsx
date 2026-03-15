@@ -28,7 +28,7 @@ export const App = () => {
     setHistoryData
   } = useStore();
 
-  const { onEvent } = useRealtime();
+  const { socket } = useRealtime();
   useChecklistSync();
 
   // Load Initial Data
@@ -62,17 +62,29 @@ export const App = () => {
   }, [autoauditoriaMesAno]);
 
   // Real-time Listeners
-  onEvent('autoauditoria_updated', (data: { unidade: string, mesAno: string }) => {
-    if (data.mesAno === autoauditoriaMesAno) {
-      loadGlobalAudits();
-    }
-  });
+  useEffect(() => {
+    if (!socket) return;
 
-  onEvent('history_updated', (data: { unidade: string }) => {
-    if (data.unidade === selectedUnit) {
-      api.getHistory(selectedUnit).then(setHistoryData).catch(console.error);
-    }
-  });
+    const handleAutoauditoriaUpdated = (data: { unidade: string, mesAno: string }) => {
+      if (data.mesAno === autoauditoriaMesAno) {
+        loadGlobalAudits();
+      }
+    };
+
+    const handleHistoryUpdated = (data: { unidade: string }) => {
+      if (data.unidade === selectedUnit) {
+        api.getHistory(selectedUnit).then(setHistoryData).catch(console.error);
+      }
+    };
+
+    socket.on('autoauditoria_updated', handleAutoauditoriaUpdated);
+    socket.on('history_updated', handleHistoryUpdated);
+
+    return () => {
+      socket.off('autoauditoria_updated', handleAutoauditoriaUpdated);
+      socket.off('history_updated', handleHistoryUpdated);
+    };
+  }, [socket, autoauditoriaMesAno, selectedUnit]);
 
   // Global Styles / Effect
   useEffect(() => {

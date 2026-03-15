@@ -15,6 +15,7 @@ interface AppState {
   usersList: User[];
   allAutoauditorias: Autoauditoria[];
   autoauditoriaData: Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>;
+  historyData: any[];
 
   // Actions
   setCurrentUser: (user: User | null) => void;
@@ -28,6 +29,7 @@ interface AppState {
   setUsersList: (users: User[]) => void;
   setAllAutoauditorias: (audits: Autoauditoria[]) => void;
   setAutoauditoriaData: (data: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)) => void;
+  setHistoryData: (data: any[]) => void;
 
   autoauditoriaMesAno: string;
   setAutoauditoriaMesAno: (mesAno: string) => void;
@@ -49,6 +51,7 @@ export const useStore = create<AppState>()(
       usersList: [],
       allAutoauditorias: [],
       autoauditoriaData: {},
+      historyData: [],
 
       autoauditoriaMesAno: (() => {
         const d = new Date();
@@ -71,6 +74,7 @@ export const useStore = create<AppState>()(
       setAutoauditoriaData: (data) => set((state) => ({
         autoauditoriaData: typeof data === 'function' ? data(state.autoauditoriaData) : data
       })),
+      setHistoryData: (historyData) => set({ historyData }),
 
       logout: () => set({ 
         currentUser: null, 
@@ -86,6 +90,7 @@ export const useStore = create<AppState>()(
         selectedUnit: state.selectedUnit,
         isSidebarCollapsed: state.isSidebarCollapsed,
         activeTab: state.activeTab,
+        historyData: state.historyData,
       }),
     }
   )

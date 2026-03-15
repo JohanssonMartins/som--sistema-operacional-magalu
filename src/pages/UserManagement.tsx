@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Users, Shield, User as UserIcon, Edit2, Trash2, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';

@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PILAR_ORDER } from '../constants/appConstants';
 import { getPilarWeight, getBlocoWeight } from '../utils/appUtils';
-import AutoauditoriaRow from '../components/AutoauditoriaRow';
+import { AutoauditoriaRow } from '../components/AutoauditoriaRow';
 import { api } from '../api';
 import { TableSkeleton, Skeleton } from '../components/Skeleton';
 

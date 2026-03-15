@@ -88,43 +88,81 @@ export const Dashboard = () => {
            initial={{ opacity: 0, y: 10 }}
            animate={{ opacity: 1, y: 0 }}
            exit={{ opacity: 0, y: -10 }}
-           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-           {resumoPorPilar.map((p: any, idx: number) => (
-             <motion.div 
-               key={p.pilar}
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ delay: idx * 0.05 }}
-               className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xl shadow-gray-200/20 dark:shadow-none hover:border-blue-500/30 transition-all group overflow-hidden relative cursor-pointer"
-               onClick={() => togglePilarExpansion(p.pilar)}
-             >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full pointer-events-none" />
-                <div className="flex items-start justify-between mb-2">
-                   <div className="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg text-zinc-400">
-                      <BarChart className="w-4 h-4" />
-                   </div>
-                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.aderencia >= 80 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}>
-                      {p.status}
-                   </span>
-                </div>
-                <h4 className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider mb-1">{p.pilar}</h4>
-                <div className="flex items-end space-x-2">
-                   <span className="text-2xl font-black text-zinc-900 dark:text-white">{p.aderencia.toFixed(1)}%</span>
-                   <div className="flex items-center text-[10px] pb-1 text-zinc-400">
-                      <div className="w-1 h-1 bg-zinc-300 rounded-full mx-1.5" />
-                      <span>{p.conforme}/{p.total} itens</span>
-                   </div>
-                </div>
-                <div className="mt-4 h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: `${p.aderencia}%` }}
-                     className={`h-full ${p.aderencia >= 80 ? 'bg-emerald-500' : p.aderencia >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
-                   />
-                </div>
-             </motion.div>
-           ))}
+           {resumoPorPilar.map((p: any, idx: number) => {
+             const config = dashboardData.find(d => d.title === p.pilar) || dashboardData[0];
+             const Icon = config.icon;
+             
+             return (
+               <motion.div 
+                 key={p.pilar}
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 transition={{ delay: idx * 0.05 }}
+                 className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden"
+               >
+                  <div className={`${config.color} px-4 py-2.5 flex items-center gap-2 text-white`}>
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-bold tracking-tight">{p.pilar}</span>
+                  </div>
+                  
+                  <div className="p-5 flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-4">
+                      {/* Objetivo */}
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1">
+                          <span>Objetivo</span>
+                          <span>{config.objetivo}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-400 dark:bg-zinc-600 rounded-full" style={{ width: `${config.objetivo}%` }} />
+                        </div>
+                      </div>
+
+                      {/* Autoavaliação */}
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1">
+                          <span>Autoavaliação</span>
+                          <span>{p.aderencia.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${p.aderencia}%` }}
+                            className={`h-full rounded-full ${p.aderencia >= 80 ? 'bg-emerald-500' : p.aderencia >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Avaliação Oficial */}
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1">
+                          <span>Avaliação Oficial</span>
+                          <span>{p.auditoriaOficial.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${p.auditoriaOficial}%` }}
+                            className={`h-full rounded-full ${p.auditoriaOficial >= 80 ? 'bg-emerald-500' : p.auditoriaOficial >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-50 dark:bg-zinc-950/50 border border-gray-100 dark:border-zinc-800 min-w-[80px]">
+                      <span className="text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase">Dispersão</span>
+                      <div className={`flex items-center gap-1 font-black text-lg ${p.auditoriaOficial >= p.aderencia ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {p.auditoriaOficial >= p.aderencia ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                        <span>{Math.abs(p.auditoriaOficial - p.aderencia).toFixed(0)} <span className="text-[10px]">pp</span></span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 dark:text-zinc-500">{p.auditoriaOficial >= p.aderencia ? 'Melhoria' : 'Abaixo'}</span>
+                    </div>
+                  </div>
+               </motion.div>
+             );
+           })}
         </motion.div>
       </AnimatePresence>
 
@@ -142,10 +180,18 @@ export const Dashboard = () => {
               <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-zinc-800">
                 <table className="w-full text-sm border-collapse">
                   <thead>
-                    <tr className="bg-zinc-50 dark:bg-zinc-950/50">
-                      <th className="p-3 border-b border-gray-200 dark:border-zinc-800 text-left font-bold text-zinc-400 uppercase text-[10px] tracking-widest sticky left-0 z-10 bg-inherit">Pilar</th>
+                    <tr className="bg-zinc-100/50 dark:bg-zinc-950/50 text-[10px] uppercase tracking-widest text-zinc-400 font-bold border-b border-gray-200 dark:border-zinc-800">
+                      <th className="p-2 border-r border-gray-200 dark:border-zinc-800 sticky left-0 z-20 bg-inherit min-w-[150px]"></th>
+                      {matrixStats.orderedDivisions.map(div => (
+                        <th key={div} colSpan={matrixStats.divisions[div].length} className="p-2 border-r border-gray-200 dark:border-zinc-800 text-center">
+                          {div}
+                        </th>
+                      ))}
+                    </tr>
+                    <tr className="bg-zinc-50 dark:bg-zinc-950/20">
+                      <th className="p-3 border-b border-r border-gray-200 dark:border-zinc-800 text-left font-bold text-zinc-500 uppercase text-[10px] tracking-widest sticky left-0 z-20 bg-inherit">Pilar</th>
                       {matrixStats.flatOrderedUnits.map(unit => (
-                        <th key={unit} className="p-3 border-b border-gray-200 dark:border-zinc-800 text-center font-bold text-zinc-500 text-[10px] whitespace-nowrap min-w-[70px]">
+                        <th key={unit} className="p-3 border-b border-gray-200 dark:border-zinc-800 text-center font-bold text-zinc-500 text-[10px] whitespace-nowrap min-w-[60px]">
                           {unit}
                         </th>
                       ))}
@@ -153,27 +199,59 @@ export const Dashboard = () => {
                   </thead>
                   <tbody>
                     {matrixStats.allPilars.map(pilar => (
-                      <tr key={pilar} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                        <td className="p-3 border-b border-gray-100 dark:border-zinc-800/50 font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-50/30 dark:bg-zinc-950/10 sticky left-0 z-10">{pilar}</td>
-                        {matrixStats.flatOrderedUnits.map(unit => {
-                          const val = Number(matrixStats.matrix[unit]?.[pilar] || 0);
-                          return (
-                            <td key={`${unit}-${pilar}`} className="p-3 border-b border-gray-100 dark:border-zinc-800/50 text-center">
-                              <span className={`px-2 py-1 rounded text-[11px] font-black ${val >= 80 ? 'text-emerald-500' : val >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
-                                {val}%
-                              </span>
-                            </td>
-                          );
-                        })}
-                      </tr>
+                      <React.Fragment key={pilar}>
+                        <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
+                          <td className="p-3 border-b border-r border-gray-100 dark:border-zinc-800/50 font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-50/10 dark:bg-zinc-950/5 sticky left-0 z-10 flex items-center gap-2">
+                             <button onClick={() => togglePilarExpansion(pilar)} className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded transition-colors text-zinc-400">
+                                {expandedPilars.has(pilar) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                             </button>
+                             {pilar}
+                          </td>
+                          {matrixStats.flatOrderedUnits.map(unit => {
+                            const val = Number(matrixStats.matrix[unit]?.[pilar] || 0);
+                            return (
+                              <td key={`${unit}-${pilar}`} className="p-3 border-b border-gray-100 dark:border-zinc-800/50 text-center font-bold">
+                                <span className={`text-[11px] ${val >= 80 ? 'text-emerald-500' : val >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
+                                  {val}%
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        
+                        {/* Sub-itens (Blocos) */}
+                        <AnimatePresence>
+                          {expandedPilars.has(pilar) && matrixStats.pilarToBlocks[pilar]?.map(bloco => (
+                            <motion.tr 
+                              key={`${pilar}-${bloco}`}
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="bg-gray-50/30 dark:bg-zinc-950/20 text-[11px]"
+                            >
+                              <td className="pl-10 p-2 border-b border-r border-gray-100 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 font-medium italic sticky left-0 z-10 bg-inherit">
+                                {bloco}
+                              </td>
+                              {matrixStats.flatOrderedUnits.map(unit => {
+                                const val = Number(matrixStats.matrix[unit]?.[`${pilar}_${bloco}`] || 0);
+                                return (
+                                  <td key={`${unit}-${pilar}-${bloco}`} className="p-2 border-b border-gray-100 dark:border-zinc-800/50 text-center text-xs opacity-80">
+                                    {val}%
+                                  </td>
+                                );
+                              })}
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </React.Fragment>
                     ))}
-                    <tr className="bg-zinc-50 dark:bg-zinc-950/20 font-black">
-                      <td className="p-3 border-t-2 border-zinc-200 dark:border-zinc-700 text-left uppercase text-[10px] tracking-widest sticky left-0 z-10 bg-inherit">Geral CD</td>
+                    <tr className="bg-blue-50/30 dark:bg-blue-500/5 font-black uppercase text-[10px]">
+                      <td className="p-4 border-t-2 border-blue-200 dark:border-blue-900 text-left tracking-widest sticky left-0 z-10 bg-inherit text-blue-600 dark:text-blue-400">Aderência Total</td>
                       {matrixStats.flatOrderedUnits.map(unit => {
                         const val = Number(matrixStats.matrix[unit]?.['Total'] || 0);
                         return (
-                          <td key={`${unit}-total`} className="p-3 border-t-2 border-zinc-200 dark:border-zinc-700 text-center font-black">
-                             <div className={`mx-auto w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] ${val >= 80 ? 'border-emerald-500 text-emerald-500 bg-emerald-500/5' : val >= 50 ? 'border-yellow-400 text-yellow-500 bg-yellow-400/5' : 'border-red-500 text-red-500 bg-red-500/5'}`}>
+                          <td key={`${unit}-total`} className="p-4 border-t-2 border-blue-200 dark:border-blue-900 text-center">
+                             <div className={`mx-auto font-black ${val >= 80 ? 'text-emerald-500' : val >= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
                                {val}%
                              </div>
                           </td>

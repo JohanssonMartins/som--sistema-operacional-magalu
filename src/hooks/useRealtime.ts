@@ -30,21 +30,8 @@ export const useRealtime = () => {
         };
     }, []);
 
-    const onEvent = (event: string, callback: (data: any) => void) => {
-        useEffect(() => {
-            const socket = socketRef.current;
-            if (!socket) return;
-
-            socket.on(event, callback);
-
-            return () => {
-                socket.off(event, callback);
-            };
-        }, [event, callback]);
-    };
-
     return {
-        onEvent,
+        socket: socketRef.current,
         isConnected: socketRef.current?.connected || false,
         socketId: socketRef.current?.id
     };
