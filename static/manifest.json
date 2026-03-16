@@ -1,0 +1,23 @@
+{
+  "name": "SOM - Sistema Operacional Magalu",
+  "short_name": "SOM Magalu",
+  "description": "Sistema Operacional Magalu para gestão de unidades e auditorias.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0085FF",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -60,11 +60,12 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
   const isLarge = size === 'large';
   
   return (
-    <div className={`flex flex-col items-center justify-center ${className} select-none w-full px-4 ${isSmall ? 'h-12' : isLarge ? 'h-32' : 'h-20'}`}>
+    <div className={`flex items-center justify-start ${className} select-none w-full ${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-20'}`}>
       <img 
         src={logoImg} 
         alt="Magalog Logo" 
-        className={`w-full h-full object-contain transition-transform duration-300 hover:scale-105`}
+        className={`max-h-full max-w-full object-contain transition-all duration-500 hover:scale-105 drop-shadow-sm`}
+        style={{ filter: 'brightness(1.1) contrast(1.05)' }}
       />
     </div>
   );
