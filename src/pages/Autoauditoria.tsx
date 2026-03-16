@@ -213,6 +213,19 @@ export const Autoauditoria = () => {
     }));
   };
 
+  const handleEvidenciaUploaded = (itemId: string, url: string, evidenceId: string) => {
+    setAutoauditoriaData(prev => ({
+      ...prev,
+      [itemId]: { 
+        ...(prev[itemId] || { score: '', nossaAcao: '' }), 
+        evidencias: [{ name: evidenceId, url, category: 'Drive' }] 
+      }
+    }));
+    // Forçar auto-save
+    pendingEdits.current.add(itemId);
+    needsSave.current = true;
+  };
+
   const handleNossaAcaoBlur = (itemId: string, finalAcao: string) => {
     pendingEdits.current.add(itemId);
     needsSave.current = true;
@@ -277,8 +290,9 @@ export const Autoauditoria = () => {
               <select
                 value={selectedUnit}
                 onChange={(e) => setSelectedUnit(e.target.value)}
-                className="bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer min-w-[160px]"
+                className="bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer min-w-[200px]"
               >
+                <option value="Todas">Todos os CDs</option>
                 {UNIDADES_DISPONIVEIS.map(u => (
                   <option key={u} value={u}>CD {CD_NAMES[u]?.split(' - ')[0]} — {CD_NAMES[u]?.split(' - ').slice(1).join(' - ')}</option>
                 ))}
@@ -462,6 +476,7 @@ export const Autoauditoria = () => {
                     onPontoChange={handlePontoChange}
                     onNossaAcaoChange={handleNossaAcaoChange}
                     onNossaAcaoBlur={handleNossaAcaoBlur}
+                    onEvidenciaUploaded={handleEvidenciaUploaded}
                     unidade={selectedUnit}
                     mesAno={localMesAno}
                     existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}

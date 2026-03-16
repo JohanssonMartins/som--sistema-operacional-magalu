@@ -15,6 +15,7 @@ interface AutoauditoriaRowProps {
   unidade: string;
   mesAno: string;
   existingEvidenciaUrl?: string;
+  onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
 }
 
 export const AutoauditoriaRow = React.memo(({
@@ -25,9 +26,9 @@ export const AutoauditoriaRow = React.memo(({
   onPontoChange,
   onNossaAcaoChange,
   onNossaAcaoBlur,
-  unidade,
   mesAno,
-  existingEvidenciaUrl
+  existingEvidenciaUrl,
+  onEvidenciaUploaded
 }: AutoauditoriaRowProps) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
@@ -75,9 +76,11 @@ export const AutoauditoriaRow = React.memo(({
       const res = await api.uploadEvidenciaGoogleDrive(formData);
       if (res.success && res.url) {
         setEvidenciaUrl(res.url);
-        if (res.evidencia && res.evidencia.name) {
-          setEvidenceId(res.evidencia.name); // O FileID foi salvo no name no server
-        }
+        const driveId = res.evidencia?.name || '';
+        if (driveId) setEvidenceId(driveId);
+        
+        // Notifica o pai para persistir no estado global
+        onEvidenciaUploaded?.(item.id, res.url, driveId);
       }
     } catch (error) {
       console.error('Erro no upload da evidência:', error);
@@ -156,7 +159,9 @@ export const AutoauditoriaRow = React.memo(({
           className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${
             localNossaAcao.trim() 
               ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20' 
-              : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+              : (pontoValue === '0' || pontoValue === '1')
+                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 animate-pulse ring-2 ring-red-500/20'
+                : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
           }`}
         >
           {localNossaAcao.trim() ? (
@@ -258,8 +263,9 @@ export const AutoauditoriaRow = React.memo(({
               href={evidenciaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20"
             >
+              <CheckCircle2 className="w-3 h-3 mr-1.5" />
               Ver Evidência Salva
             </a>
           )}
