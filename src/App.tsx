@@ -69,10 +69,11 @@ export const App = () => {
 
 
   // Global Styles / Effect
+  const theme = useStore(state => state.theme);
+  
   useEffect(() => {
-    const theme = useStore.getState().theme;
     document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, []);
+  }, [theme]);
 
   return (
     <BrowserRouter>
