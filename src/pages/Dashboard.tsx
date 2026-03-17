@@ -11,7 +11,7 @@ import { getPerformanceStatus } from '../utils/appUtils';
 export const Dashboard = () => {
   const { selectedUnit, autoauditoriaMesAno } = useStore();
   const { dashboardStats, matrixStats } = useDashboardStats(selectedUnit, autoauditoriaMesAno);
-  const { resumoPorPilar } = dashboardStats;
+  const resumoPorPilar = dashboardStats?.resumoPorPilar || [];
 
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -112,10 +112,10 @@ export const Dashboard = () => {
           if (card.title === 'Clientes') pilarName = 'Cliente';
 
           const pilarInfo = resumoPorPilar.find(p => p.pilar === pilarName);
-          const actualAutoAuditoria = pilarInfo ? Math.round(pilarInfo.aderencia) : 0;
-          const actualOficialAuditoria = pilarInfo ? Math.round((pilarInfo as any).auditoriaOficial || 0) : 0;
+          const actualAutoAuditoria = pilarInfo?.aderencia ? Math.round(pilarInfo.aderencia) : 0;
+          const actualOficialAuditoria = pilarInfo?.auditoriaOficial ? Math.round(pilarInfo.auditoriaOficial) : 0;
           const dispersao = Math.abs(actualAutoAuditoria - actualOficialAuditoria);
-          let dispersaoType = actualAutoAuditoria > actualOficialAuditoria ? 'down' : (actualOficialAuditoria > actualAutoAuditoria ? 'up' : card.dispersaoType);
+          const dispersaoType = actualAutoAuditoria > actualOficialAuditoria ? 'down' : (actualOficialAuditoria > actualAutoAuditoria ? 'up' : card.dispersaoType);
 
           return (
             <motion.div
@@ -283,7 +283,10 @@ export const Dashboard = () => {
                   {matrixStats.flatOrderedUnits.map(unit => {
                     const value = parseInt(matrixStats.matrix[unit]['Total'] || '0');
                     const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                    const colorClass = getPercentageColor(value).replace('500/10', '500/20'); // Slightly stronger background for Total row
+                    const baseColorClass = getPercentageColor(value);
+                    const colorClass = baseColorClass.includes('/10') 
+                      ? baseColorClass.replace('/10', '/20') 
+                      : baseColorClass; // Slightly stronger background for Total row
 
                     return (
                       <td
