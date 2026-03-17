@@ -147,19 +147,10 @@ export const Dashboard = () => {
                   <div>
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-gray-500 dark:text-zinc-400">Autoavaliação</span>
-                      <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualAutoAuditoria}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualAutoAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualAutoAuditoria).bg} rounded-full`} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500 dark:text-zinc-400">Avaliação Oficial</span>
                       <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualOficialAuditoria}%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.9 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} />
                     </div>
                   </div>
                 </div>
@@ -179,20 +170,6 @@ export const Dashboard = () => {
                     <span className={`text-xl font-black leading-none ${getPerformanceStatus(actualOficialAuditoria).text}`}>
                       {actualOficialAuditoria}%
                     </span>
-                  </motion.div>
-
-                  {/* Dispersão Tag */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 + (idx * 0.1) }}
-                    className="absolute -bottom-2 bg-zinc-800 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full text-[9px] font-bold border border-white/20 flex items-center gap-1 shadow-md"
-                  >
-                    <span className="opacity-60 uppercase tracking-tighter">Dispersão</span>
-                    <div className={`flex items-center ${dispersaoType === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {dispersaoType === 'up' ? <ArrowUp className="w-2 h-2" /> : <ArrowDown className="w-2 h-2" />}
-                      <span>{dispersao} pp</span>
-                    </div>
                   </motion.div>
                 </div>
               </div>
