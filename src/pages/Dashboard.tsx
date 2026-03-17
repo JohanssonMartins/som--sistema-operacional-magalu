@@ -6,6 +6,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats';
 import { dashboardData, CD_NAMES } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
 import { api } from '../api';
+import { getPerformanceStatus } from '../utils/appUtils';
 
 export const Dashboard = () => {
   const { selectedUnit, autoauditoriaMesAno } = useStore();
@@ -24,9 +25,8 @@ export const Dashboard = () => {
   };
 
   const getPercentageColor = (value: number, isSubItem = false) => {
-    if (value >= 70) return isSubItem ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
-    if (value >= 50) return isSubItem ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
-    if (value > 0) return isSubItem ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold' : 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
+    const status = getPerformanceStatus(value);
+    if (value > 0) return isSubItem ? `${status.bg}/10 ${status.text} font-bold` : `${status.bg}/10 ${status.text} font-bold`;
     return isSubItem ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-900 dark:text-white';
   };
 
@@ -52,11 +52,32 @@ export const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
-      <div>
-        <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
-          {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
-        </h2>
-        <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
+            {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
+          </h2>
+          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
+        </div>
+
+        {/* Status Legend */}
+        <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#e34935]" />
+            <span className="opacity-70">&lt; 50% →</span>
+            <span className="font-bold">Não aderente</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="opacity-70">50% a 69.9% →</span>
+            <span className="font-bold">Qualificado</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#22a06b]" />
+            <span className="opacity-70">≥ 70% →</span>
+            <span className="font-bold">Certificado</span>
+          </div>
+        </div>
       </div>
 
       {selectedUnit !== 'Todas' && (
@@ -129,7 +150,7 @@ export const Dashboard = () => {
                       <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualAutoAuditoria}%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualAutoAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.autoColor} rounded-full`} />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualAutoAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualAutoAuditoria).bg} rounded-full`} />
                     </div>
                   </div>
                   <div>
@@ -138,27 +159,42 @@ export const Dashboard = () => {
                       <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualOficialAuditoria}%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.9 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${card.oficialColor} rounded-full`} />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.9 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} />
                     </div>
                   </div>
                 </div>
 
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 1.2 + (idx * 0.1), type: "spring" }} className="w-24 bg-gray-50 dark:bg-zinc-800/50 rounded-lg flex flex-col items-center justify-center p-2 border border-gray-200 dark:border-zinc-700/30 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-default">
-                  <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium mb-2 uppercase tracking-wider">Dispersão</span>
-                  <div className={`flex items-center space-x-1 font-bold text-xl whitespace-nowrap ${dispersaoType === 'up' ? 'text-[#36b37e]' : 'text-[#e34935]'}`}>
-                    {dispersaoType === 'up' ? (
-                      <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2 }}><ArrowUp className="w-4 h-4" strokeWidth={3} /></motion.div>
-                    ) : (
-                      <motion.div animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2 }}><ArrowDown className="w-4 h-4" strokeWidth={3} /></motion.div>
-                    )}
-                    <span className="flex items-baseline space-x-1"><span>{dispersao}</span> <span className="text-sm">pp</span></span>
-                    {dispersaoType === 'up' ? (
-                      <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2, delay: 0.2 }}><ArrowUp className="w-4 h-4" strokeWidth={3} /></motion.div>
-                    ) : (
-                      <motion.div animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2, delay: 0.2 }}><ArrowDown className="w-4 h-4" strokeWidth={3} /></motion.div>
-                    )}
-                  </div>
-                </motion.div>
+                <div className="flex flex-col items-center justify-center relative">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }} 
+                    animate={{ opacity: 1, scale: 1 }} 
+                    transition={{ duration: 0.5, delay: 1.2 + (idx * 0.1), type: "spring" }} 
+                    className={`w-24 h-24 rounded-full flex flex-col items-center justify-center p-2 border-4 shadow-xl transition-all duration-300 ${
+                      getPerformanceStatus(actualOficialAuditoria).bg.replace('bg-', 'border-')
+                    } bg-white dark:bg-zinc-900`}
+                  >
+                    <span className="text-[8px] text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-tighter text-center leading-none mb-1">
+                      {getPerformanceStatus(actualOficialAuditoria).label}
+                    </span>
+                    <span className={`text-xl font-black leading-none ${getPerformanceStatus(actualOficialAuditoria).text}`}>
+                      {actualOficialAuditoria}%
+                    </span>
+                  </motion.div>
+
+                  {/* Dispersão Tag */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.5 + (idx * 0.1) }}
+                    className="absolute -bottom-2 bg-zinc-800 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full text-[9px] font-bold border border-white/20 flex items-center gap-1 shadow-md"
+                  >
+                    <span className="opacity-60 uppercase tracking-tighter">Dispersão</span>
+                    <div className={`flex items-center ${dispersaoType === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {dispersaoType === 'up' ? <ArrowUp className="w-2 h-2" /> : <ArrowDown className="w-2 h-2" />}
+                      <span>{dispersao} pp</span>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </motion.div>
           );

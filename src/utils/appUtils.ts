@@ -24,3 +24,8 @@ export const getDueDateStatus = (prazo?: string) => {
   if (diffDays <= 3) return 'approaching';
   return 'ok';
 };
+export const getPerformanceStatus = (value: number) => {
+  if (value >= 70) return { label: 'Certificado', color: 'emerald', bg: 'bg-[#22a06b]', text: 'text-emerald-600 dark:text-emerald-400' };
+  if (value >= 50) return { label: 'Qualificado', color: 'amber', bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' };
+  return { label: 'Não aderente', color: 'red', bg: 'bg-[#e34935]', text: 'text-red-600 dark:text-red-400' };
+};
