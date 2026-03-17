@@ -23,6 +23,13 @@ export const Dashboard = () => {
     setExpandedPilars(next);
   };
 
+  const getPercentageColor = (value: number, isSubItem = false) => {
+    if (value >= 70) return isSubItem ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
+    if (value >= 50) return isSubItem ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
+    if (value > 0) return isSubItem ? 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold' : 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
+    return isSubItem ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-900 dark:text-white';
+  };
+
   useEffect(() => {
     const loadHistory = async () => {
       if (selectedUnit !== 'Todas') {
@@ -216,15 +223,12 @@ export const Dashboard = () => {
                       {matrixStats.flatOrderedUnits.map(unit => {
                         const value = parseInt(matrixStats.matrix[unit][pilar] || '0');
                         const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                        let bgColor = 'text-gray-900 dark:text-white';
-                        if (value >= 70) bgColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold';
-                        else if (value >= 50) bgColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold';
-                        else if (value > 0) bgColor = 'bg-red-500/10 text-red-600 dark:text-red-400 font-bold';
+                        const colorClass = getPercentageColor(value);
 
                         return (
                           <td
                             key={`${unit}-${pilar}`}
-                            className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                            className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${colorClass} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
                           >
                             {value}%
                           </td>
@@ -244,13 +248,12 @@ export const Dashboard = () => {
                         {matrixStats.flatOrderedUnits.map(unit => {
                           const value = parseInt(matrixStats.matrix[unit][`${pilar}_${bloco}`] || '0');
                           const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                          let textColor = 'text-gray-400 dark:text-zinc-500';
-                          if (value > 0) textColor = 'text-gray-600 dark:text-zinc-300 font-medium';
+                          const colorClass = getPercentageColor(value, true);
 
                           return (
                             <td
                               key={`${unit}-${pilar}-${bloco}`}
-                              className={`px-1 py-2 border border-gray-200 dark:border-zinc-800 ${textColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/20' : ''}`}
+                              className={`px-1 py-2 border border-gray-200 dark:border-zinc-800 ${colorClass} ${isFirstInDiv ? 'border-l-4 border-gray-400/20' : ''}`}
                             >
                               {value}%
                             </td>
@@ -267,15 +270,12 @@ export const Dashboard = () => {
                   {matrixStats.flatOrderedUnits.map(unit => {
                     const value = parseInt(matrixStats.matrix[unit]['Total'] || '0');
                     const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                    let bgColor = 'text-gray-900 dark:text-white';
-                    if (value >= 70) bgColor = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
-                    else if (value >= 50) bgColor = 'bg-amber-500/20 text-amber-600 dark:text-amber-400';
-                    else if (value > 0) bgColor = 'bg-red-500/20 text-red-600 dark:text-red-400';
+                    const colorClass = getPercentageColor(value).replace('500/10', '500/20'); // Slightly stronger background for Total row
 
                     return (
                       <td
                         key={`${unit}-total`}
-                        className={`px-1 py-3 border border-gray-300 dark:border-zinc-700 ${bgColor} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                        className={`px-1 py-3 border border-gray-300 dark:border-zinc-700 ${colorClass} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
                       >
                         {value}%
                       </td>
