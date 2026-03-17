@@ -52,8 +52,16 @@ export const Autoauditoria = () => {
 
   // Calcular resumo local baseado em autoauditoriaData (dados reais da auto-avaliação)
   const resumoLocal = useMemo(() => {
-    return PILAR_ORDER.map(pilar => {
-      const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
+    const pilaresParaExibir = selectedPilarFilter === 'Todos' 
+      ? PILAR_ORDER 
+      : [selectedPilarFilter];
+
+    return pilaresParaExibir.map(pilar => {
+      const pilarBaseItems = baseItems.filter(i => 
+        i.pilar === pilar && 
+        i.ativo &&
+        (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
+      );
       const total = pilarBaseItems.length;
       let conforme = 0; // score === '3'
       let parcial = 0;  // score === '1'
@@ -72,28 +80,35 @@ export const Autoauditoria = () => {
       const aderencia = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
       const status = aderencia >= 80 ? 'Aderente' : 'Não Aderente';
       return { pilar, total, conforme, parcial, naoConforme, respondidos, aderencia, status };
-    });
-  }, [baseItems, autoauditoriaData]);
+    }).filter(row => row.total > 0);
+  }, [baseItems, autoauditoriaData, selectedPilarFilter, selectedBlocoFilter]);
 
-  const totalItems = useMemo(() => baseItems.filter(i => i.ativo).length, [baseItems]);
+  const itemsForStats = useMemo(() => {
+    return baseItems.filter(i => 
+      i.ativo &&
+      (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
+      (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
+    );
+  }, [baseItems, selectedPilarFilter, selectedBlocoFilter]);
+
+  const totalItems = useMemo(() => itemsForStats.length, [itemsForStats]);
   const totalRespondidos = useMemo(() => {
-    const ativos = baseItems.filter(i => i.ativo);
-    return ativos.filter(bi => {
+    return itemsForStats.filter(bi => {
       const s = autoauditoriaData[bi.id]?.score;
       return s === '3' || s === '1' || s === '0';
     }).length;
-  }, [baseItems, autoauditoriaData]);
+  }, [itemsForStats, autoauditoriaData]);
 
   const totalPoints = useMemo(() => {
-    return baseItems.filter(i => i.ativo).reduce((acc, bi) => {
+    return itemsForStats.reduce((acc, bi) => {
       const s = autoauditoriaData[bi.id]?.score;
       if (s === '3') return acc + 3;
       if (s === '1') return acc + 1;
       return acc;
     }, 0);
-  }, [baseItems, autoauditoriaData]);
+  }, [itemsForStats, autoauditoriaData]);
 
-  const maxPossiblePoints = useMemo(() => baseItems.filter(i => i.ativo).length * 3, [baseItems]);
+  const maxPossiblePoints = useMemo(() => itemsForStats.length * 3, [itemsForStats]);
   const aderenciaMedia = maxPossiblePoints === 0 ? 0 : (totalPoints / maxPossiblePoints) * 100;
   const progressoTotal = totalItems === 0 ? 0 : (totalRespondidos / totalItems) * 100;
 
