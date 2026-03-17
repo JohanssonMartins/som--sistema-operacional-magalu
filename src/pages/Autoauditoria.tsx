@@ -44,6 +44,10 @@ export const Autoauditoria = () => {
     setAllAutoauditorias 
   } = useStore();
 
+  const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
+  const [selectedBlocoFilter, setSelectedBlocoFilter] = useState('Todos');
+  const [showOnlyPending, setShowOnlyPending] = useState(false);
+
   // Mês local — carrega a avaliação do mês selecionado sem alterar o global
   const [localMesAno, setLocalMesAno] = useState(autoauditoriaMesAno);
 
@@ -115,9 +119,6 @@ export const Autoauditoria = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
-  const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
-  const [selectedBlocoFilter, setSelectedBlocoFilter] = useState('Todos');
-  const [showOnlyPending, setShowOnlyPending] = useState(false);
 
   // Blocos disponíveis para o Pilar selecionado
   const blocosDisponiveis = useMemo(() => {
