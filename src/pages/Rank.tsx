@@ -11,13 +11,15 @@ export const Rank = () => {
     const unitAudit = allAutoauditorias.find(a => 
       String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
     );
+    const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+
     const activeBaseItems = baseItems.filter(i => i.ativo);
 
     let totalPoints = 0;
     let respondidosCount = 0;
 
     activeBaseItems.forEach(bi => {
-      const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
+      const ai = auditMap.get(bi.id);
       if (ai?.score === '3') {
         totalPoints += 3;
       } else if (ai?.score === '1') {
@@ -146,26 +148,29 @@ export const Rank = () => {
                         )}
                       </div>
                     </td>
-                    {PILAR_ORDER.map(pilar => {
-                      const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
+                    {(() => {
                       const unitAudit = allAutoauditorias.find(a => 
                         String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
                       );
+                      const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
 
-                      let pilarPoints = 0;
-                      let pilarRespondidos = 0;
+                      return PILAR_ORDER.map(pilar => {
+                        const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
 
-                      pilarBaseItems.forEach(bi => {
-                        const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
-                        if (ai?.score === '3') {
-                          pilarPoints += 3;
-                        } else if (ai?.score === '1') {
-                          pilarPoints += 1;
-                        }
-                        if (ai && ai.score && ai.score !== '') {
-                          pilarRespondidos++;
-                        }
-                      });
+                        let pilarPoints = 0;
+                        let pilarRespondidos = 0;
+
+                        pilarBaseItems.forEach(bi => {
+                          const ai = auditMap.get(bi.id);
+                          if (ai?.score === '3') {
+                            pilarPoints += 3;
+                          } else if (ai?.score === '1') {
+                            pilarPoints += 1;
+                          }
+                          if (ai && ai.score && ai.score !== '') {
+                            pilarRespondidos++;
+                          }
+                        });
 
                       const pilarMaxPoints = pilarBaseItems.length * 3;
                       const pAderencia = pilarMaxPoints === 0 ? 0 : (pilarPoints / pilarMaxPoints) * 100;
@@ -192,7 +197,8 @@ export const Rank = () => {
                           )}
                         </td>
                       );
-                    })}
+                    });
+                    })()}
                   </tr>
                 );
               })}

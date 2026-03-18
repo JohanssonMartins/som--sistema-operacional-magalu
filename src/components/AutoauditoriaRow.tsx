@@ -26,6 +26,7 @@ export const AutoauditoriaRow = React.memo(({
   onPontoChange,
   onNossaAcaoChange,
   onNossaAcaoBlur,
+  unidade,
   mesAno,
   existingEvidenciaUrl,
   onEvidenciaUploaded

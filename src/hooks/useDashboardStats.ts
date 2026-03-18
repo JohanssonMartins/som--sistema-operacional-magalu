@@ -39,24 +39,31 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       let possiblePoints = 0;
 
       if (selectedUnit === 'Todas') {
-        (allAutoauditorias || [])
+        const applicableAudits = (allAutoauditorias || [])
           .filter(a => a.mesAno === autoauditoriaMesAno)
-          .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional)
-          .forEach(audit => {
-            pilarBaseItems.forEach(bi => {
-              const ai = audit.items?.find((item: any) => item.baseItemId === bi.id);
-              if (ai) {
-                possiblePoints += 3;
-                if (ai.score === '3') totalPoints += 3;
-                else if (ai.score === '1') totalPoints += 1;
-              }
-            });
+          .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional);
+
+        const auditMaps = applicableAudits.map(audit => 
+          new Map(audit.items?.map((ai: any) => [ai.baseItemId, ai]) || [])
+        );
+
+        auditMaps.forEach(auditMap => {
+          pilarBaseItems.forEach(bi => {
+            const ai = auditMap.get(bi.id);
+            if (ai) {
+              possiblePoints += 3;
+              if (ai.score === '3') totalPoints += 3;
+              else if (ai.score === '1') totalPoints += 1;
+            }
           });
+        });
       } else {
         const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit && a.mesAno === autoauditoriaMesAno);
+        const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+        
         possiblePoints = pilarBaseItems.length * 3;
         pilarBaseItems.forEach(bi => {
-          const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
+          const ai = auditMap.get(bi.id);
           if (ai?.score === '3') totalPoints += 3;
           else if (ai?.score === '1') totalPoints += 1;
         });
@@ -117,6 +124,8 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
         String(a.unidade) === String(unit) && a.mesAno === autoauditoriaMesAno
       );
 
+      const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+
       let unitTotalPoints = 0;
       let unitMaxPoints = 0;
 
@@ -127,7 +136,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
           const blocoBaseItems = pilarBaseItems.filter(i => i.bloco === bloco);
           let blocoPoints = 0;
           blocoBaseItems.forEach(bi => {
-            const auditItem = unitAudit?.items?.find((ai: any) => ai.baseItemId === bi.id);
+            const auditItem = auditMap.get(bi.id);
             const score = String(auditItem?.score || '');
             if (score === '3') blocoPoints += 3;
             else if (score === '1') blocoPoints += 1;
@@ -143,7 +152,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
 
         let totalPoints = 0;
         pilarBaseItems.forEach(bi => {
-          const auditItem = unitAudit?.items?.find((ai: any) => ai.baseItemId === bi.id);
+          const auditItem = auditMap.get(bi.id);
           const score = String(auditItem?.score || '');
           if (score === '3') totalPoints += 3;
           else if (score === '1') totalPoints += 1;
