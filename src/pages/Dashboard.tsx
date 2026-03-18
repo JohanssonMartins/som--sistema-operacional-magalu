@@ -190,7 +190,7 @@ export const Dashboard = () => {
             <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Aderência Oficial (% por CD)</span>
           </div>
           <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-center text-[11px] sm:text-sm border-collapse">
+            <table className="w-full text-center text-[11px] sm:text-sm border-collapse matrix-tt-included">
               <thead className="bg-[#1e293b] text-white">
                 <tr className="bg-[#0f172a] text-[10px] uppercase tracking-tighter sm:tracking-normal">
                   <th className="px-2 py-2 border-b border-gray-700 sticky left-0 z-20 w-[120px] sm:w-[180px] bg-[#0f172a]"></th>
@@ -203,6 +203,9 @@ export const Dashboard = () => {
                       <span className="opacity-80">{div}</span>
                     </th>
                   ))}
+                  <th rowSpan={2} className="px-2 py-2 border border-gray-700 bg-[#0f172a] text-[10px] min-w-[80px] align-middle shadow-[-2px_0_5px_rgba(0,0,0,0.2)] sticky right-0 z-20">
+                    Aderência<br/>Pilar TT
+                  </th>
                 </tr>
                 <tr>
                   <th className="px-2 py-3 border border-gray-700 font-bold bg-[#1e293b] sticky left-0 z-20 w-[120px] sm:w-[180px] shadow-[2px_0_5px_rgba(0,0,0,0.2)]">Pilar</th>
@@ -250,6 +253,9 @@ export const Dashboard = () => {
                           </td>
                         );
                       })}
+                      <td className={`px-2 py-3 border border-gray-200 dark:border-zinc-800 font-black bg-gray-50 dark:bg-zinc-950 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages[pilar] || '0'))}`}>
+                        {matrixStats.pilarAverages[pilar] || '0'}%
+                      </td>
                     </tr>
                     {expandedPilars.has(pilar) && matrixStats.pilarToBlocks[pilar].map(bloco => (
                       <motion.tr
@@ -275,6 +281,9 @@ export const Dashboard = () => {
                             </td>
                           );
                         })}
+                        <td className={`px-2 py-2 border border-gray-200 dark:border-zinc-800 font-bold bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.05)] ${getPercentageColor(parseInt(matrixStats.pilarAverages[`${pilar}_${bloco}`] || '0'), true)}`}>
+                          {matrixStats.pilarAverages[`${pilar}_${bloco}`] || '0'}%
+                        </td>
                       </motion.tr>
                     ))}
                   </React.Fragment>
@@ -300,7 +309,10 @@ export const Dashboard = () => {
                       </td>
                     );
                   })}
-                </tr>
+                      <td className={`px-2 py-3 border border-gray-300 dark:border-zinc-700 font-black bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages['Total'] || '0')).replace('/10', '/30')}`}>
+                        {matrixStats.pilarAverages['Total'] || '0'}%
+                      </td>
+                    </tr>
               </tbody>
             </table>
           </div>

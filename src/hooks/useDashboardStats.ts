@@ -160,7 +160,31 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
     const flatOrderedUnits = orderedDivisions.flatMap(div => divisions[div]);
     const divFirstUnits = new Set(orderedDivisions.map(div => divisions[div][0]));
 
-    return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix, pilarToBlocks };
+    // Calculate Averages (TT)
+    const pilarAverages: Record<string, string> = {};
+    allPilars.forEach(pilar => {
+      let pSum = 0;
+      flatOrderedUnits.forEach(unit => {
+        pSum += parseInt(matrix[unit][pilar] || '0');
+      });
+      pilarAverages[pilar] = flatOrderedUnits.length === 0 ? '0' : Math.round(pSum / flatOrderedUnits.length).toString();
+
+      pilarToBlocks[pilar].forEach(bloco => {
+        let bSum = 0;
+        flatOrderedUnits.forEach(unit => {
+          bSum += parseInt(matrix[unit][`${pilar}_${bloco}`] || '0');
+        });
+        pilarAverages[`${pilar}_${bloco}`] = flatOrderedUnits.length === 0 ? '0' : Math.round(bSum / flatOrderedUnits.length).toString();
+      });
+    });
+
+    let tSum = 0;
+    flatOrderedUnits.forEach(unit => {
+      tSum += parseInt(matrix[unit]['Total'] || '0');
+    });
+    pilarAverages['Total'] = flatOrderedUnits.length === 0 ? '0' : Math.round(tSum / flatOrderedUnits.length).toString();
+
+    return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix, pilarToBlocks, pilarAverages };
   }, [baseItems, allAutoauditorias, autoauditoriaMesAno]);
 
   return { dashboardStats, matrixStats };
