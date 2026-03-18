@@ -1,16 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, RefreshCw, ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { dashboardData, CD_NAMES } from '../constants/appConstants';
+import { dashboardData, CD_NAMES, PILAR_ORDER } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
 import { api } from '../api';
 import { getPerformanceStatus } from '../utils/appUtils';
 
 export const Dashboard = () => {
-  const { selectedUnit, autoauditoriaMesAno } = useStore();
-  const { dashboardStats, matrixStats } = useDashboardStats(selectedUnit, autoauditoriaMesAno);
+  const { selectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore();
+
+  const [filterDivisional, setFilterDivisional] = useState<string>('Todas');
+  const [filterPilar, setFilterPilar] = useState<string>('Todos');
+
+  const availableMonths = useMemo(() => {
+    const months = new Set((allAutoauditorias || []).map(a => a.mesAno).filter(Boolean));
+    if (!months.has(autoauditoriaMesAno)) months.add(autoauditoriaMesAno);
+    return Array.from(months);
+  }, [allAutoauditorias, autoauditoriaMesAno]);
+
+  const { dashboardStats, matrixStats } = useDashboardStats(selectedUnit, autoauditoriaMesAno, filterDivisional, filterPilar);
   const resumoPorPilar = dashboardStats?.resumoPorPilar || [];
 
   const [historyData, setHistoryData] = useState<any[]>([]);
@@ -52,30 +62,80 @@ export const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
-            {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
-          </h2>
-          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
+              {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
+            </h2>
+            <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Filtro de Mês */}
+            <div className="relative min-w-[150px]">
+              <select
+                value={autoauditoriaMesAno}
+                onChange={(e) => setAutoauditoriaMesAno(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+              >
+                {availableMonths.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Filtro Divisional */}
+            <div className="relative min-w-[160px]">
+              <select
+                value={filterDivisional}
+                onChange={(e) => setFilterDivisional(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+              >
+                <option value="Todas">Todas Divisionais</option>
+                <option value="SP">SP</option>
+                <option value="Sul / Sudeste">Sul / Sudeste</option>
+                <option value="NE/NO/CO">NE/NO/CO</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Filtro Pilar */}
+            <div className="relative min-w-[160px]">
+              <select
+                value={filterPilar}
+                onChange={(e) => setFilterPilar(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+              >
+                <option value="Todos">Todos os Pilares</option>
+                {PILAR_ORDER.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
         {/* Status Legend */}
-        <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#e34935]" />
-            <span className="opacity-70">&lt; 50% →</span>
-            <span className="font-bold">Não aderente</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span className="opacity-70">50% a 69.9% →</span>
-            <span className="font-bold">Qualificado</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#22a06b]" />
-            <span className="opacity-70">≥ 70% →</span>
-            <span className="font-bold">Certificado</span>
+        <div className="flex justify-end w-full">
+          <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800 w-fit">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#e34935]" />
+              <span className="opacity-70">&lt; 50% →</span>
+              <span className="font-bold">Não aderente</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="opacity-70">50% a 69.9% →</span>
+              <span className="font-bold">Qualificado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#22a06b]" />
+              <span className="opacity-70">≥ 70% →</span>
+              <span className="font-bold">Certificado</span>
+            </div>
           </div>
         </div>
       </div>

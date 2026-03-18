@@ -3,12 +3,19 @@ import { useStore } from '../store/useStore';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import { getBlocoWeight } from '../utils/appUtils';
 
-export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: string) => {
+export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: string, filterDivisional: string = 'Todas', filterPilar: string = 'Todos') => {
   const { items, baseItems, allAutoauditorias } = useStore();
 
   const dashboardStats = useMemo(() => {
-    const vItems = items.filter(i => selectedUnit === 'Todas' ? true : i.unidade === selectedUnit);
-    const aItems = vItems.filter(i => i.ativo);
+    const vItems = items.filter(i => {
+      if (selectedUnit !== 'Todas') return i.unidade === selectedUnit;
+      if (filterDivisional !== 'Todas') {
+        const div = CD_REGIONS[i.unidade]?.divisao;
+        if (div !== filterDivisional) return false;
+      }
+      return true;
+    });
+    const aItems = vItems.filter(i => i.ativo && (filterPilar === 'Todos' || i.pilar === filterPilar));
     const tItems = aItems.length;
     const tResp = aItems.filter(i => i.completed).length;
     const tAder = aItems.filter(i => i.completed && i.aderente).length;
@@ -17,7 +24,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
     const aderMedia = tItems === 0 ? 0 : (tAder / tItems) * 100;
     const sGeral = aderMedia >= 80 ? 'Aderente' : 'Não Aderente';
 
-    const currentPilares = PILAR_ORDER;
+    const currentPilares = filterPilar === 'Todos' ? PILAR_ORDER : [filterPilar];
 
     const rPorPilar = currentPilares.map(pilar => {
       const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
@@ -34,6 +41,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       if (selectedUnit === 'Todas') {
         (allAutoauditorias || [])
           .filter(a => a.mesAno === autoauditoriaMesAno)
+          .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional)
           .forEach(audit => {
             pilarBaseItems.forEach(bi => {
               const ai = audit.items?.find((item: any) => item.baseItemId === bi.id);
@@ -83,10 +91,10 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       resumoPorPilar: rPorPilar,
       pilares: currentPilares
     };
-  }, [items, selectedUnit, allAutoauditorias, baseItems]);
+  }, [items, selectedUnit, allAutoauditorias, baseItems, autoauditoriaMesAno, filterDivisional, filterPilar]);
 
   const matrixStats = useMemo(() => {
-    const allPilars = PILAR_ORDER;
+    const allPilars = filterPilar === 'Todos' ? PILAR_ORDER : [filterPilar];
     const matrix: Record<string, Record<string, string>> = {};
     const divisions: Record<string, string[]> = {};
     const pilarToBlocks: Record<string, string[]> = {};
@@ -97,7 +105,9 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       pilarToBlocks[pilar] = pilarBlocks.sort((a, b) => getBlocoWeight(a) - getBlocoWeight(b));
     });
 
-    UNIDADES_DISPONIVEIS.forEach(unit => {
+    const unitsToProcess = UNIDADES_DISPONIVEIS.filter(u => filterDivisional === 'Todas' || CD_REGIONS[u]?.divisao === filterDivisional);
+
+    unitsToProcess.forEach(unit => {
       const division = CD_REGIONS[unit]?.divisao || 'Outros';
       if (!divisions[division]) divisions[division] = [];
       divisions[division].push(unit);
@@ -185,7 +195,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
     pilarAverages['Total'] = flatOrderedUnits.length === 0 ? '0' : Math.round(tSum / flatOrderedUnits.length).toString();
 
     return { divisions, orderedDivisions, flatOrderedUnits, divFirstUnits, allPilars, matrix, pilarToBlocks, pilarAverages };
-  }, [baseItems, allAutoauditorias, autoauditoriaMesAno]);
+  }, [baseItems, allAutoauditorias, autoauditoriaMesAno, filterDivisional, filterPilar]);
 
   return { dashboardStats, matrixStats };
 };
