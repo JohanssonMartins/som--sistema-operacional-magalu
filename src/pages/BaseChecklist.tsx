@@ -82,6 +82,7 @@ export const BaseChecklist = () => {
                             <tr>
                                 <th className="px-6 py-4">Pilar</th>
                                 <th className="px-6 py-4">Bloco</th>
+                                <th className="px-6 py-4">Trilha</th>
                                 <th className="px-6 py-4">Item</th>
                                 <th className="px-6 py-4">Evidência</th>
                                 <th className="px-6 py-4">Status</th>
@@ -93,6 +94,15 @@ export const BaseChecklist = () => {
                                 <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group">
                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
                                     <td className="px-6 py-4">{item.bloco}</td>
+                                    <td className="px-6 py-4">
+                                        {item.trilha ? (
+                                            <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-xs font-bold border border-amber-100 dark:border-amber-500/20">
+                                                {item.trilha}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">-</span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 max-w-xs md:max-w-md truncate" title={item.item}>
                                         {item.item}
                                     </td>
@@ -179,11 +189,24 @@ export const BaseChecklist = () => {
                                             <input
                                                 type="text"
                                                 required
-                                                value={formData.bloco}
+                                                value={formData.bloco || ''}
                                                 onChange={e => setFormData({ ...formData, bloco: e.target.value })}
                                                 className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
                                             />
                                         </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Trilha</label>
+                                        <select
+                                            required
+                                            value={formData.trilha || ''}
+                                            onChange={e => setFormData({ ...formData, trilha: e.target.value })}
+                                            className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
+                                        >
+                                            <option value="" disabled>Selecione uma trilha</option>
+                                            <option value="BASICO BEM FEITO">BÁSICO BEM FEITO</option>
+                                            <option value="GERENCIAR PARA MELHORAR">GERENCIAR PARA MELHORAR</option>
+                                        </select>
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Item (Pergunta/Verificação)</label>
