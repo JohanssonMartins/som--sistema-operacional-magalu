@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, RefreshCw, ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { dashboardData, CD_NAMES, PILAR_ORDER } from '../constants/appConstants';
+import { dashboardData, CD_NAMES, PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
 import { api } from '../api';
 import { getPerformanceStatus } from '../utils/appUtils';
 
 export const Dashboard = () => {
-  const { selectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore();
+  const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore();
 
   const [filterDivisional, setFilterDivisional] = useState<string>('Todas');
   const [filterPilar, setFilterPilar] = useState<string>('Todos');
@@ -19,6 +19,11 @@ export const Dashboard = () => {
     if (!months.has(autoauditoriaMesAno)) months.add(autoauditoriaMesAno);
     return Array.from(months);
   }, [allAutoauditorias, autoauditoriaMesAno]);
+
+  const cdOptions = useMemo(() => {
+    if (filterDivisional === 'Todas') return UNIDADES_DISPONIVEIS;
+    return UNIDADES_DISPONIVEIS.filter(u => CD_REGIONS[u]?.divisao === filterDivisional);
+  }, [filterDivisional]);
 
   const { dashboardStats, matrixStats } = useDashboardStats(selectedUnit, autoauditoriaMesAno, filterDivisional, filterPilar);
   const resumoPorPilar = dashboardStats?.resumoPorPilar || [];
@@ -90,13 +95,36 @@ export const Dashboard = () => {
             <div className="relative min-w-[160px]">
               <select
                 value={filterDivisional}
-                onChange={(e) => setFilterDivisional(e.target.value)}
+                onChange={(e) => {
+                  const newDiv = e.target.value;
+                  setFilterDivisional(newDiv);
+                  if (selectedUnit !== 'Todas' && newDiv !== 'Todas') {
+                    if (CD_REGIONS[selectedUnit]?.divisao !== newDiv) {
+                      setSelectedUnit('Todas');
+                    }
+                  }
+                }}
                 className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
               >
                 <option value="Todas">Todas Divisionais</option>
                 <option value="SP">SP</option>
                 <option value="Sul / Sudeste">Sul / Sudeste</option>
                 <option value="NE/NO/CO">NE/NO/CO</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Filtro CD */}
+            <div className="relative min-w-[160px]">
+              <select
+                value={selectedUnit}
+                onChange={(e) => setSelectedUnit(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+              >
+                <option value="Todas">Todos os CDs</option>
+                {cdOptions.map(u => (
+                  <option key={u} value={u}>CD {u}</option>
+                ))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
