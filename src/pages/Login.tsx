@@ -38,10 +38,8 @@ export const Login = () => {
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300"
+        <div
+          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300 animate-in fade-in zoom-in duration-500"
         >
           <div className="absolute top-4 right-4">
             <button onClick={toggleTheme} className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors">
@@ -122,7 +120,7 @@ export const Login = () => {
           <div className="mt-8 text-center text-xs text-gray-400 dark:text-zinc-600">
             © 2026 Magalu | Feito com ❤ por J's Martins
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
