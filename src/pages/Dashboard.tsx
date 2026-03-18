@@ -130,24 +130,24 @@ export const Dashboard = () => {
                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: (idx * 0.1) + 0.3, duration: 0.5 }}>
                   <Icon className="w-5 h-5 text-white relative z-10" />
                 </motion.div>
-                <h3 className="text-white font-semibold text-lg relative z-10">{card.title}</h3>
+                <h3 className="text-white font-black text-xl relative z-10 tracking-tight drop-shadow-md">{card.title}</h3>
               </div>
 
               <div className="p-5 flex gap-4">
                 <div className="flex-1 space-y-4">
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500 dark:text-zinc-400">Objetivo</span>
-                      <span className="text-gray-900 dark:text-zinc-200 font-bold">{card.objetivo}%</span>
+                      <span className="text-gray-500 dark:text-zinc-400 font-medium">Objetivo</span>
+                      <span className="text-gray-900 dark:text-zinc-200 font-black">&gt; 70%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${card.objetivo}%` }} transition={{ duration: 1, delay: 0.5 + (idx * 0.1), ease: "easeOut" }} className="h-full bg-[#6b778c] rounded-full" />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `70%` }} transition={{ duration: 1, delay: 0.5 + (idx * 0.1), ease: "easeOut" }} className="h-full bg-[#6b778c] rounded-full" />
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500 dark:text-zinc-400">Autoavaliação</span>
-                      <span className="text-gray-900 dark:text-zinc-200 font-bold">{actualOficialAuditoria}%</span>
+                      <span className="text-gray-500 dark:text-zinc-400 font-medium">Autoavaliação</span>
+                      <span className="text-gray-900 dark:text-zinc-200 font-black">{actualOficialAuditoria}%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                       <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} />
@@ -155,19 +155,22 @@ export const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center justify-center relative">
+                <div className="flex flex-col items-center justify-center relative pl-4">
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.8 }} 
                     animate={{ opacity: 1, scale: 1 }} 
                     transition={{ duration: 0.5, delay: 1.2 + (idx * 0.1), type: "spring" }} 
-                    className={`w-24 h-24 rounded-full flex flex-col items-center justify-center p-2 border-4 shadow-xl transition-all duration-300 ${
-                      getPerformanceStatus(actualOficialAuditoria).bg.replace('bg-', 'border-')
-                    } bg-white dark:bg-zinc-900`}
+                    className={`w-28 h-28 rounded-full flex flex-col items-center justify-center p-3 border-[6px] border-white dark:border-zinc-800 shadow-[0_15px_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] transition-all duration-300 bg-white dark:bg-zinc-900 relative group`}
                   >
-                    <span className="text-[8px] text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-tighter text-center leading-none mb-1">
+                    {/* Subtle Glow Ring */}
+                    <div className={`absolute inset-[-4px] rounded-full border-2 opacity-50 ${
+                      getPerformanceStatus(actualOficialAuditoria).bg.replace('bg-', 'border-').replace('/10', '/30')
+                    }`} />
+                    
+                    <span className={`text-[10px] font-black uppercase tracking-widest text-center leading-none mb-2 ${getPerformanceStatus(actualOficialAuditoria).text}`}>
                       {getPerformanceStatus(actualOficialAuditoria).label}
                     </span>
-                    <span className={`text-xl font-black leading-none ${getPerformanceStatus(actualOficialAuditoria).text}`}>
+                    <span className={`text-3xl font-black leading-none ${getPerformanceStatus(actualOficialAuditoria).text} drop-shadow-md`}>
                       {actualOficialAuditoria}%
                     </span>
                   </motion.div>
