@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3333';
+const rawSocketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:3333';
+const SOCKET_URL = rawSocketUrl;
 
 export const useRealtime = () => {
     const socketRef = useRef<Socket | null>(null);

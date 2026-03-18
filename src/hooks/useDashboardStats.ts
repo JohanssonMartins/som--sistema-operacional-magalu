@@ -32,18 +32,20 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       let possiblePoints = 0;
 
       if (selectedUnit === 'Todas') {
-        allAutoauditorias.forEach(audit => {
-          pilarBaseItems.forEach(bi => {
-            const ai = audit.items?.find((item: any) => item.baseItemId === bi.id);
-            if (ai) {
-              possiblePoints += 3;
-              if (ai.score === '3') totalPoints += 3;
-              else if (ai.score === '1') totalPoints += 1;
-            }
+        (allAutoauditorias || [])
+          .filter(a => a.mesAno === autoauditoriaMesAno)
+          .forEach(audit => {
+            pilarBaseItems.forEach(bi => {
+              const ai = audit.items?.find((item: any) => item.baseItemId === bi.id);
+              if (ai) {
+                possiblePoints += 3;
+                if (ai.score === '3') totalPoints += 3;
+                else if (ai.score === '1') totalPoints += 1;
+              }
+            });
           });
-        });
       } else {
-        const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit);
+        const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit && a.mesAno === autoauditoriaMesAno);
         possiblePoints = pilarBaseItems.length * 3;
         pilarBaseItems.forEach(bi => {
           const ai = unitAudit?.items?.find((item: any) => item.baseItemId === bi.id);
