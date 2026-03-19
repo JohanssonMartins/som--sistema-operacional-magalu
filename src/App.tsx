@@ -124,12 +124,12 @@ export const App = () => {
           <Route
             path="/autoauditoria"
             element={
-              currentUser ? (
+              currentUser && currentUser.role !== 'AUDITOR' ? (
                 <Shell>
                   <Autoauditoria />
                 </Shell>
               ) : (
-                <Navigate to="/login" replace />
+                <Navigate to={currentUser ? "/" : "/login"} replace />
               )
             }
           />

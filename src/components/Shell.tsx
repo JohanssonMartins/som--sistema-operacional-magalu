@@ -38,7 +38,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA';
+  const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,7 +88,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['ANY'] },
     { to: '/rank', icon: Trophy, label: 'Top Magalog', roles: ['ANY'] },
-    { to: '/autoauditoria', icon: CheckCircle2, label: 'Autoavaliação', roles: ['ANY'] },
+    { to: '/autoauditoria', icon: CheckCircle2, label: 'Autoavaliação', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD', 'DONO_DO_PILAR', 'COLABORADOR'] },
     { to: '/avaliacao-externa', icon: CheckCircle2, label: 'Avaliação Externa', roles: ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'] },
     { to: '/base-checklist', icon: Database, label: 'Base Check-List', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'] },
     { to: '/usuarios', icon: Users, label: 'Usuários', roles: ['ADMIN'] },
@@ -234,8 +234,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
               className={`w-full flex items-center p-2.5 rounded-2xl transition-all duration-200 border ${isProfileDropdownOpen
-                  ? 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 shadow-lg'
-                  : 'bg-white/50 dark:bg-zinc-900/50 border-transparent hover:bg-white dark:hover:bg-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700 hover:shadow-md'
+                ? 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 shadow-lg'
+                : 'bg-white/50 dark:bg-zinc-900/50 border-transparent hover:bg-white dark:hover:bg-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700 hover:shadow-md'
                 }`}
             >
               <div className="relative shrink-0 group/avatar overflow-hidden rounded-xl">
@@ -375,8 +375,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     className={`p-3 rounded-xl text-sm font-medium ${passwordStatus.type === 'success'
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                        : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                      : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
                       }`}
                   >
                     {passwordStatus.message}

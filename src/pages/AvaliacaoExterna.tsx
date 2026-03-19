@@ -44,6 +44,8 @@ export const AvaliacaoExterna = () => {
     setAllAutoauditorias
   } = useStore();
 
+  const [autoReferenceData, setAutoReferenceData] = useState<Record<string, any>>({});
+
   const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
   const [selectedBlocoFilter, setSelectedBlocoFilter] = useState('Todos');
   const [showOnlyPending, setShowOnlyPending] = useState(false);
@@ -143,24 +145,50 @@ export const AvaliacaoExterna = () => {
         setIsLoading(true);
         isInitialLoad.current = true;
       }
-      const data = await api.getAutoauditoria(unidade, mesAno, 'EXTERNA');
-      if (data && data.items) {
-        const mappedData: Record<string, any> = {};
-        data.items.forEach((item: any) => {
-          mappedData[item.baseItemId] = {
+
+      // Busca as duas avaliações em paralelo: a do Auditor (EXTERNA) e a do CD (AUTO)
+      const [externaData, autoData] = await Promise.all([
+        api.getAutoauditoria(unidade, mesAno, 'EXTERNA'),
+        api.getAutoauditoria(unidade, mesAno, 'AUTO')
+      ]);
+
+      // 1. Mapeia a avaliação do Auditor (scores)
+      if (externaData && externaData.items) {
+        const mappedExterna: Record<string, any> = {};
+        externaData.items.forEach((item: any) => {
+          mappedExterna[item.baseItemId] = {
             score: item.score || '',
             nossaAcao: item.nossaAcao || '',
             evidencias: item.evidencias || []
           };
         });
-        setAutoauditoriaData(mappedData);
+        setAutoauditoriaData(mappedExterna);
       } else {
         if (!isPolling) setAutoauditoriaData({});
       }
+
+      // 2. Mapeia a avaliação do CD (Referência para Plano e Evidências)
+      if (autoData && autoData.items) {
+        const mappedAuto: Record<string, any> = {};
+        autoData.items.forEach((item: any) => {
+          mappedAuto[item.baseItemId] = {
+            score: item.score || '',
+            nossaAcao: item.nossaAcao || '',
+            evidencias: item.evidencias || []
+          };
+        });
+        setAutoReferenceData(mappedAuto);
+      } else {
+        setAutoReferenceData({});
+      }
+
       if (!isPolling) setLastSavedTime(null);
     } catch (e) {
-      console.error("Erro ao carregar autoauditoria:", e);
-      if (!isPolling) setAutoauditoriaData({});
+      console.error("Erro ao carregar auditorias:", e);
+      if (!isPolling) {
+        setAutoauditoriaData({});
+        setAutoReferenceData({});
+      }
     } finally {
       if (!isPolling) {
         setIsLoading(false);
@@ -266,7 +294,7 @@ export const AvaliacaoExterna = () => {
       return getBlocoWeight(a.bloco) - getBlocoWeight(b.bloco);
     });
 
-  const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA';
+  const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
 
   return (
     <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
@@ -366,8 +394,8 @@ export const AvaliacaoExterna = () => {
             <button
               onClick={() => setShowOnlyPending(!showOnlyPending)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${showOnlyPending
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
-                  : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
+                : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
                 }`}
             >
               {showOnlyPending ? '✓ Mostrando Pendentes' : 'Ver Pendências'}
@@ -488,7 +516,9 @@ export const AvaliacaoExterna = () => {
                     item={item}
                     canEdit={!!canEdit}
                     pontoValue={autoauditoriaData[item.id]?.score || ''}
-                    nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || ''}
+                    // Prioriza o que o Auditor preencheu, senão mostra o do CD para validação
+                    nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || autoReferenceData[item.id]?.nossaAcao || ''}
+                    existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url || autoReferenceData[item.id]?.evidencias?.[0]?.url}
                     onPontoChange={handlePontoChange}
                     onNossaAcaoChange={handleNossaAcaoChange}
                     onNossaAcaoBlur={handleNossaAcaoBlur}
@@ -496,7 +526,7 @@ export const AvaliacaoExterna = () => {
                     unidade={selectedUnit}
                     mesAno={localMesAno}
                     tipo="EXTERNA"
-                    existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}
+                    isNossaAcaoReadOnly={true}
                   />
                 ))}
               </tbody>
