@@ -205,8 +205,8 @@ export const BaseChecklist = () => {
                                             className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
                                         >
                                             <option value="" disabled>Selecione uma trilha</option>
-                                            <option value="BASICO BEM FEITO">BÁSICO BEM FEITO</option>
-                                            <option value="GERENCIAR PARA MELHORAR">GERENCIAR PARA MELHORAR</option>
+                                            <option value="Básico bem feito">Básico bem feito</option>
+                                            <option value="Gerenciar para melhorar">Gerenciar para melhorar</option>
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
