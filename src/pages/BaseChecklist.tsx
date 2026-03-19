@@ -18,7 +18,8 @@ export const BaseChecklist = () => {
         nossaAcao: '',
         exigeEvidencia: false,
         ativo: true,
-        order: 0
+        order: 0,
+        criterios: ''
     });
 
     const handleEditItem = (item: ChecklistItem) => {
@@ -65,7 +66,7 @@ export const BaseChecklist = () => {
                 <button
                     onClick={() => {
                         setEditingItem(null);
-                        setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', nossaAcao: '', exigeEvidencia: false, ativo: true, order: baseItems.length + 1 });
+                        setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', nossaAcao: '', exigeEvidencia: false, ativo: true, order: baseItems.length + 1, criterios: '' });
                         setIsModalOpen(true);
                     }}
                     className="bg-amber-500 text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-amber-400 transition-colors flex items-center space-x-2"
@@ -90,7 +91,7 @@ export const BaseChecklist = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                            {baseItems.sort((a,b) => (a.order || 0) - (b.order || 0)).map((item) => (
+                            {baseItems.sort((a, b) => (a.order || 0) - (b.order || 0)).map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group">
                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
                                     <td className="px-6 py-4">{item.bloco}</td>
@@ -224,6 +225,15 @@ export const BaseChecklist = () => {
                                             required
                                             value={formData.descricao}
                                             onChange={e => setFormData({ ...formData, descricao: e.target.value })}
+                                            className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white min-h-[80px]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Critérios de Pontuação</label>
+                                        <textarea
+                                            value={formData.criterios || ''}
+                                            onChange={e => setFormData({ ...formData, criterios: e.target.value })}
+                                            placeholder="Ex: 3 - Sim completa; 1 - Parcial; 0 - Não realizado"
                                             className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white min-h-[100px]"
                                         />
                                     </div>
