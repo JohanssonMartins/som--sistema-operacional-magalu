@@ -71,6 +71,7 @@ model BaseChecklistItem {
   trilha         String
   item           String
   descricao      String
+  criterios      String?
   exigeEvidencia Boolean @default(false)
   ativo          Boolean @default(true)
   order          Int

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2 } from 'lucide-react';
+import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2, HelpCircle } from 'lucide-react';
 import { ChecklistItem } from '../data';
 import { api } from '../api';
 
@@ -43,6 +43,7 @@ export const AutoauditoriaRow = React.memo(({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [evidenceId, setEvidenceId] = useState<string | undefined>(undefined); // ID do Drive para análise
+  const [showCriteria, setShowCriteria] = useState(false);
 
   useEffect(() => {
     setLocalNossaAcao(nossaAcaoValue);
@@ -146,25 +147,52 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </div>
       </td>
-      <td className="px-6 py-4">
-        <select
-          value={pontoValue}
-          disabled={!canEdit}
-          onChange={(e) => onPontoChange(item.id, e.target.value)}
-          className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'} ${pontoValue === '3'
-            ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-            : pontoValue === '1'
-              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-              : pontoValue === '0'
-                ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
-                : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
-            }`}
-        >
-          <option value=""></option>
-          <option value="1">1</option>
-          <option value="3">3</option>
-          <option value="0">0</option>
-        </select>
+      <td
+        className="px-6 py-4 relative"
+        onMouseEnter={() => setShowCriteria(true)}
+        onMouseLeave={() => setShowCriteria(false)}
+      >
+        <div className="flex items-center justify-center gap-1">
+          <select
+            value={pontoValue}
+            disabled={!canEdit}
+            onChange={(e) => onPontoChange(item.id, e.target.value)}
+            className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'} ${pontoValue === '3'
+              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+              : pontoValue === '1'
+                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                : pontoValue === '0'
+                  ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
+                  : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
+              }`}
+          >
+            <option value=""></option>
+            <option value="1">1</option>
+            <option value="3">3</option>
+            <option value="0">0</option>
+          </select>
+          {item.criterios && (
+            <HelpCircle className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 cursor-help" />
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showCriteria && item.criterios && (
+            <motion.div
+              initial={{ opacity: 0, y: 5, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 5, scale: 0.95 }}
+              className="absolute z-[70] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg shadow-xl text-xs whitespace-pre-wrap border border-zinc-800 dark:border-zinc-200"
+            >
+              <div className="font-bold border-b border-zinc-800 dark:border-zinc-100 pb-1 mb-2 flex items-center gap-1.5">
+                <HelpCircle className="w-3 h-3" />
+                Critérios de Pontuação
+              </div>
+              {item.criterios}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-zinc-900 dark:border-t-white" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </td>
       <td className="px-6 py-4">
         <button

@@ -28,6 +28,7 @@ export type ChecklistItem = {
   trilha: string;
   item: string;
   descricao: string;
+  criterios?: string;
   exigeEvidencia: boolean;
   ativo: boolean;
   order: number;
@@ -86,6 +87,19 @@ export const INITIAL_CHECKLIST: ChecklistItem[] = [
   { id: '8', pilar: 'Pessoas', bloco: 'Clima', trilha: 'Básico bem feito', item: 'Plano de ação da pesquisa de clima anterior foi executado?', descricao: 'Verificar se as ações propostas para melhorar o clima foram implementadas.', exigeEvidencia: true, ativo: true, order: 2, code: 'PES-CLI-02' },
   { id: '9', pilar: 'Pessoas', bloco: 'Retenção', trilha: 'Básico bem feito', item: 'Entrevistas de desligamento são realizadas?', descricao: 'Verificar se todas as saídas voluntárias passam por entrevista de desligamento para coletar feedback.', exigeEvidencia: true, ativo: true, order: 1, code: 'PES-RET-01' },
   { id: '10', pilar: 'Pessoas', bloco: 'Atração', trilha: 'Básico bem feito', item: 'Vagas são divulgadas internamente antes de abertas ao mercado?', descricao: 'Confirmar se o processo de recrutamento interno é priorizado.', exigeEvidencia: false, ativo: true, order: 1, code: 'PES-ATR-01' },
+  {
+    id: '44',
+    pilar: 'Pessoas',
+    bloco: 'Atração',
+    trilha: 'Básico bem feito',
+    item: 'Existe banco de talentos estruturado e atualizado?',
+    descricao: 'Verificar a existência e o volume do banco de talentos em relação ao quadro ativo.',
+    criterios: '3 - Existe banco estruturado, atualizado e com volume ≥ 10% do quadro ativo da unidade, sendo utilizado no preenchimento de vagas.\n1 - Existe banco de talentos estruturado, atualizado e utilizado ativamente no preenchimento de vagas, com volume mínimo de ≥9% do quadro ativo da unidade\n0 - Não existe banco de talentos estruturado.',
+    exigeEvidencia: true,
+    ativo: true,
+    order: 2,
+    code: 'PES-ATR-02'
+  },
   { id: '11', pilar: 'Pessoas', bloco: 'Cultura', trilha: 'Básico bem feito', item: 'Valores da empresa são comunicados em reuniões de time?', descricao: 'Verificar se a cultura e os valores são reforçados na rotina da liderança.', exigeEvidencia: false, ativo: true, order: 1, code: 'PES-CUL-01' },
   { id: '12', pilar: 'Pessoas', bloco: 'Diversidade', trilha: 'Básico bem feito', item: 'Ações de conscientização sobre diversidade e inclusão são realizadas?', descricao: 'Checar a realização de eventos, palestras ou comunicados sobre o tema.', exigeEvidencia: true, ativo: true, order: 1, code: 'PES-DIV-01' },
   { id: '13', pilar: 'Segurança', bloco: 'Gestão de Acidente', trilha: 'Básico bem feito', item: 'Relatórios de acidente (CAT) são preenchidos e investigados no prazo?', descricao: 'Verificar se todos os acidentes geram um relatório de investigação com causa raiz.', exigeEvidencia: true, ativo: true, order: 1, code: 'SSM-GES-01' },
