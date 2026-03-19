@@ -79,14 +79,19 @@ export const googleDriveService = {
     },
 
     /**
-     * Garante toda a estrutura de pastas Mês > CD > Pilar > Bloco > Pergunta
+     * Garante toda a estrutura de pastas Mês > CD > [Auto|Externa] > Pilar > Bloco > Pergunta
      */
-    async resolveFolderPath(mesAno: string, unidade: string, pilar: string, bloco: string, pergunta: string): Promise<string> {
+    async resolveFolderPath(mesAno: string, unidade: string, pilar: string, bloco: string, pergunta: string, tipo: string = 'AUTO'): Promise<string> {
         const limpaNome = (str: string) => str.substring(0, 50).replace(/[\\/:*?"<>|]/g, '');
 
         const mesId = await this.getOrCreateFolder(limpaNome(mesAno), ROOT_FOLDER_ID);
         const unidadeId = await this.getOrCreateFolder(limpaNome(`CD ${unidade}`), mesId);
-        const pilarId = await this.getOrCreateFolder(limpaNome(pilar), unidadeId);
+
+        // Pasta intermediária por tipo (Auto vs Externa)
+        const tipoFolderName = tipo === 'EXTERNA' ? 'Externa' : 'Auto';
+        const tipoId = await this.getOrCreateFolder(tipoFolderName, unidadeId);
+
+        const pilarId = await this.getOrCreateFolder(limpaNome(pilar), tipoId);
         const blocoId = await this.getOrCreateFolder(limpaNome(bloco), pilarId);
         const perguntaId = await this.getOrCreateFolder(limpaNome(pergunta), blocoId);
 
@@ -138,9 +143,9 @@ export const googleDriveService = {
     async downloadFile(fileId: string): Promise<{ buffer: Buffer, mimeType: string }> {
         const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'arraybuffer' });
         const metadata = await drive.files.get({ fileId, fields: 'mimeType' });
-        return { 
-            buffer: Buffer.from(res.data as ArrayBuffer), 
-            mimeType: metadata.data.mimeType || 'image/jpeg' 
+        return {
+            buffer: Buffer.from(res.data as ArrayBuffer),
+            mimeType: metadata.data.mimeType || 'image/jpeg'
         };
     }
 };

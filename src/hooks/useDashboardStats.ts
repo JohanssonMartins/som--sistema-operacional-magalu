@@ -4,36 +4,13 @@ import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appC
 import { getBlocoWeight } from '../utils/appUtils';
 
 export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: string, filterDivisional: string = 'Todas', filterPilar: string = 'Todos') => {
-  const { items, baseItems, allAutoauditorias } = useStore();
+  const { baseItems, allAutoauditorias } = useStore();
 
   const dashboardStats = useMemo(() => {
-    const vItems = items.filter(i => {
-      if (selectedUnit !== 'Todas') return i.unidade === selectedUnit;
-      if (filterDivisional !== 'Todas') {
-        const div = CD_REGIONS[i.unidade]?.divisao;
-        if (div !== filterDivisional) return false;
-      }
-      return true;
-    });
-    const aItems = vItems.filter(i => i.ativo && (filterPilar === 'Todos' || i.pilar === filterPilar));
-    const tItems = aItems.length;
-    const tResp = aItems.filter(i => i.completed).length;
-    const tAder = aItems.filter(i => i.completed && i.aderente).length;
-
-    const progTotal = tItems === 0 ? 0 : (tResp / tItems) * 100;
-    const aderMedia = tItems === 0 ? 0 : (tAder / tItems) * 100;
-    const sGeral = aderMedia >= 80 ? 'Aderente' : 'Não Aderente';
-
     const currentPilares = filterPilar === 'Todos' ? PILAR_ORDER : [filterPilar];
 
     const rPorPilar = currentPilares.map(pilar => {
       const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
-      const pilarUnitItems = aItems.filter(i => i.pilar === pilar);
-
-      const pTotal = pilarUnitItems.length;
-      const pRespondidos = pilarUnitItems.filter(i => i.completed).length;
-      const pAderentes = pilarUnitItems.filter(i => i.completed && i.aderente).length;
-      const pNaoAderentes = pRespondidos - pAderentes;
 
       let totalPoints = 0;
       let possiblePoints = 0;
@@ -43,7 +20,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
           .filter(a => a.mesAno === autoauditoriaMesAno)
           .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional);
 
-        const auditMaps = applicableAudits.map(audit => 
+        const auditMaps = applicableAudits.map(audit =>
           new Map(audit.items?.map((ai: any) => [ai.baseItemId, ai]) || [])
         );
 
@@ -60,7 +37,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       } else {
         const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit && a.mesAno === autoauditoriaMesAno);
         const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
-        
+
         possiblePoints = pilarBaseItems.length * 3;
         pilarBaseItems.forEach(bi => {
           const ai = auditMap.get(bi.id);
@@ -70,35 +47,18 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       }
 
       const pAuditoriaOficial = possiblePoints === 0 ? 0 : (totalPoints / possiblePoints) * 100;
-      const pProgresso = pTotal === 0 ? 0 : (pRespondidos / pTotal) * 100;
-      const pAderencia = pTotal === 0 ? 0 : (pAderentes / pTotal) * 100;
-      const pStatus = pAderencia >= 80 ? 'Aderente' : 'Não Aderente';
 
       return {
         pilar,
-        total: pTotal,
-        conforme: pAderentes,
-        naoConforme: pNaoAderentes,
-        progresso: pProgresso,
-        auditoriaOficial: pAuditoriaOficial,
-        aderencia: pAderencia,
-        status: pStatus
+        auditoriaOficial: pAuditoriaOficial
       };
     });
 
     return {
-      visibleItems: vItems,
-      activeItems: aItems,
-      totalItems: tItems,
-      totalRespondidos: tResp,
-      totalAderentes: tAder,
-      progressoTotal: progTotal,
-      aderenciaMedia: aderMedia,
-      statusGeral: sGeral,
       resumoPorPilar: rPorPilar,
       pilares: currentPilares
     };
-  }, [items, selectedUnit, allAutoauditorias, baseItems, autoauditoriaMesAno, filterDivisional, filterPilar]);
+  }, [selectedUnit, allAutoauditorias, baseItems, autoauditoriaMesAno, filterDivisional, filterPilar]);
 
   const matrixStats = useMemo(() => {
     const allPilars = filterPilar === 'Todos' ? PILAR_ORDER : [filterPilar];
@@ -120,7 +80,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       divisions[division].push(unit);
 
       matrix[unit] = {};
-      const unitAudit = allAutoauditorias.find(a => 
+      const unitAudit = allAutoauditorias.find(a =>
         String(a.unidade) === String(unit) && a.mesAno === autoauditoriaMesAno
       );
 

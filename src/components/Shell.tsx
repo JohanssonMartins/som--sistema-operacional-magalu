@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  LayoutDashboard, Trophy, CheckCircle2, Database, Users, 
-  Menu, PanelLeftClose, ChevronDown, Package, Bell, 
+import {
+  LayoutDashboard, Trophy, CheckCircle2, Database, Users,
+  Menu, PanelLeftClose, ChevronDown, Package, Bell,
   Sun, Moon, LogOut, Lock, User as UserIcon, Check, X
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -17,13 +17,13 @@ interface ShellProps {
 }
 
 export const Shell: React.FC<ShellProps> = ({ children }) => {
-  const { 
-    currentUser, logout, theme, toggleTheme, 
+  const {
+    currentUser, logout, theme, toggleTheme,
     isSidebarCollapsed, setIsSidebarCollapsed,
     selectedUnit, setSelectedUnit,
     items
   } = useStore();
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
@@ -89,17 +89,18 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['ANY'] },
     { to: '/rank', icon: Trophy, label: 'Top Magalog', roles: ['ANY'] },
     { to: '/autoauditoria', icon: CheckCircle2, label: 'Autoavaliação', roles: ['ANY'] },
+    { to: '/avaliacao-externa', icon: CheckCircle2, label: 'Avaliação Externa', roles: ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'] },
     { to: '/base-checklist', icon: Database, label: 'Base Check-List', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'] },
     { to: '/usuarios', icon: Users, label: 'Usuários', roles: ['ADMIN'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => 
+  const filteredNavItems = navItems.filter(item =>
     item.roles.includes('ANY') || (currentUser && item.roles.includes(currentUser.role))
   );
 
-  const notificationsCount = items.filter(i => 
+  const notificationsCount = items.filter(i =>
     (i.assigneeId === currentUser?.id || i.assigneeId2 === currentUser?.id || i.assigneeId3 === currentUser?.id) && !i.completed
-  ).length + items.filter(i => 
+  ).length + items.filter(i =>
     !i.completed && i.prazo && ['approaching', 'overdue'].includes(getDueDateStatus(i.prazo))
   ).length;
 
@@ -107,7 +108,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex text-gray-900 dark:text-zinc-100 font-sans transition-colors duration-300">
       {/* Sidebar Navigation */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl`}>
-        
+
         {/* Logo Area */}
         <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden`}>
           {!isSidebarCollapsed && (
@@ -193,8 +194,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               to={item.to}
               className={({ isActive }) => `
                 flex items-center space-x-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium transition-all
-                ${isActive 
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 font-bold shadow-sm' 
+                ${isActive
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 font-bold shadow-sm'
                   : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-800/50'}
                 ${isSidebarCollapsed ? 'justify-center px-0' : ''}
               `}
@@ -232,21 +233,20 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
           <div className="mt-4 relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className={`w-full flex items-center p-2.5 rounded-2xl transition-all duration-200 border ${
-                isProfileDropdownOpen 
-                  ? 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 shadow-lg' 
+              className={`w-full flex items-center p-2.5 rounded-2xl transition-all duration-200 border ${isProfileDropdownOpen
+                  ? 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 shadow-lg'
                   : 'bg-white/50 dark:bg-zinc-900/50 border-transparent hover:bg-white dark:hover:bg-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700 hover:shadow-md'
-              }`}
+                }`}
             >
               <div className="relative shrink-0 group/avatar overflow-hidden rounded-xl">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
                   onChange={handlePhotoUpload}
                 />
-                
+
                 {currentUser?.photo ? (
                   <img src={currentUser.photo} className="w-9 h-9 rounded-xl object-cover" alt="" />
                 ) : (
@@ -254,9 +254,9 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     <UserIcon className="w-5 h-5" />
                   </div>
                 )}
-                
+
                 {/* Overlay Glow ao passar o mouse */}
-                <div 
+                <div
                   onClick={(e) => {
                     e.stopPropagation();
                     fileInputRef.current?.click();
@@ -271,10 +271,10 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     )}
                   </label>
                 </div>
-                
+
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm z-10"></div>
               </div>
-              
+
               {!isSidebarCollapsed && (
                 <div className="ml-3 flex-1 text-left min-w-0">
                   <p className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate leading-none mb-1">
@@ -289,7 +289,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
               )}
             </button>
-            
+
             <AnimatePresence>
               {isProfileDropdownOpen && (
                 <motion.div
@@ -304,7 +304,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                   </div>
 
                   <div className="p-1.5">
-                    <button 
+                    <button
                       onClick={() => {
                         setIsPasswordModalOpen(true);
                         setIsProfileDropdownOpen(false);
@@ -314,9 +314,9 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                       <Lock className="w-4 h-4 mr-3 text-gray-400 group-hover:text-current" />
                       <span className="font-medium">Alterar Senha</span>
                     </button>
-                    
-                    <button 
-                      onClick={handleLogout} 
+
+                    <button
+                      onClick={handleLogout}
                       className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors font-bold group mt-1"
                     >
                       <LogOut className="w-4 h-4 mr-3 text-red-500/70 group-hover:text-red-600 transition-colors" />
@@ -335,7 +335,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         <div className="p-6">
           {children}
         </div>
-        
+
         <footer className="mt-auto py-6 text-center text-xs text-gray-400 dark:text-zinc-600 opacity-70">
           <p>© 2026 Magalu | Feito com ❤ por J's Martins</p>
         </footer>
@@ -361,7 +361,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     <p className="text-blue-100 text-xs">Proteja sua conta</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsPasswordModalOpen(false)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
@@ -371,14 +371,13 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
               <div className="p-8 space-y-5">
                 {passwordStatus.type && (
-                  <motion.div 
+                  <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
-                    className={`p-3 rounded-xl text-sm font-medium ${
-                      passwordStatus.type === 'success' 
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' 
+                    className={`p-3 rounded-xl text-sm font-medium ${passwordStatus.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
                         : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
-                    }`}
+                      }`}
                   >
                     {passwordStatus.message}
                   </motion.div>
@@ -387,7 +386,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Senha Atual</label>
-                    <input 
+                    <input
                       type="password"
                       value={passwordForm.current}
                       onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
@@ -395,12 +394,12 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                       placeholder="••••••••"
                     />
                   </div>
-                  
+
                   <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2"></div>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Nova Senha</label>
-                    <input 
+                    <input
                       type="password"
                       value={passwordForm.new}
                       onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
@@ -411,7 +410,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Confirmar Nova Senha</label>
-                    <input 
+                    <input
                       type="password"
                       value={passwordForm.confirm}
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
@@ -442,7 +441,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
                       setIsChangingPassword(true);
                       setPasswordStatus({ type: null, message: '' });
-                      
+
                       try {
                         if (currentUser) {
                           // Aqui você pode validar a senha atual se o backend suportar, 
@@ -461,9 +460,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                         setIsChangingPassword(false);
                       }
                     }}
-                    className={`flex-1 px-4 py-3 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-500/30 transition-all ${
-                      isChangingPassword ? 'opacity-70 grayscale' : 'hover:bg-blue-700 active:scale-95'
-                    }`}
+                    className={`flex-1 px-4 py-3 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-500/30 transition-all ${isChangingPassword ? 'opacity-70 grayscale' : 'hover:bg-blue-700 active:scale-95'
+                      }`}
                   >
                     {isChangingPassword ? 'Alterando...' : 'Confirmar'}
                   </button>

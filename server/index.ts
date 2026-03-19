@@ -201,14 +201,14 @@ app.post('/api/checklists/bulk-put', async (req, res) => {
 app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
     try {
         const { unidade } = req.params;
-        
+
         // 1. Buscar itens base para mapear pilares
         const baseItems = await prisma.baseChecklistItem.findMany();
         const baseItemMap = new Map(baseItems.map(item => [item.id, item.pilar]));
 
         // 2. Buscar auditorias da unidade selecionada
         const autoauditorias = await prisma.autoauditoria.findMany({
-            where: { unidade },
+            where: { unidade, tipo: 'AUTO' },
             include: {
                 items: true
             }
@@ -216,11 +216,12 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
 
         // 3. Identificar os meses presentes para calcular média da rede
         const uniqueMonths = [...new Set(autoauditorias.map(a => a.mesAno))];
-        
+
         // 4. Buscar todas as auditorias desses meses para o benchmark
         const allAuditsInMonths = await prisma.autoauditoria.findMany({
             where: {
-                mesAno: { in: uniqueMonths }
+                mesAno: { in: uniqueMonths },
+                tipo: 'AUTO'
             },
             include: {
                 items: true
@@ -233,7 +234,7 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
             const audits = allAuditsInMonths.filter(a => a.mesAno === mes);
             let monthTotalScore = 0;
             let monthMaxScore = 0;
-            
+
             audits.forEach(audit => {
                 audit.items.forEach(item => {
                     const s = parseInt(item.score || '0');
@@ -241,21 +242,21 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
                     monthMaxScore += 3;
                 });
             });
-            
-            networkAvgByMonth[mes] = monthMaxScore > 0 
-                ? Math.round((monthTotalScore / monthMaxScore) * 1000) / 10 
+
+            networkAvgByMonth[mes] = monthMaxScore > 0
+                ? Math.round((monthTotalScore / monthMaxScore) * 1000) / 10
                 : 0;
         });
 
         // 6. Processar histórico final com pilares
         const history = autoauditorias.map(audit => {
             const pillarScores: Record<string, { score: number, max: number }> = {};
-            
+
             audit.items.forEach(item => {
                 const pilar = baseItemMap.get(item.baseItemId) || 'Outros';
                 const s = parseInt(item.score || '0');
                 const val = (isNaN(s) ? 0 : s);
-                
+
                 if (!pillarScores[pilar]) pillarScores[pilar] = { score: 0, max: 0 };
                 pillarScores[pilar].score += val;
                 pillarScores[pilar].max += 3;
@@ -265,7 +266,7 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
                 const s = parseInt(item.score || '0');
                 return acc + (isNaN(s) ? 0 : s);
             }, 0);
-            
+
             const maxScore = audit.items.length * 3;
             const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
@@ -310,10 +311,11 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
 app.get('/api/autoauditoria/all/:mesAno', async (req, res) => {
     try {
         const { mesAno } = req.params;
-        console.log(`[API] Buscando todas as autoauditorias para: ${mesAno}`);
-        
+        const tipo = req.query.tipo as string || 'AUTO';
+        console.log(`[API] Buscando todas as autoauditorias para: ${mesAno} (${tipo})`);
+
         const autoauditorias = await prisma.autoauditoria.findMany({
-            where: { mesAno },
+            where: { mesAno, tipo },
             include: {
                 items: true
             }
@@ -330,11 +332,13 @@ app.get('/api/autoauditoria/all/:mesAno', async (req, res) => {
 app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
     try {
         const { unidade, mesAno } = req.params;
+        const tipo = req.query.tipo as string || 'AUTO';
         const autoauditoria = await prisma.autoauditoria.findUnique({
             where: {
-                unidade_mesAno: {
+                unidade_mesAno_tipo: {
                     unidade,
-                    mesAno
+                    mesAno,
+                    tipo
                 }
             },
             include: {
@@ -358,12 +362,12 @@ app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
 
 app.post('/api/autoauditoria', async (req, res) => {
     try {
-        const { unidade, mesAno, items } = req.body;
+        const { unidade, mesAno, items, tipo = 'AUTO' } = req.body;
 
         // 1. Busca ou cria o registro principal de autoauditoria
         const autoauditoria = await prisma.autoauditoria.upsert({
             where: {
-                unidade_mesAno: { unidade, mesAno }
+                unidade_mesAno_tipo: { unidade, mesAno, tipo }
             },
             update: {
                 status: 'Pendente de Auditoria' // Reseta status ao salvar
@@ -371,6 +375,7 @@ app.post('/api/autoauditoria', async (req, res) => {
             create: {
                 unidade,
                 mesAno,
+                tipo,
                 status: 'Pendente de Auditoria'
             }
         });
@@ -406,7 +411,7 @@ app.post('/api/autoauditoria', async (req, res) => {
         }
 
         res.json({ success: true, autoauditoria, itemsCount: results.length });
-        
+
         // Notifica clientes em tempo real
         notifyDataChange('autoauditoria_updated', { unidade, mesAno });
     } catch (error) {
@@ -429,16 +434,16 @@ const upload = multer({
 app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (req: any, res: any) => {
     try {
         const file = req.file;
-        const { unidade, mesAno, pilar, bloco, pergunta, baseItemId } = req.body;
+        const { unidade, mesAno, pilar, bloco, pergunta, baseItemId, tipo = 'AUTO' } = req.body;
 
         if (!file || !unidade || !mesAno || !pilar || !bloco || !pergunta || !baseItemId) {
             return res.status(400).json({ error: 'Faltam dados essenciais para o upload.' });
         }
 
-        console.log(`[Drive Upload] Iniciando upload para: ${mesAno} > CD ${unidade} > ${pilar} > ${bloco} > ${pergunta}`);
+        console.log(`[Drive Upload] Iniciando upload para: ${mesAno} > CD ${unidade} > ${pilar} > ${bloco} > ${pergunta} (${tipo})`);
 
         // 1. Resolve toda a hierarquia de pastas no drive
-        const parentFolderId = await googleDriveService.resolveFolderPath(mesAno, unidade, pilar, bloco, pergunta);
+        const parentFolderId = await googleDriveService.resolveFolderPath(mesAno, unidade, pilar, bloco, pergunta, tipo);
 
         // 2. Faz o upload do arquivo
         const dataOriginal = new Date().getTime();
@@ -449,12 +454,13 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
         // Precisamos garantir que a autoauditoria pai existe antes de atrelarmos 
         const autoauditoria = await prisma.autoauditoria.upsert({
             where: {
-                unidade_mesAno: { unidade, mesAno }
+                unidade_mesAno_tipo: { unidade, mesAno, tipo }
             },
             update: {},
             create: {
                 unidade,
                 mesAno,
+                tipo,
                 status: 'Pendente de Auditoria'
             }
         });
@@ -484,7 +490,7 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
         });
 
         res.json({ success: true, url: webViewLink, evidencia });
-        
+
         // Notifica clientes que houve upload de evidencia
         notifyDataChange('autoauditoria_updated', { unidade, mesAno });
 
@@ -519,13 +525,13 @@ app.post('/api/ai/analyze-evidence', async (req, res) => {
         // 1. Buscar a evidência no banco para pegar o fileId se necessário, 
         // ou assumir que evidenceId já é o ID do arquivo no Google Drive.
         // Pelo esquema atual, a URL contém o ID. Mas vamos passar o ID direto do frontend para simplificar.
-        
+
         // 2. Baixar o arquivo do Drive
         const { buffer, mimeType } = await googleDriveService.downloadFile(evidenceId);
 
         // 3. Analisar com Gemini Vision
         const analysis = await aiService.analyzeEvidence(pilar, bloco, item, descricao, buffer, mimeType);
-        
+
         res.json({ analysis });
     } catch (error: any) {
         console.error('[AI Vision API] Error:', error);

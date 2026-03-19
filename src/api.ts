@@ -74,13 +74,17 @@ export const api = {
     },
 
     // Autoauditoria Mensal
-    getAutoauditoria: async (unidade: string, mesAno: string) => {
-        const res = await fetch(`${API_BASE_URL}/autoauditoria/${encodeURIComponent(unidade)}/${encodeURIComponent(mesAno)}`);
+    getAutoauditoria: async (unidade: string, mesAno: string, tipo?: 'AUTO' | 'EXTERNA') => {
+        const url = new URL(`${API_BASE_URL}/autoauditoria/${encodeURIComponent(unidade)}/${encodeURIComponent(mesAno)}`);
+        if (tipo) url.searchParams.append('tipo', tipo);
+        const res = await fetch(url.toString());
         if (!res.ok) throw new Error('Failed to fetch autoauditoria');
         return res.json();
     },
-    getAllAutoauditorias: async (mesAno: string) => {
-        const res = await fetch(`${API_BASE_URL}/autoauditoria/all/${encodeURIComponent(mesAno)}`);
+    getAllAutoauditorias: async (mesAno: string, tipo?: 'AUTO' | 'EXTERNA') => {
+        const url = new URL(`${API_BASE_URL}/autoauditoria/all/${encodeURIComponent(mesAno)}`);
+        if (tipo) url.searchParams.append('tipo', tipo);
+        const res = await fetch(url.toString());
         if (!res.ok) throw new Error('Failed to fetch all autoauditorias');
         return res.json();
     },
@@ -88,8 +92,10 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/autoauditoria`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         return res.json();
     },
-    getHistory: async (unidade: string) => {
-        const res = await fetch(`${API_BASE_URL}/autoauditoria/history/${encodeURIComponent(unidade)}`);
+    getHistory: async (unidade: string, tipo?: 'AUTO' | 'EXTERNA') => {
+        const url = new URL(`${API_BASE_URL}/autoauditoria/history/${encodeURIComponent(unidade)}`);
+        if (tipo) url.searchParams.append('tipo', tipo);
+        const res = await fetch(url.toString());
         if (!res.ok) throw new Error('Failed to fetch history');
         return res.json();
     },

@@ -8,13 +8,14 @@ interface AppState {
   selectedUnit: string;
   isSidebarCollapsed: boolean;
   activeTab: string;
-  
+
   // Dados de Cache/Global
   items: ChecklistItem[];
   baseItems: ChecklistItem[];
   usersList: User[];
   allAutoauditorias: Autoauditoria[];
   autoauditoriaData: Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>;
+  avaliacaoExternaData: Record<string, { score: string; nossaAcao: string; evidencias?: any[] }>;
 
   // Actions
   setCurrentUser: (user: User | null) => void;
@@ -22,12 +23,13 @@ interface AppState {
   setSelectedUnit: (unit: string) => void;
   setIsSidebarCollapsed: (collapsed: boolean) => void;
   setActiveTab: (tab: string) => void;
-  
+
   setItems: (items: ChecklistItem[]) => void;
   setBaseItems: (items: ChecklistItem[]) => void;
   setUsersList: (users: User[]) => void;
   setAllAutoauditorias: (audits: Autoauditoria[]) => void;
   setAutoauditoriaData: (data: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)) => void;
+  setAvaliacaoExternaData: (data: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)) => void;
 
   autoauditoriaMesAno: string;
   setAutoauditoriaMesAno: (mesAno: string) => void;
@@ -44,12 +46,13 @@ export const useStore = create<AppState>()(
       selectedUnit: 'Todas',
       isSidebarCollapsed: false,
       activeTab: 'home',
-      
+
       items: [],
       baseItems: [],
       usersList: [],
       allAutoauditorias: [],
       autoauditoriaData: {},
+      avaliacaoExternaData: {},
 
       autoauditoriaMesAno: (() => {
         const d = new Date();
@@ -73,11 +76,14 @@ export const useStore = create<AppState>()(
       setAutoauditoriaData: (data) => set((state) => ({
         autoauditoriaData: typeof data === 'function' ? data(state.autoauditoriaData) : data
       })),
+      setAvaliacaoExternaData: (data) => set((state) => ({
+        avaliacaoExternaData: typeof data === 'function' ? data(state.avaliacaoExternaData) : data
+      })),
 
-      logout: () => set({ 
-        currentUser: null, 
-        activeTab: 'home', 
-        selectedUnit: 'Todas' 
+      logout: () => set({
+        currentUser: null,
+        activeTab: 'home',
+        selectedUnit: 'Todas'
       }),
     }),
     {

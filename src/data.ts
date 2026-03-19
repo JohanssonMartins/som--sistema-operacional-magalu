@@ -68,6 +68,7 @@ export type Autoauditoria = {
   id?: string;
   unidade: string;
   mesAno: string;
+  tipo?: 'AUTO' | 'EXTERNA';
   status?: string;
   items: AutoauditoriaItem[];
   createdAt?: string;

@@ -14,6 +14,7 @@ interface AutoauditoriaRowProps {
   onNossaAcaoBlur: (itemId: string, finalAcao: string) => void;
   unidade: string;
   mesAno: string;
+  tipo?: 'AUTO' | 'EXTERNA';
   existingEvidenciaUrl?: string;
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
 }
@@ -28,6 +29,7 @@ export const AutoauditoriaRow = React.memo(({
   onNossaAcaoBlur,
   unidade,
   mesAno,
+  tipo = 'AUTO',
   existingEvidenciaUrl,
   onEvidenciaUploaded
 }: AutoauditoriaRowProps) => {
@@ -73,13 +75,14 @@ export const AutoauditoriaRow = React.memo(({
       formData.append('bloco', item.bloco);
       formData.append('pergunta', item.item);
       formData.append('baseItemId', item.id);
+      formData.append('tipo', tipo);
 
       const res = await api.uploadEvidenciaGoogleDrive(formData);
       if (res.success && res.url) {
         setEvidenciaUrl(res.url);
         const driveId = res.evidencia?.name || '';
         if (driveId) setEvidenceId(driveId);
-        
+
         // Notifica o pai para persistir no estado global
         onEvidenciaUploaded?.(item.id, res.url, driveId);
       }
@@ -109,8 +112,8 @@ export const AutoauditoriaRow = React.memo(({
 
   const handleAIAnalysis = async () => {
     if (!evidenceId) {
-       alert('ID da evidência não disponível para análise.');
-       return;
+      alert('ID da evidência não disponível para análise.');
+      return;
     }
     try {
       setIsAnalyzing(true);
@@ -132,7 +135,14 @@ export const AutoauditoriaRow = React.memo(({
       <td className="px-6 py-4">{item.bloco}</td>
       <td className="px-6 py-4">{item.trilha}</td>
       <td className="px-6 py-4">
-        <div className="max-w-md" title={item.descricao || item.item}>{item.item}</div>
+        <div className="max-w-md">
+          <div className="font-medium text-gray-900 dark:text-zinc-100">{item.item}</div>
+          {item.descricao && (
+            <div className="text-sm italic text-gray-500 dark:text-zinc-400 mt-1">
+              {item.descricao}
+            </div>
+          )}
+        </div>
       </td>
       <td className="px-6 py-4">
         <select
@@ -157,13 +167,12 @@ export const AutoauditoriaRow = React.memo(({
       <td className="px-6 py-4">
         <button
           onClick={() => setIsModalOpen(true)}
-          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${
-            localNossaAcao.trim() 
-              ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20' 
-              : (pontoValue === '0' || pontoValue === '1')
-                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 animate-pulse ring-2 ring-red-500/20'
-                : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
-          }`}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${localNossaAcao.trim()
+            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+            : (pontoValue === '0' || pontoValue === '1')
+              ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 animate-pulse ring-2 ring-red-500/20'
+              : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+            }`}
         >
           {localNossaAcao.trim() ? (
             <>
@@ -199,7 +208,7 @@ export const AutoauditoriaRow = React.memo(({
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Plano de Ação / Observações</h3>
                     <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">{item.pilar} {' > '} {item.bloco}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setIsModalOpen(false)}
                     className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
                   >
@@ -270,19 +279,18 @@ export const AutoauditoriaRow = React.memo(({
               Ver Evidência Salva
             </a>
           )}
-          
+
           {(evidenciaUrl && canEdit) && (
             <button
               onClick={handleAIAnalysis}
               disabled={isAnalyzing}
-              className={`flex items-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all ${
-                aiAnalysis 
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800'
-                  : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-800 hover:bg-purple-100'
-              }`}
+              className={`flex items-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all ${aiAnalysis
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800'
+                : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-800 hover:bg-purple-100'
+                }`}
               title={aiAnalysis || "Analisar evidência com Vision IA"}
             >
-              {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3" />}
+              {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
               <span>{aiAnalysis ? 'Evidência Analisada' : 'Validar com IA'}</span>
             </button>
           )}
@@ -292,7 +300,7 @@ export const AutoauditoriaRow = React.memo(({
               <span className="font-bold text-gray-700 dark:text-zinc-300">Análise IA: </span>
               {aiAnalysis}
             </div>
-          ) }
+          )}
 
           <label className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}>
             <Upload className="w-3.5 h-3.5" />

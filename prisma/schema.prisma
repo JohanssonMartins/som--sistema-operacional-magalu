@@ -82,13 +82,14 @@ model Autoauditoria {
   id          String   @id @default(uuid())
   unidade     String
   mesAno      String   // Ex: "Fevereiro-2026"
+  tipo        String   @default("AUTO") // "AUTO" ou "EXTERNA"
   status      String   @default("Pendente de Auditoria") // Pendente de Auditoria, Auditado, etc.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   items       AutoauditoriaItem[]
   
-  @@unique([unidade, mesAno])
+  @@unique([unidade, mesAno, tipo])
 }
 
 model AutoauditoriaItem {
