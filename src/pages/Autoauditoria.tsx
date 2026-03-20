@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -9,12 +9,12 @@ import { AutoauditoriaRow } from '../components/AutoauditoriaRow';
 import { api } from '../api';
 
 const PILAR_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
-  'Pessoas':         { icon: Users,         color: 'bg-purple-600' },
-  'Segurança':       { icon: Shield,        color: 'bg-slate-600'  },
-  'Sustentabilidade':{ icon: Leaf,          color: 'bg-emerald-600'},
-  'Cliente':         { icon: ShoppingCart,  color: 'bg-cyan-500'   },
-  'Gestão':          { icon: Settings,      color: 'bg-blue-600'   },
-  'Armazém':         { icon: Package,       color: 'bg-orange-500' },
+  'Pessoas': { icon: Users, color: 'bg-purple-600' },
+  'Segurança': { icon: Shield, color: 'bg-slate-600' },
+  'Sustentabilidade': { icon: Leaf, color: 'bg-emerald-600' },
+  'Cliente': { icon: ShoppingCart, color: 'bg-cyan-500' },
+  'Gestão': { icon: Settings, color: 'bg-blue-600' },
+  'Armazém': { icon: Package, color: 'bg-orange-500' },
 };
 
 // Gera os últimos 12 meses no formato "Mês-Ano"
@@ -33,15 +33,15 @@ const gerarUltimosMeses = (quantidade = 12): string[] => {
 const MESES_DISPONIVEIS = gerarUltimosMeses();
 
 export const Autoauditoria = () => {
-  const { 
-    currentUser, 
+  const {
+    currentUser,
     selectedUnit, setSelectedUnit,
     autoauditoriaMesAno,
-    autoauditoriaData, 
+    autoauditoriaData,
     setAutoauditoriaData,
     baseItems,
     allAutoauditorias,
-    setAllAutoauditorias 
+    setAllAutoauditorias
   } = useStore();
 
   const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
@@ -56,13 +56,13 @@ export const Autoauditoria = () => {
 
   // Calcular resumo local baseado em autoauditoriaData (dados reais da auto-avaliação)
   const resumoLocal = useMemo(() => {
-    const pilaresParaExibir = selectedPilarFilter === 'Todos' 
-      ? PILAR_ORDER 
+    const pilaresParaExibir = selectedPilarFilter === 'Todos'
+      ? PILAR_ORDER
       : [selectedPilarFilter];
 
     return pilaresParaExibir.map(pilar => {
-      const pilarBaseItems = baseItems.filter(i => 
-        i.pilar === pilar && 
+      const pilarBaseItems = baseItems.filter(i =>
+        i.pilar === pilar &&
         i.ativo &&
         (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
       );
@@ -88,7 +88,7 @@ export const Autoauditoria = () => {
   }, [baseItems, autoauditoriaData, selectedPilarFilter, selectedBlocoFilter]);
 
   const itemsForStats = useMemo(() => {
-    return baseItems.filter(i => 
+    return baseItems.filter(i =>
       i.ativo &&
       (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
       (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
@@ -232,9 +232,9 @@ export const Autoauditoria = () => {
   const handleEvidenciaUploaded = (itemId: string, url: string, evidenceId: string) => {
     setAutoauditoriaData(prev => ({
       ...prev,
-      [itemId]: { 
-        ...(prev[itemId] || { score: '', nossaAcao: '' }), 
-        evidencias: [{ name: evidenceId, url, category: 'Drive' }] 
+      [itemId]: {
+        ...(prev[itemId] || { score: '', nossaAcao: '' }),
+        evidencias: [{ name: evidenceId, url, category: 'Drive' }]
       }
     }));
     // Forçar auto-save
@@ -246,14 +246,14 @@ export const Autoauditoria = () => {
     pendingEdits.current.add(itemId);
     needsSave.current = true;
     // Trigger save via useEffect
-    setAutoauditoriaData(prev => ({ ...prev })); 
+    setAutoauditoriaData(prev => ({ ...prev }));
   };
 
   const canEdit = currentUser && ['ADMIN', 'GERENTE_DO_CD', 'DONO_DO_PILAR'].includes(currentUser.role) &&
     (currentUser.role === 'ADMIN' || currentUser.unidade === selectedUnit);
 
   const filteredItems = baseItems
-    .filter(i => i.ativo && 
+    .filter(i => i.ativo &&
       (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
       (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter) &&
       (!showOnlyPending || !(autoauditoriaData[i.id]?.score))
@@ -283,8 +283,8 @@ export const Autoauditoria = () => {
           {/* Status de salvamento */}
           <div className="flex items-center gap-3 shrink-0">
             {isSaving && (
-              <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium animate-pulse">
-                <RefreshCw className="w-4 h-4 animate-spin" />
+              <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium">
+                <RefreshCw className="w-4 h-4" />
                 <span>Salvando...</span>
               </div>
             )}
@@ -298,7 +298,7 @@ export const Autoauditoria = () => {
 
         {/* ── Barra de Filtros ── */}
         <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 shadow-sm">
-          
+
           {/* CD */}
           {isPrivileged && (
             <div className="flex flex-col">
@@ -364,11 +364,10 @@ export const Autoauditoria = () => {
           <div className="ml-auto">
             <button
               onClick={() => setShowOnlyPending(!showOnlyPending)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                showOnlyPending 
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30' 
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${showOnlyPending
+                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
                   : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
-              }`}
+                }`}
             >
               {showOnlyPending ? '✓ Mostrando Pendentes' : 'Ver Pendências'}
             </button>

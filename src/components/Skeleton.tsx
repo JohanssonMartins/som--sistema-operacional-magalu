@@ -7,13 +7,13 @@ interface SkeletonProps {
   height?: string | number;
 }
 
-export const Skeleton: React.FC<SkeletonProps> = ({ 
-  className = '', 
-  variant = 'rectangular', 
-  width, 
-  height 
+export const Skeleton: React.FC<SkeletonProps> = ({
+  className = '',
+  variant = 'rectangular',
+  width,
+  height
 }) => {
-  const baseClass = "animate-pulse bg-gray-200 dark:bg-zinc-800";
+  const baseClass = "bg-gray-200 dark:bg-zinc-800";
   const variantClass = {
     text: "rounded h-4 w-full mb-2",
     circular: "rounded-full",
@@ -26,8 +26,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   };
 
   return (
-    <div 
-      className={`${baseClass} ${variantClass} ${className}`} 
+    <div
+      className={`${baseClass} ${variantClass} ${className}`}
       style={style}
     />
   );
@@ -75,10 +75,10 @@ export const ChartSkeleton = () => (
     </div>
     <div className="h-[300px] flex items-end gap-2 px-2">
       {[...Array(12)].map((_, i) => (
-        <Skeleton 
-          key={i} 
-          width="100%" 
-          height={`${Math.floor(Math.random() * 60) + 20}%`} 
+        <Skeleton
+          key={i}
+          width="100%"
+          height={`${Math.floor(Math.random() * 60) + 20}%`}
           className="rounded-t-sm"
         />
       ))}

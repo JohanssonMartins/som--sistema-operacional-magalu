@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -312,8 +312,8 @@ export const AvaliacaoExterna = () => {
           {/* Status de salvamento */}
           <div className="flex items-center gap-3 shrink-0">
             {isSaving && (
-              <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium animate-pulse">
-                <RefreshCw className="w-4 h-4 animate-spin" />
+              <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium">
+                <RefreshCw className="w-4 h-4" />
                 <span>Salvando...</span>
               </div>
             )}

@@ -19,11 +19,11 @@ import { MainLogo } from './components/Logos';
 
 const PageLoader = () => (
   <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex flex-col items-center justify-center">
-    <MainLogo className="animate-pulse" size="large" />
+    <MainLogo size="large" />
     <div className="mt-8 flex items-center gap-2">
-      <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-      <div className="w-2 h-2 rounded-full bg-red-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-      <div className="w-2 h-2 rounded-full bg-yellow-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+      <div className="w-2 h-2 rounded-full bg-blue-50" />
+      <div className="w-2 h-2 rounded-full bg-red-50" />
+      <div className="w-2 h-2 rounded-full bg-yellow-50" />
     </div>
   </div>
 );

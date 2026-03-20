@@ -55,6 +55,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
 
       return {
         pilar,
+        aderencia: pAuditoriaOficial,
         auditoriaOficial: pAuditoriaOficial
       };
     });

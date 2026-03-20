@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
 import { Sun, Moon, Mail, Lock, ShieldAlert, Users } from 'lucide-react';
 import { MainLogo } from '../components/Logos';
 import { useStore } from '../store/useStore';
@@ -39,7 +38,7 @@ export const Login = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
 
         <div
-          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300 animate-in fade-in zoom-in duration-500"
+          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300"
         >
           <div className="absolute top-4 right-4">
             <button onClick={toggleTheme} className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors">
@@ -53,10 +52,10 @@ export const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-5">
             {loginError && (
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg flex items-center space-x-2">
+              <div className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg flex items-center space-x-2">
                 <ShieldAlert className="w-4 h-4 shrink-0" />
                 <span>{loginError}</span>
-              </motion.div>
+              </div>
             )}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">E-mail</label>
@@ -106,9 +105,9 @@ export const Login = () => {
                 { label: 'Auditor', email: 'auditor@magalu.com' },
                 { label: 'Colab', email: 'colab@magalu.com' }
               ].map((account) => (
-                <div 
+                <div
                   key={account.email}
-                  className="flex justify-center items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors" 
+                  className="flex justify-center items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors"
                   onClick={() => { setLoginEmail(account.email); setLoginPassword('123'); }}
                 >
                   <span className="text-blue-600 dark:text-blue-400 font-medium">{account.label}</span>

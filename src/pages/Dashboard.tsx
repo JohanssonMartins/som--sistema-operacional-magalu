@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, RefreshCw, ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -169,9 +168,7 @@ export const Dashboard = () => {
       </div>
 
       {selectedUnit !== 'Todas' && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <div
           className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-6 shadow-lg"
         >
           <div className="flex items-center justify-between mb-2">
@@ -185,12 +182,12 @@ export const Dashboard = () => {
           </div>
           {isLoadingHistory ? (
             <div className="h-[300px] flex items-center justify-center">
-              <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+              <RefreshCw className="w-8 h-8 text-blue-500" />
             </div>
           ) : (
             <TrendChart data={historyData} />
           )}
-        </motion.div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -206,18 +203,15 @@ export const Dashboard = () => {
           const dispersaoType = actualAutoAuditoria > actualOficialAuditoria ? 'down' : (actualOficialAuditoria > actualAutoAuditoria ? 'up' : card.dispersaoType);
 
           return (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -4 }}
               className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 shadow-lg hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 group"
             >
               <div className={`${card.color} px-4 py-3 flex items-center space-x-3 relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
-                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: (idx * 0.1) + 0.3, duration: 0.5 }}>
+                <div>
                   <Icon className="w-5 h-5 text-white relative z-10" />
-                </motion.div>
+                </div>
                 <h3 className="text-white font-black text-xl relative z-10 tracking-tight drop-shadow-md">{card.title}</h3>
               </div>
 
@@ -229,7 +223,7 @@ export const Dashboard = () => {
                       <span className="text-gray-900 dark:text-zinc-200 font-black">&gt; 70%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `70%` }} transition={{ duration: 1, delay: 0.5 + (idx * 0.1), ease: "easeOut" }} className="h-full bg-[#6b778c] rounded-full" />
+                      <div className="h-full bg-[#6b778c] rounded-full" style={{ width: '70%' }} />
                     </div>
                   </div>
                   <div>
@@ -238,33 +232,29 @@ export const Dashboard = () => {
                       <span className="text-gray-900 dark:text-zinc-200 font-black">{actualOficialAuditoria}%</span>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${actualOficialAuditoria}%` }} transition={{ duration: 1, delay: 0.7 + (idx * 0.1), ease: "easeOut" }} className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} />
+                      <div className={`h-full ${getPerformanceStatus(actualOficialAuditoria).bg} rounded-full`} style={{ width: `${actualOficialAuditoria}%` }} />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center justify-center relative pl-4">
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }} 
-                    animate={{ opacity: 1, scale: 1 }} 
-                    transition={{ duration: 0.5, delay: 1.2 + (idx * 0.1), type: "spring" }} 
+                  <div
                     className={`w-28 h-28 rounded-full flex flex-col items-center justify-center p-3 border-[6px] border-white dark:border-zinc-800 shadow-[0_15px_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] transition-all duration-300 bg-white dark:bg-zinc-900 relative group`}
                   >
                     {/* Subtle Glow Ring */}
-                    <div className={`absolute inset-[-4px] rounded-full border-2 opacity-50 ${
-                      getPerformanceStatus(actualOficialAuditoria).bg.replace('bg-', 'border-').replace('/10', '/30')
-                    }`} />
-                    
+                    <div className={`absolute inset-[-4px] rounded-full border-2 opacity-50 ${getPerformanceStatus(actualOficialAuditoria).bg.replace('bg-', 'border-').replace('/10', '/30')
+                      }`} />
+
                     <span className={`text-[10px] font-black uppercase tracking-widest text-center leading-none mb-2 ${getPerformanceStatus(actualOficialAuditoria).text}`}>
                       {getPerformanceStatus(actualOficialAuditoria).label}
                     </span>
                     <span className={`text-3xl font-black leading-none ${getPerformanceStatus(actualOficialAuditoria).text} drop-shadow-md`}>
                       {actualOficialAuditoria}%
                     </span>
-                  </motion.div>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -292,7 +282,7 @@ export const Dashboard = () => {
                     </th>
                   ))}
                   <th rowSpan={2} className="px-2 py-2 border border-gray-700 bg-[#0f172a] text-[10px] min-w-[80px] align-middle shadow-[-2px_0_5px_rgba(0,0,0,0.2)] sticky right-0 z-20">
-                    Aderência<br/>Pilar TT
+                    Aderência<br />Pilar TT
                   </th>
                 </tr>
                 <tr>
@@ -346,9 +336,7 @@ export const Dashboard = () => {
                       </td>
                     </tr>
                     {expandedPilars.has(pilar) && matrixStats.pilarToBlocks[pilar].map(bloco => (
-                      <motion.tr
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
+                      <tr
                         key={`${pilar}-${bloco}`}
                         className="bg-gray-100/30 dark:bg-zinc-900/40 text-[10px] sm:text-xs"
                       >
@@ -372,7 +360,7 @@ export const Dashboard = () => {
                         <td className={`px-2 py-2 border border-gray-200 dark:border-zinc-800 font-bold bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.05)] ${getPercentageColor(parseInt(matrixStats.pilarAverages[`${pilar}_${bloco}`] || '0'), true)}`}>
                           {matrixStats.pilarAverages[`${pilar}_${bloco}`] || '0'}%
                         </td>
-                      </motion.tr>
+                      </tr>
                     ))}
                   </React.Fragment>
                 ))}
@@ -384,8 +372,8 @@ export const Dashboard = () => {
                     const value = parseInt(matrixStats.matrix[unit]['Total'] || '0');
                     const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
                     const baseColorClass = getPercentageColor(value);
-                    const colorClass = baseColorClass.includes('/10') 
-                      ? baseColorClass.replace('/10', '/20') 
+                    const colorClass = baseColorClass.includes('/10')
+                      ? baseColorClass.replace('/10', '/20')
                       : baseColorClass; // Slightly stronger background for Total row
 
                     return (
@@ -397,10 +385,10 @@ export const Dashboard = () => {
                       </td>
                     );
                   })}
-                      <td className={`px-2 py-3 border border-gray-300 dark:border-zinc-700 font-black bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages['Total'] || '0')).replace('/10', '/30')}`}>
-                        {matrixStats.pilarAverages['Total'] || '0'}%
-                      </td>
-                    </tr>
+                  <td className={`px-2 py-3 border border-gray-300 dark:border-zinc-700 font-black bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages['Total'] || '0')).replace('/10', '/30')}`}>
+                    {matrixStats.pilarAverages['Total'] || '0'}%
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

@@ -20,7 +20,7 @@ export const LogoIconSVG = ({ className = '' }: { className?: string }) => (
         <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
     </defs>
-    
+
     <path
       d="M 12 50 A 38 38 0 1 1 35 83"
       stroke="url(#logoIconGradient1)"
@@ -58,13 +58,13 @@ export const LogoIconSVG = ({ className = '' }: { className?: string }) => (
 export const MainLogo = ({ className = '', size = 'medium' }: { className?: string, size?: 'small' | 'medium' | 'large' }) => {
   const isSmall = size === 'small';
   const isLarge = size === 'large';
-  
+
   return (
     <div className={`flex items-center justify-start ${className} select-none w-full ${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-20'}`}>
-      <img 
-        src={logoImg} 
-        alt="Magalog Logo" 
-        className={`max-h-full max-w-full object-contain transition-all duration-500 hover:scale-105 drop-shadow-sm`}
+      <img
+        src={logoImg}
+        alt="Magalog Logo"
+        className={`max-h-full max-w-full object-contain transition-all duration-500 drop-shadow-sm`}
         style={{ filter: 'brightness(1.1) contrast(1.05)' }}
       />
     </div>

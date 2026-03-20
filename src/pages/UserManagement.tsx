@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Users, Shield, User as UserIcon, Edit2, Trash2, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';
@@ -10,24 +9,24 @@ export const UserManagement = () => {
   const { usersList, setUsersList, currentUser } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
-    role: 'COLABORADOR' as Role, 
-    password: '', 
-    photo: '', 
-    unidade: '' 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'COLABORADOR' as Role,
+    password: '',
+    photo: '',
+    unidade: ''
   });
 
   const handleEditUser = (user: User) => {
     setEditingUserId(user.id);
-    setFormData({ 
-      name: user.name, 
-      email: user.email, 
-      role: user.role, 
-      password: user.password, 
-      photo: user.photo || '', 
-      unidade: user.unidade || '' 
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      password: user.password,
+      photo: user.photo || '',
+      unidade: user.unidade || ''
     });
     setIsModalOpen(true);
   };
@@ -112,14 +111,13 @@ export const UserManagement = () => {
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">{user.unidade || '-'}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-                      user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
-                      user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                      user.role === 'GERENTE_DIVISIONAL' || user.role === 'DIRETORIA' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
-                      user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
-                      user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
-                      'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
-                    }`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
+                        user.role === 'AUDITOR' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                          user.role === 'GERENTE_DIVISIONAL' || user.role === 'DIRETORIA' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' :
+                            user.role === 'GERENTE_DO_CD' ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' :
+                              user.role === 'DONO_DO_PILAR' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
+                                'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                      }`}>
                       <Shield className="w-3 h-3 mr-1" />
                       {user.role.replace(/_/g, ' ')}
                     </span>
@@ -147,106 +145,98 @@ export const UserManagement = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-zinc-800"
-            >
-              <form onSubmit={handleSubmit}>
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingUserId ? 'Editar Usuário' : 'Novo Usuário'}</h3>
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                    <X className="w-5 h-5 text-gray-500" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Nome</label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">E-mail</label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Perfil</label>
-                      <select
-                        value={formData.role}
-                        onChange={e => setFormData({ ...formData, role: e.target.value as Role })}
-                        className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
-                        required
-                      >
-                        <option value="COLABORADOR">Colaborador</option>
-                        <option value="DONO_DO_PILAR">Dono do Pilar</option>
-                        <option value="GERENTE_DO_CD">Gerente do CD</option>
-                        <option value="GERENTE_DIVISIONAL">Gerente Divisional</option>
-                        <option value="DIRETORIA">Diretoria</option>
-                        <option value="AUDITOR">Auditor</option>
-                        <option value="ADMIN">Administrador</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Unidade/CD</label>
-                      <select
-                        value={formData.unidade}
-                        onChange={e => setFormData({ ...formData, unidade: e.target.value })}
-                        className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
-                      >
-                        <option value="">Nenhuma (Geral)</option>
-                        <option value="Master">Master</option>
-                        {UNIDADES_DISPONIVEIS.map(u => (
-                          <option key={u} value={u}>CD {u}</option>
-                        ))}
-                      </select>
-                    </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setIsModalOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+          <div
+            className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-zinc-800"
+          >
+            <form onSubmit={handleSubmit}>
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingUserId ? 'Editar Usuário' : 'Novo Usuário'}</h3>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Nome</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
+                      required
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Senha</label>
+                    <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">E-mail</label>
                     <input
-                      type="password"
-                      value={formData.password}
-                      onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      type="email"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
                       className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
-                      required={!editingUserId}
-                      placeholder={editingUserId ? "Deixe em branco para não alterar" : "Senha do usuário"}
+                      required
                     />
                   </div>
                 </div>
-                <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end space-x-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Cancelar</button>
-                  <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all text-sm">Salvar Usuário</button>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Perfil</label>
+                    <select
+                      value={formData.role}
+                      onChange={e => setFormData({ ...formData, role: e.target.value as Role })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
+                      required
+                    >
+                      <option value="COLABORADOR">Colaborador</option>
+                      <option value="DONO_DO_PILAR">Dono do Pilar</option>
+                      <option value="GERENTE_DO_CD">Gerente do CD</option>
+                      <option value="GERENTE_DIVISIONAL">Gerente Divisional</option>
+                      <option value="DIRETORIA">Diretoria</option>
+                      <option value="AUDITOR">Auditor</option>
+                      <option value="ADMIN">Administrador</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Unidade/CD</label>
+                    <select
+                      value={formData.unidade}
+                      onChange={e => setFormData({ ...formData, unidade: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
+                    >
+                      <option value="">Nenhuma (Geral)</option>
+                      <option value="Master">Master</option>
+                      {UNIDADES_DISPONIVEIS.map(u => (
+                        <option key={u} value={u}>CD {u}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </form>
-            </motion.div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Senha</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-white"
+                    required={!editingUserId}
+                    placeholder={editingUserId ? "Deixe em branco para não alterar" : "Senha do usuário"}
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end space-x-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Cancelar</button>
+                <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all text-sm">Salvar Usuário</button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,12 +1,2 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
-
-@theme {
-  --animate-shine: shine 1.5s ease-in-out infinite;
-  
-  @keyframes shine {
-    100% {
-      left: 125%;
-    }
-  }
-}

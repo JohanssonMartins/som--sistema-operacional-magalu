@@ -17,7 +17,7 @@ const LogoSymbolSVG = ({ className = '' }: { className?: string }) => (
         <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
     </defs>
-    
+
     {/* Outer Arc (starts at left) */}
     <path
       d="M 12 50 A 38 38 0 1 1 35 83"
@@ -58,19 +58,19 @@ const LogoSymbolSVG = ({ className = '' }: { className?: string }) => (
 
 export default function Logo() {
   return (
-    <div className="flex flex-col items-center justify-center select-none group">
+    <div className="flex flex-col items-center justify-center select-none">
       <div className="flex items-center gap-1.5 leading-none mb-1">
-        <span className="font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-105">
+        <span className="font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent text-5xl md:text-6xl">
           S
         </span>
-        <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+        <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
           <LogoSymbolSVG />
         </div>
-        <span className="font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-105">
+        <span className="font-black tracking-tighter bg-gradient-to-b from-[#00AEEF] to-[#006CEE] bg-clip-text text-transparent text-5xl md:text-6xl">
           M
         </span>
       </div>
-      <div className="text-[#006CEE] font-bold tracking-[0.25em] text-center uppercase text-[8px] md:text-[10px] mt-1 transition-all duration-300 group-hover:tracking-[0.35em]">
+      <div className="text-[#006CEE] font-bold tracking-[0.25em] text-center uppercase text-[8px] md:text-[10px] mt-1">
         SISTEMA OPERACIONAL MAGALOG
       </div>
     </div>
