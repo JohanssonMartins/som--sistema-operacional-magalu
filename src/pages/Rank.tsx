@@ -7,41 +7,75 @@ import { CustomTrophy } from '../components/CustomTrophy';
 export const Rank = () => {
   const { allAutoauditorias, autoauditoriaMesAno, baseItems } = useStore();
 
-  const unitsWithPontos = UNIDADES_DISPONIVEIS.map(unidade => {
-    const unitAudit = allAutoauditorias.find(a => 
-      String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
-    );
-    const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
-
+  const { unitsWithStats, sortedUnits } = useMemo(() => {
+    // 1. Pre-group active base items and active base items by pilar
     const activeBaseItems = baseItems.filter(i => i.ativo);
+    const pilarActiveItems: Record<string, typeof baseItems> = {};
+    PILAR_ORDER.forEach(pilar => {
+      pilarActiveItems[pilar] = activeBaseItems.filter(i => i.pilar === pilar);
+    });
 
-    let totalPoints = 0;
-    let respondidosCount = 0;
-
-    activeBaseItems.forEach(bi => {
-      const ai = auditMap.get(bi.id);
-      if (ai?.score === '3') {
-        totalPoints += 3;
-      } else if (ai?.score === '1') {
-        totalPoints += 1;
-      }
-      if (ai && ai.score && ai.score !== '') {
-        respondidosCount++;
+    // 2. Index allAutoauditorias by unit for current month
+    const auditByUnit = new Map<string, any>();
+    (allAutoauditorias || []).forEach(a => {
+      if (a.mesAno === autoauditoriaMesAno) {
+        auditByUnit.set(String(a.unidade), a);
       }
     });
 
-    const maxPoints = activeBaseItems.length * 3;
-    const aderenciaGeral = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
+    // 3. Calculate stats for each unit
+    const unitsStats = UNIDADES_DISPONIVEIS.map(unidade => {
+      const unitAudit = auditByUnit.get(String(unidade));
+      const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
 
-    return {
-      unidade,
-      totalGeral: activeBaseItems.length,
-      respondidosGeral: respondidosCount,
-      aderenciaGeral
-    };
-  }).filter(u => u.totalGeral > 0);
+      let totalPoints = 0;
+      let respondidosCount = 0;
 
-  const sortedUnits = [...unitsWithPontos].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
+      activeBaseItems.forEach(bi => {
+        const ai = auditMap.get(bi.id);
+        if (ai?.score === '3') totalPoints += 3;
+        else if (ai?.score === '1') totalPoints += 1;
+        if (ai && ai.score && ai.score !== '') respondidosCount++;
+      });
+
+      const maxPoints = activeBaseItems.length * 3;
+      const aderenciaGeral = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
+
+      // Calculate pilar adherence
+      const pillarsStats: Record<string, { aderencia: number, respondidos: number, total: number }> = {};
+      PILAR_ORDER.forEach(pilar => {
+        const pItems = pilarActiveItems[pilar];
+        let pPoints = 0;
+        let pRespondidos = 0;
+
+        pItems.forEach(bi => {
+          const ai = auditMap.get(bi.id);
+          if (ai?.score === '3') pPoints += 3;
+          else if (ai?.score === '1') pPoints += 1;
+          if (ai && ai.score && ai.score !== '') pRespondidos++;
+        });
+
+        const pMaxPoints = pItems.length * 3;
+        pillarsStats[pilar] = {
+          aderencia: pMaxPoints === 0 ? 0 : (pPoints / pMaxPoints) * 100,
+          respondidos: pRespondidos,
+          total: pItems.length
+        };
+      });
+
+      return {
+        unidade,
+        totalGeral: activeBaseItems.length,
+        respondidosGeral: respondidosCount,
+        aderenciaGeral,
+        pillarsStats
+      };
+    }).filter(u => u.totalGeral > 0);
+
+    const sorted = [...unitsStats].sort((a, b) => b.aderenciaGeral - a.aderenciaGeral);
+
+    return { unitsWithStats: unitsStats, sortedUnits: sorted };
+  }, [allAutoauditorias, autoauditoriaMesAno, baseItems]);
 
   const getRankIcon = (unidade: string) => {
     const index = sortedUnits.findIndex(u => u.unidade === unidade);
@@ -114,9 +148,9 @@ export const Rank = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-              {sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, respondidosGeral }) => {
+              {sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, respondidosGeral, pillarsStats }) => {
                 const division = CD_REGIONS[unidade]?.divisao || 'Geral';
-                
+
                 return (
                   <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
                     <td className="px-6 py-5 font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10 w-48">
@@ -148,36 +182,15 @@ export const Rank = () => {
                         )}
                       </div>
                     </td>
-                    {(() => {
-                      const unitAudit = allAutoauditorias.find(a => 
-                        String(a.unidade) === String(unidade) && a.mesAno === autoauditoriaMesAno
-                      );
-                      const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+                    {PILAR_ORDER.map(pilar => {
+                      const stat = pillarsStats[pilar];
+                      if (!stat) return <td key={`${unidade}-${pilar}`} className="px-4 py-5 border-b border-gray-100 dark:border-zinc-800/80 text-gray-300 dark:text-zinc-700">-</td>;
 
-                      return PILAR_ORDER.map(pilar => {
-                        const pilarBaseItems = baseItems.filter(i => i.pilar === pilar && i.ativo);
-
-                        let pilarPoints = 0;
-                        let pilarRespondidos = 0;
-
-                        pilarBaseItems.forEach(bi => {
-                          const ai = auditMap.get(bi.id);
-                          if (ai?.score === '3') {
-                            pilarPoints += 3;
-                          } else if (ai?.score === '1') {
-                            pilarPoints += 1;
-                          }
-                          if (ai && ai.score && ai.score !== '') {
-                            pilarRespondidos++;
-                          }
-                        });
-
-                      const pilarMaxPoints = pilarBaseItems.length * 3;
-                      const pAderencia = pilarMaxPoints === 0 ? 0 : (pilarPoints / pilarMaxPoints) * 100;
+                      const { aderencia: pAderencia, respondidos: pRespondidos, total: pTotal } = stat;
 
                       return (
                         <td key={`${unidade}-${pilar}`} className="px-4 py-5 border-b border-gray-100 dark:border-zinc-800/80">
-                          {pilarMaxPoints > 0 ? (
+                          {pTotal > 0 ? (
                             <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 shadow-sm transition-colors border border-transparent hover:border-gray-200 dark:hover:border-zinc-700">
                               <span className={`text-sm font-bold px-2 py-1 rounded shadow-sm ${pAderencia === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
                                 pAderencia >= 70 ? 'bg-emerald-500 text-white' :
@@ -187,9 +200,9 @@ export const Rank = () => {
                                 {pAderencia.toFixed(1).replace('.', ',')}%
                               </span>
                               <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
-                                <span className={pilarRespondidos === pilarBaseItems.length ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pilarRespondidos}</span>
+                                <span className={pRespondidos === pTotal ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{pRespondidos}</span>
                                 <span className="text-gray-400 dark:text-zinc-500">/</span>
-                                <span className="text-gray-500 dark:text-zinc-400">{pilarBaseItems.length}</span>
+                                <span className="text-gray-500 dark:text-zinc-400">{pTotal}</span>
                               </div>
                             </div>
                           ) : (
@@ -197,8 +210,7 @@ export const Rank = () => {
                           )}
                         </td>
                       );
-                    });
-                    })()}
+                    })}
                   </tr>
                 );
               })}
