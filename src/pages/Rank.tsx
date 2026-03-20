@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import { TopMagalogLogo } from '../components/Logos';
@@ -32,7 +32,7 @@ export const Rank = () => {
       let respondidosCount = 0;
 
       activeBaseItems.forEach(bi => {
-        const ai = auditMap.get(bi.id);
+        const ai = auditMap.get(bi.id) as any;
         if (ai?.score === '3') totalPoints += 3;
         else if (ai?.score === '1') totalPoints += 1;
         if (ai && ai.score && ai.score !== '') respondidosCount++;
@@ -49,7 +49,7 @@ export const Rank = () => {
         let pRespondidos = 0;
 
         pItems.forEach(bi => {
-          const ai = auditMap.get(bi.id);
+          const ai = auditMap.get(bi.id) as any;
           if (ai?.score === '3') pPoints += 3;
           else if (ai?.score === '1') pPoints += 1;
           if (ai && ai.score && ai.score !== '') pRespondidos++;

@@ -15,6 +15,13 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       pilarItemsMap.set(pilar, baseItems.filter(i => i.pilar === pilar && i.ativo));
     });
 
+    const auditMaps = selectedUnit === 'Todas'
+      ? (allAutoauditorias || [])
+        .filter(a => a.mesAno === autoauditoriaMesAno)
+        .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional)
+        .map(audit => new Map(audit.items?.map((ai: any) => [ai.baseItemId, ai]) || []))
+      : [];
+
     const rPorPilar = currentPilares.map(pilar => {
       const pilarBaseItems = pilarItemsMap.get(pilar) || [];
 
@@ -22,12 +29,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       let possiblePoints = 0;
 
       if (selectedUnit === 'Todas') {
-        const applicableAudits = (allAutoauditorias || [])
-          .filter(a => a.mesAno === autoauditoriaMesAno)
-          .filter(a => filterDivisional === 'Todas' || CD_REGIONS[String(a.unidade)]?.divisao === filterDivisional);
-
-        applicableAudits.forEach(audit => {
-          const auditMap = new Map(audit.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+        auditMaps.forEach(auditMap => {
           pilarBaseItems.forEach(bi => {
             const ai = auditMap.get(bi.id);
             if (ai) {
@@ -117,7 +119,7 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
           const blocoItems = groupedBaseItems[pilar][bloco];
           let blocoPoints = 0;
           blocoItems.forEach(bi => {
-            const auditItem = auditMap.get(bi.id);
+            const auditItem = auditMap.get(bi.id) as any;
             const score = String(auditItem?.score || '');
             if (score === '3') blocoPoints += 3;
             else if (score === '1') blocoPoints += 1;
