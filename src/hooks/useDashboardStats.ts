@@ -29,16 +29,36 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       let possiblePoints = 0;
 
       if (selectedUnit === 'Todas') {
-        auditMaps.forEach(auditMap => {
+        // Para Visão Empresa, o resultado deve ser a média das aderências individuais de cada CD,
+        // refletindo exatamente o que a Matriz de Aderência Consolidada mostra na coluna "TT".
+        const unitsToProcess = UNIDADES_DISPONIVEIS.filter(u => filterDivisional === 'Todas' || CD_REGIONS[u]?.divisao === filterDivisional);
+
+        if (unitsToProcess.length === 0) return { pilar, aderencia: 0, auditoriaOficial: 0 };
+
+        let sumOfPercentages = 0;
+        unitsToProcess.forEach(unit => {
+          const unitAudit = allAutoauditorias.find(a => a.unidade === unit && a.mesAno === autoauditoriaMesAno);
+          const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
+
+          let unitPilarPoints = 0;
           pilarBaseItems.forEach(bi => {
             const ai = auditMap.get(bi.id);
-            if (ai) {
-              possiblePoints += 3;
-              if (ai.score === '3') totalPoints += 3;
-              else if (ai.score === '1') totalPoints += 1;
-            }
+            if (ai?.score === '3') unitPilarPoints += 3;
+            else if (ai?.score === '1') unitPilarPoints += 1;
           });
+
+          const maxUnitPilarPoints = pilarBaseItems.length * 3;
+          const unitPercentage = maxUnitPilarPoints === 0 ? 0 : (unitPilarPoints / maxUnitPilarPoints) * 100;
+          sumOfPercentages += unitPercentage;
         });
+
+        const avgPercentage = sumOfPercentages / unitsToProcess.length;
+
+        return {
+          pilar,
+          aderencia: avgPercentage,
+          auditoriaOficial: avgPercentage
+        };
       } else {
         const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit && a.mesAno === autoauditoriaMesAno);
         const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
