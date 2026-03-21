@@ -1,16 +1,19 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = process.env.GEMINI_API_KEY || "";
+console.log(`[AI Service] Inicializando com chave: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`);
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export const aiService = {
   /**
    * Sugere um plano de ação para um item de auditoria não conforme.
    */
   async suggestAction(pilar: string, bloco: string, item: string, descricao: string) {
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
       throw new Error("GEMINI_API_KEY não configurada corretamente no servidor.");
     }
 
@@ -33,25 +36,33 @@ export const aiService = {
       Sugestão de Plano de Ação:
     `;
 
-    try {
-      const result = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{ role: "user", parts: [{ text: prompt }] }]
-      });
-      
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      return text?.trim() || "Não foi possível gerar uma sugestão automática no momento.";
-    } catch (error: any) {
-      console.error("Erro ao gerar sugestão com Gemini:", error);
-      throw new Error(error.message || "Falha ao gerar sugestão de IA.");
+    const models = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"];
+    let lastError: any;
+
+    for (const modelName of models) {
+      try {
+        console.log(`[AI Service] Tentando modelo: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        return text?.trim() || "Não foi possível gerar uma sugestão automática no momento.";
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[AI Service] Falha com ${modelName}:`, error.message);
+        continue;
+      }
     }
+
+    console.error("Erro ao gerar sugestão com Gemini após tentar todos os modelos:", lastError);
+    throw new Error(lastError?.message || "Falha ao gerar sugestão de IA após tentar múltiplos modelos.");
   },
 
   /**
    * Analisa uma evidência (imagem/pdf) para validar se cumpre o requisito.
    */
   async analyzeEvidence(pilar: string, bloco: string, item: string, descricao: string, fileBuffer: Buffer, mimeType: string) {
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
       throw new Error("GEMINI_API_KEY não configurada no servidor.");
     }
 
@@ -68,28 +79,33 @@ export const aiService = {
       Responda de forma extremamente breve (máximo 1 parágrafo), indicando se a evidência parece válida ou o que pode estar faltando.
     `;
 
-    try {
-      const result = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{
-          role: "user",
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                data: fileBuffer.toString("base64"),
-                mimeType
-              }
+    const models = ["gemini-1.5-flash-latest", "gemini-1.5-flash"];
+    let lastError: any;
+
+    for (const modelName of models) {
+      try {
+        console.log(`[AI Service/Vision] Tentando modelo: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: fileBuffer.toString("base64"),
+              mimeType
             }
-          ]
-        }]
-      });
-      
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      return text?.trim() || "Não foi possível analisar a evidência com IA.";
-    } catch (error: any) {
-      console.error("Erro ao analisar evidência com Gemini:", error);
-      throw new Error(error.message || "Falha ao analisar evidência com IA.");
+          }
+        ]);
+        const response = await result.response;
+        const text = response.text();
+        return text?.trim() || "Não foi possível analisar a evidência com IA.";
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[AI Service/Vision] Falha com ${modelName}:`, error.message);
+        continue;
+      }
     }
+
+    console.error("Erro ao analisar evidência com Gemini:", lastError);
+    throw new Error(lastError?.message || "Falha ao analisar evidência com IA.");
   }
 };
