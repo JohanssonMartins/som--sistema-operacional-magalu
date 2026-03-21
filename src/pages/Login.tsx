@@ -34,11 +34,11 @@ export const Login = () => {
     <div className="min-h-screen">
       <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center p-4 font-sans relative overflow-hidden transition-colors duration-300">
         {/* Background Elements */}
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
         <div
-          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300"
+          className="w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10 transition-colors duration-300 animate-in fade-in zoom-in duration-500"
         >
           <div className="absolute top-4 right-4">
             <button onClick={toggleTheme} className="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800/50 rounded-md transition-colors">
@@ -52,7 +52,7 @@ export const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-5">
             {loginError && (
-              <div className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg flex items-center space-x-2">
+              <div className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg flex items-center space-x-2 animate-in slide-in-from-top-2">
                 <ShieldAlert className="w-4 h-4 shrink-0" />
                 <span>{loginError}</span>
               </div>
@@ -85,7 +85,7 @@ export const Login = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="w-full bg-amber-500 text-zinc-950 font-bold rounded-lg py-2.5 hover:bg-amber-400 transition-colors mt-6 shadow-lg shadow-amber-500/20">
+            <button type="submit" className="w-full bg-amber-500 text-zinc-950 font-bold rounded-lg py-2.5 hover:bg-amber-400 active:scale-95 transition-all mt-6 shadow-lg shadow-amber-500/20">
               Entrar no Sistema
             </button>
           </form>
@@ -107,7 +107,7 @@ export const Login = () => {
               ].map((account) => (
                 <div
                   key={account.email}
-                  className="flex justify-center items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-colors"
+                  className="flex justify-center items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   onClick={() => { setLoginEmail(account.email); setLoginPassword('123'); }}
                 >
                   <span className="text-blue-600 dark:text-blue-400 font-medium">{account.label}</span>

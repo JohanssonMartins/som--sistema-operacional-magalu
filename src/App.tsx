@@ -1,5 +1,6 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useStore } from './store/useStore';
 import { api } from './api';
 import { useRealtime } from './hooks/useRealtime';
@@ -21,9 +22,21 @@ const PageLoader = () => (
   <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex flex-col items-center justify-center">
     <MainLogo size="large" />
     <div className="mt-8 flex items-center gap-2">
-      <div className="w-2 h-2 rounded-full bg-blue-50" />
-      <div className="w-2 h-2 rounded-full bg-red-50" />
-      <div className="w-2 h-2 rounded-full bg-yellow-50" />
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+        className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm"
+      />
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+        className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm"
+      />
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+        className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-sm"
+      />
     </div>
   </div>
 );

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, Trophy, CheckCircle2, Database, Users,
   Menu, PanelLeftClose, ChevronDown, Package, Bell,
@@ -104,12 +105,21 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex text-gray-900 dark:text-zinc-100 font-sans transition-colors duration-300">
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl`}>
+      <motion.aside
+        initial={false}
+        animate={{ width: isSidebarCollapsed ? 80 : 256 }}
+        className="bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl"
+      >
         <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden`}>
           {!isSidebarCollapsed && (
-            <div className="flex items-center cursor-pointer h-full flex-1" onClick={() => navigate('/')}>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center cursor-pointer h-full flex-1"
+              onClick={() => navigate('/')}
+            >
               <MainLogo size="small" className="!px-0" />
-            </div>
+            </motion.div>
           )}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -133,7 +143,11 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                   <Package className="w-4 h-4" />
                 </div>
                 {!isSidebarCollapsed && (
-                  <div className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left">
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left"
+                  >
                     <span className="text-[13px] font-bold text-gray-800 dark:text-zinc-200 truncate w-full">
                       {selectedUnit === 'Todas' ? 'Todos os CDs' : `CD ${selectedUnit}`}
                     </span>
@@ -142,7 +156,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                         {CD_NAMES[selectedUnit].split(' - ').slice(1).join(' - ')}
                       </span>
                     )}
-                  </div>
+                  </motion.div>
                 )}
               </div>
               {(!isSidebarCollapsed && isPrivileged) && (
@@ -150,28 +164,33 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               )}
             </button>
 
-            {isUnitDropdownOpen && (
-              <div
-                className={`absolute left-0 mt-2 ${isSidebarCollapsed ? 'w-[260px]' : 'w-full'} max-h-[300px] overflow-y-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-[60] py-2`}
-              >
-                <button
-                  onClick={() => { setSelectedUnit('Todas'); setIsUnitDropdownOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm ${selectedUnit === 'Todas' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+            <AnimatePresence>
+              {isUnitDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  className={`absolute left-0 mt-2 ${isSidebarCollapsed ? 'w-[260px]' : 'w-full'} max-h-[300px] overflow-y-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-xl z-[60] py-2`}
                 >
-                  Todos os CDs
-                </button>
-                {UNIDADES_DISPONIVEIS.map(u => (
                   <button
-                    key={u}
-                    onClick={() => { setSelectedUnit(u); setIsUnitDropdownOpen(false); }}
-                    className={`w-full flex flex-col items-start px-3 py-2 text-sm ${selectedUnit === u ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                    onClick={() => { setSelectedUnit('Todas'); setIsUnitDropdownOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm ${selectedUnit === 'Todas' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
                   >
-                    <span>CD {u}</span>
-                    <span className="text-[10px] opacity-70">{CD_NAMES[u]}</span>
+                    Todos os CDs
                   </button>
-                ))}
-              </div>
-            )}
+                  {UNIDADES_DISPONIVEIS.map(u => (
+                    <button
+                      key={u}
+                      onClick={() => { setSelectedUnit(u); setIsUnitDropdownOpen(false); }}
+                      className={`w-full flex flex-col items-start px-3 py-2 text-sm ${selectedUnit === u ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                    >
+                      <span>CD {u}</span>
+                      <span className="text-[10px] opacity-70">{CD_NAMES[u]}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -189,7 +208,14 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               `}
             >
               <item.icon className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>{item.label}</span>}
+              {!isSidebarCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  {item.label}
+                </motion.span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -211,7 +237,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               >
                 <Bell className="w-5 h-5" />
                 {notificationsCount > 0 && (
-                  <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50"></span>
+                  <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50 animate-pulse"></span>
                 )}
               </button>
             </div>
@@ -251,67 +277,79 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                 >
                   <label className="cursor-pointer">
                     {isUploadingPhoto ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <LayoutDashboard className="w-4 h-4 rotate-45" />
                     )}
                   </label>
                 </div>
 
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm z-10"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm z-10 animate-pulse"></div>
               </div>
 
               {!isSidebarCollapsed && (
-                <div className="ml-3 flex-1 text-left min-w-0">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="ml-3 flex-1 text-left min-w-0"
+                >
                   <p className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate leading-none mb-1">
                     {currentUser?.name.split(' ')[0]}
                   </p>
                   <p className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest truncate">
                     {currentUser?.role.replace(/_/g, ' ')}
                   </p>
-                </div>
+                </motion.div>
               )}
               {!isSidebarCollapsed && (
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
               )}
             </button>
 
-            {isProfileDropdownOpen && (
-              <div
-                className={`absolute bottom-full left-0 mb-3 w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden ${isSidebarCollapsed ? 'w-[220px]' : 'w-full'}`}
-              >
-                <div className="p-4 bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Sua Conta</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-1 truncate">{currentUser?.email}</p>
-                </div>
+            <AnimatePresence>
+              {isProfileDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  className={`absolute bottom-full left-0 mb-3 w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden ${isSidebarCollapsed ? 'w-[220px]' : 'w-full'}`}
+                >
+                  <div className="p-4 bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
+                    <p className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Sua Conta</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-1 truncate">{currentUser?.email}</p>
+                  </div>
 
-                <div className="p-1.5">
-                  <button
-                    onClick={() => {
-                      setIsPasswordModalOpen(true);
-                      setIsProfileDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors group"
-                  >
-                    <Lock className="w-4 h-4 mr-3 text-gray-400 group-hover:text-current" />
-                    <span className="font-medium">Alterar Senha</span>
-                  </button>
+                  <div className="p-1.5">
+                    <button
+                      onClick={() => {
+                        setIsPasswordModalOpen(true);
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors group"
+                    >
+                      <Lock className="w-4 h-4 mr-3 text-gray-400 group-hover:text-current" />
+                      <span className="font-medium">Alterar Senha</span>
+                    </button>
 
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors font-bold group mt-1"
-                  >
-                    <LogOut className="w-4 h-4 mr-3 text-red-500/70 group-hover:text-red-600 transition-colors" />
-                    Sair do Sistema
-                  </button>
-                </div>
-              </div>
-            )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors font-bold group mt-1"
+                    >
+                      <LogOut className="w-4 h-4 mr-3 text-red-500/70 group-hover:text-red-600 transition-colors" />
+                      Sair do Sistema
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
-      <main className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto">
+      <motion.main
+        layout
+        className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto"
+      >
         <div className="p-6">
           {children}
         </div>
@@ -319,128 +357,144 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         <footer className="mt-auto py-6 text-center text-xs text-gray-400 dark:text-zinc-600 opacity-70">
           <p>© 2026 Magalu | Feito com ❤ por J's Martins</p>
         </footer>
-      </main>
+      </motion.main>
 
-      {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div
-            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden"
-          >
-            <div className="bg-blue-600 p-6 flex items-center justify-between text-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                  <Lock className="w-5 h-5" />
+      <AnimatePresence>
+        {isPasswordModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPasswordModalOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden"
+            >
+              <div className="bg-blue-600 p-6 flex items-center justify-between text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Alterar Senha</h3>
+                    <p className="text-blue-100 text-xs">Proteja sua conta</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold">Alterar Senha</h3>
-                  <p className="text-blue-100 text-xs">Proteja sua conta</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsPasswordModalOpen(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-8 space-y-5">
-              {passwordStatus.type && (
-                <div
-                  className={`p-3 rounded-xl text-sm font-medium ${passwordStatus.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                    : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
-                    }`}
-                >
-                  {passwordStatus.message}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Senha Atual</label>
-                  <input
-                    type="password"
-                    value={passwordForm.current}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    placeholder="••••••••"
-                  />
-                </div>
-
-                <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2"></div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Nova Senha</label>
-                  <input
-                    type="password"
-                    value={passwordForm.new}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    placeholder="Nova senha"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Confirmar Nova Senha</label>
-                  <input
-                    type="password"
-                    value={passwordForm.confirm}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    placeholder="Confirme a nova senha"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 px-4 py-3 border border-gray-200 dark:border-zinc-800 rounded-xl text-gray-600 dark:text-zinc-400 font-bold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
-                  Cancelar
-                </button>
-                <button
-                  disabled={isChangingPassword || !passwordForm.current || !passwordForm.new || !passwordForm.confirm}
-                  onClick={async () => {
-                    if (passwordForm.new !== passwordForm.confirm) {
-                      setPasswordStatus({ type: 'error', message: 'As senhas não coincidem' });
-                      return;
-                    }
-                    if (passwordForm.new.length < 3) {
-                      setPasswordStatus({ type: 'error', message: 'A senha deve ter pelo menos 3 caracteres' });
-                      return;
-                    }
-
-                    setIsChangingPassword(true);
-                    setPasswordStatus({ type: null, message: '' });
-
-                    try {
-                      if (currentUser) {
-                        await api.updateUser(currentUser.id, { password: passwordForm.new });
-                        setPasswordStatus({ type: 'success', message: 'Senha alterada com sucesso!' });
-                        setTimeout(() => {
-                          setIsPasswordModalOpen(false);
-                          setPasswordForm({ current: '', new: '', confirm: '' });
-                          setPasswordStatus({ type: null, message: '' });
-                        }, 2000);
-                      }
-                    } catch (e) {
-                      setPasswordStatus({ type: 'error', message: 'Erro ao alterar senha. Tente novamente.' });
-                    } finally {
-                      setIsChangingPassword(false);
-                    }
-                  }}
-                  className={`flex-1 px-4 py-3 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-500/30 transition-all ${isChangingPassword ? 'opacity-70 grayscale' : 'hover:bg-blue-700'
-                    }`}
-                >
-                  {isChangingPassword ? 'Alterando...' : 'Confirmar'}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </div>
+
+              <div className="p-8 space-y-5">
+                {passwordStatus.type && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className={`p-3 rounded-xl text-sm font-medium ${passwordStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                      : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                      }`}
+                  >
+                    {passwordStatus.message}
+                  </motion.div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Senha Atual</label>
+                    <input
+                      type="password"
+                      value={passwordForm.current}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2"></div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Nova Senha</label>
+                    <input
+                      type="password"
+                      value={passwordForm.new}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="Nova senha"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Confirmar Nova Senha</label>
+                    <input
+                      type="password"
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="Confirme a nova senha"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setIsPasswordModalOpen(false)}
+                    className="flex-1 px-4 py-3 border border-gray-200 dark:border-zinc-800 rounded-xl text-gray-600 dark:text-zinc-400 font-bold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={isChangingPassword || !passwordForm.current || !passwordForm.new || !passwordForm.confirm}
+                    onClick={async () => {
+                      if (passwordForm.new !== passwordForm.confirm) {
+                        setPasswordStatus({ type: 'error', message: 'As senhas não coincidem' });
+                        return;
+                      }
+                      if (passwordForm.new.length < 3) {
+                        setPasswordStatus({ type: 'error', message: 'A senha deve ter pelo menos 3 caracteres' });
+                        return;
+                      }
+
+                      setIsChangingPassword(true);
+                      setPasswordStatus({ type: null, message: '' });
+
+                      try {
+                        if (currentUser) {
+                          await api.updateUser(currentUser.id, { password: passwordForm.new });
+                          setPasswordStatus({ type: 'success', message: 'Senha alterada com sucesso!' });
+                          setTimeout(() => {
+                            setIsPasswordModalOpen(false);
+                            setPasswordForm({ current: '', new: '', confirm: '' });
+                            setPasswordStatus({ type: null, message: '' });
+                          }, 2000);
+                        }
+                      } catch (e) {
+                        setPasswordStatus({ type: 'error', message: 'Erro ao alterar senha. Tente novamente.' });
+                      } finally {
+                        setIsChangingPassword(false);
+                      }
+                    }}
+                    className={`flex-1 px-4 py-3 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-500/30 transition-all ${isChangingPassword ? 'opacity-70 grayscale' : 'hover:bg-blue-700 active:scale-95'
+                      }`}
+                  >
+                    {isChangingPassword ? 'Alterando...' : 'Confirmar'}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

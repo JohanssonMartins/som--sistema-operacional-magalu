@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -297,7 +297,11 @@ export const AvaliacaoExterna = () => {
   const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
 
   return (
-    <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    >
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-4">
@@ -311,16 +315,27 @@ export const AvaliacaoExterna = () => {
 
           {/* Status de salvamento */}
           <div className="flex items-center gap-3 shrink-0">
-            {isSaving && (
-              <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium">
-                <RefreshCw className="w-4 h-4" />
-                <span>Salvando...</span>
-              </div>
-            )}
+            <AnimatePresence>
+              {isSaving && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 text-sm font-medium"
+                >
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Salvando...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {!isSaving && lastSavedTime && (
-              <div className="text-emerald-600 dark:text-emerald-400 text-xs">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-emerald-600 dark:text-emerald-400 text-xs"
+              >
                 Salvo às {lastSavedTime.toLocaleTimeString()}
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -393,7 +408,7 @@ export const AvaliacaoExterna = () => {
           <div className="ml-auto">
             <button
               onClick={() => setShowOnlyPending(!showOnlyPending)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${showOnlyPending
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showOnlyPending
                 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
                 : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
                 }`}
@@ -459,9 +474,11 @@ export const AvaliacaoExterna = () => {
                         <div className="font-bold text-gray-900 dark:text-zinc-100">{row.pilar}</div>
                         <div className="mt-1.5 flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
-                              style={{ width: row.total === 0 ? '0%' : `${(row.respondidos / row.total) * 100}%` }}
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: row.total === 0 ? '0%' : `${(row.respondidos / row.total) * 100}%` }}
+                              className="h-full bg-blue-500 rounded-full"
+                              transition={{ duration: 0.8, ease: "easeOut" }}
                             />
                           </div>
                           <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 shrink-0">
@@ -489,51 +506,67 @@ export const AvaliacaoExterna = () => {
       </div>
 
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden">
-        {selectedUnit === 'Todas' ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center text-gray-500 dark:text-zinc-400">
-            <LayoutDashboard className="w-16 h-16 mb-4 text-gray-300 dark:text-zinc-700" />
-            <h3 className="text-xl font-bold text-gray-700 dark:text-zinc-300 mb-2">Visão Geral dos CDs</h3>
-            <p className="max-w-md">Selecione um CD específico no menu lateral para realizar a autoavaliação detalhada.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
-              <thead className="bg-gray-50 dark:bg-zinc-950 font-bold border-b border-gray-200 dark:border-zinc-800 uppercase text-[10px] tracking-wider text-gray-500">
-                <tr>
-                  <th className="px-6 py-3">Pilar</th>
-                  <th className="px-6 py-3">Bloco</th>
-                  <th className="px-6 py-3">Trilha</th>
-                  <th className="px-6 py-3">Item</th>
-                  <th className="px-6 py-3 w-24">Ponto</th>
-                  <th className="px-6 py-3 w-32">Plano</th>
-                  <th className="px-6 py-3 w-40">Evidência</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/50">
-                {filteredItems.map(item => (
-                  <AutoauditoriaRow
-                    key={item.id}
-                    item={item}
-                    canEdit={!!canEdit}
-                    pontoValue={autoauditoriaData[item.id]?.score || ''}
-                    // Prioriza o que o Auditor preencheu, senão mostra o do CD para validação
-                    nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || autoReferenceData[item.id]?.nossaAcao || ''}
-                    existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url || autoReferenceData[item.id]?.evidencias?.[0]?.url}
-                    onPontoChange={handlePontoChange}
-                    onNossaAcaoChange={handleNossaAcaoChange}
-                    onNossaAcaoBlur={handleNossaAcaoBlur}
-                    onEvidenciaUploaded={handleEvidenciaUploaded}
-                    unidade={selectedUnit}
-                    mesAno={localMesAno}
-                    tipo="EXTERNA"
-                    isNossaAcaoReadOnly={true}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {selectedUnit === 'Todas' ? (
+            <motion.div
+              key="no-unit"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center p-12 text-center text-gray-500 dark:text-zinc-400"
+            >
+              <LayoutDashboard className="w-16 h-16 mb-4 text-gray-300 dark:text-zinc-700" />
+              <h3 className="text-xl font-bold text-gray-700 dark:text-zinc-300 mb-2">Visão Geral dos CDs</h3>
+              <p className="max-w-md">Selecione um CD específico no menu lateral para realizar a autoavaliação detalhada.</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="unit-selected"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="overflow-x-auto"
+            >
+              <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
+                <thead className="bg-gray-50 dark:bg-zinc-950 font-bold border-b border-gray-200 dark:border-zinc-800 uppercase text-[10px] tracking-wider text-gray-500">
+                  <tr>
+                    <th className="px-6 py-3">Pilar</th>
+                    <th className="px-6 py-3">Bloco</th>
+                    <th className="px-6 py-3">Trilha</th>
+                    <th className="px-6 py-3">Item</th>
+                    <th className="px-6 py-3 w-24">Ponto</th>
+                    <th className="px-6 py-3 w-32">Plano</th>
+                    <th className="px-6 py-3 w-40">Evidência</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/50">
+                  <AnimatePresence mode="popLayout">
+                    {filteredItems.map(item => (
+                      <AutoauditoriaRow
+                        key={item.id}
+                        item={item}
+                        canEdit={!!canEdit}
+                        pontoValue={autoauditoriaData[item.id]?.score || ''}
+                        // Prioriza o que o Auditor preencheu, senão mostra o do CD para validação
+                        nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || autoReferenceData[item.id]?.nossaAcao || ''}
+                        existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url || autoReferenceData[item.id]?.evidencias?.[0]?.url}
+                        onPontoChange={handlePontoChange}
+                        onNossaAcaoChange={handleNossaAcaoChange}
+                        onNossaAcaoBlur={handleNossaAcaoBlur}
+                        onEvidenciaUploaded={handleEvidenciaUploaded}
+                        unidade={selectedUnit}
+                        mesAno={localMesAno}
+                        tipo="EXTERNA"
+                        isNossaAcaoReadOnly={true}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };

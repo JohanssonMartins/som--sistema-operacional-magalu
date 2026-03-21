@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { useStore } from '../store/useStore';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import { TopMagalogLogo } from '../components/Logos';
@@ -80,35 +81,63 @@ export const Rank = () => {
   const getRankIcon = (unidade: string) => {
     const index = sortedUnits.findIndex(u => u.unidade === unidade);
     if (index === 0) return (
-      <div className="flex items-center space-x-1.5 bg-yellow-400 text-yellow-950 px-2.5 py-1 rounded-full border-2 border-yellow-500 shadow-sm transform scale-105" title="1º Lugar">
+      <motion.div
+        initial={{ scale: 0, rotate: -20 }}
+        animate={{ scale: 1.05, rotate: 0 }}
+        className="flex items-center space-x-1.5 bg-yellow-400 text-yellow-950 px-2.5 py-1 rounded-full border-2 border-yellow-500 shadow-sm" title="1º Lugar"
+      >
         <span className="font-extrabold text-sm leading-none pl-0.5">1º</span>
         <CustomTrophy gold className="w-5 h-5 drop-shadow-md" />
-      </div>
+      </motion.div>
     );
     if (index === 1) return (
-      <div className="flex items-center space-x-1.5 bg-slate-300 text-slate-800 px-2 py-0.5 rounded-full border-2 border-slate-400 shadow-sm opacity-90" title="2º Lugar">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="flex items-center space-x-1.5 bg-slate-300 text-slate-800 px-2 py-0.5 rounded-full border-2 border-slate-400 shadow-sm opacity-90" title="2º Lugar"
+      >
         <span className="font-bold text-xs leading-none pl-0.5">2º</span>
         <CustomTrophy silver className="w-4 h-4 drop-shadow-md" />
-      </div>
+      </motion.div>
     );
     if (index === 2) return (
-      <div className="flex items-center space-x-1 bg-orange-500 text-orange-50 px-2 py-0.5 rounded-full border-2 border-orange-600 shadow-sm opacity-90" title="3º Lugar">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="flex items-center space-x-1 bg-orange-500 text-orange-50 px-2 py-0.5 rounded-full border-2 border-orange-600 shadow-sm opacity-90" title="3º Lugar"
+      >
         <span className="font-bold text-xs leading-none pl-0.5">3º</span>
         <CustomTrophy bronze className="w-4 h-4 drop-shadow-md" />
-      </div>
+      </motion.div>
     );
     return null;
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full py-8 space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <TopMagalogLogo />
-          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1">Acompanhamento consolidado de Aderência Oficial por CD e Pilar.</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1"
+          >
+            Acompanhamento consolidado de Aderência Oficial por CD e Pilar.
+          </motion.p>
         </div>
 
-        <div className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px]">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px]"
+        >
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
@@ -132,7 +161,7 @@ export const Rank = () => {
               <span className="text-gray-400 text-xs">(Fundo Verde Esmeralda)</span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
@@ -148,11 +177,17 @@ export const Rank = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-              {sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, respondidosGeral, pillarsStats }) => {
+              {sortedUnits.map(({ unidade, aderenciaGeral, totalGeral, respondidosGeral, pillarsStats }, idx) => {
                 const division = CD_REGIONS[unidade]?.divisao || 'Geral';
 
                 return (
-                  <tr key={unidade} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50">
+                  <motion.tr
+                    key={unidade}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50"
+                  >
                     <td className="px-6 py-5 font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10 w-48">
                       <div className="flex flex-col items-center justify-center space-y-1">
                         <div className="flex items-center space-x-2">
@@ -166,13 +201,17 @@ export const Rank = () => {
                     </td>
                     <td className="px-6 py-5 font-bold border-r border-gray-200 dark:border-zinc-700 bg-blue-50/30 dark:bg-blue-900/5">
                       <div className="flex flex-col items-center justify-center">
-                        <span className={`px-3 py-1.5 rounded-md text-sm shadow-sm ${aderenciaGeral === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
-                          aderenciaGeral >= 70 ? 'bg-emerald-500 text-white' :
-                            aderenciaGeral >= 50 ? 'bg-yellow-400 text-yellow-950 font-bold' :
-                              'bg-red-500 text-white'
-                          }`}>
+                        <motion.span
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          className={`px-3 py-1.5 rounded-md text-sm shadow-sm ${aderenciaGeral === 0 ? 'bg-gray-400 dark:bg-zinc-600 text-white' :
+                            aderenciaGeral >= 70 ? 'bg-emerald-500 text-white' :
+                              aderenciaGeral >= 50 ? 'bg-yellow-400 text-yellow-950 font-bold' :
+                                'bg-red-500 text-white'
+                            }`}
+                        >
                           {aderenciaGeral.toFixed(1).replace('.', ',')}%
-                        </span>
+                        </motion.span>
                         {totalGeral > 0 && (
                           <div className="flex items-center space-x-1 mt-1.5 bg-gray-100 dark:bg-zinc-950 px-2 py-0.5 rounded text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700">
                             <span className={respondidosGeral === totalGeral ? "text-emerald-600 dark:text-emerald-500" : "text-gray-900 dark:text-white"}>{respondidosGeral}</span>
@@ -211,13 +250,13 @@ export const Rank = () => {
                         </td>
                       );
                     })}
-                  </tr>
+                  </motion.tr>
                 );
               })}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

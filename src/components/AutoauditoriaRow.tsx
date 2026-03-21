@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2, HelpCircle } from 'lucide-react';
 import { ChecklistItem } from '../data';
 import { api } from '../api';
@@ -132,7 +133,12 @@ export const AutoauditoriaRow = React.memo(({
   };
 
   return (
-    <tr className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+    <motion.tr
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
+      className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
+    >
       <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
       <td className="px-6 py-4">{item.bloco}</td>
       <td className="px-6 py-4">{item.trilha}</td>
@@ -156,7 +162,7 @@ export const AutoauditoriaRow = React.memo(({
             value={pontoValue}
             disabled={!canEdit}
             onChange={(e) => onPontoChange(item.id, e.target.value)}
-            className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500'} ${pontoValue === '3'
+            className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-all ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
               ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
               : pontoValue === '1'
                 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
@@ -175,21 +181,28 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </div>
 
-        {showCriteria && item.criterios && (
-          <div
-            className="absolute z-[70] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg shadow-xl text-xs whitespace-pre-wrap border border-zinc-800 dark:border-zinc-200"
-          >
-            <div className="font-bold border-b border-zinc-800 dark:border-zinc-100 pb-1 mb-2 flex items-center gap-1.5">
-              <HelpCircle className="w-3 h-3" />
-              Critérios de Pontuação
-            </div>
-            {item.criterios}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-zinc-900 dark:border-t-white" />
-          </div>
-        )}
+        <AnimatePresence>
+          {showCriteria && item.criterios && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute z-[70] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg shadow-xl text-xs whitespace-pre-wrap border border-zinc-800 dark:border-zinc-200"
+            >
+              <div className="font-bold border-b border-zinc-800 dark:border-zinc-100 pb-1 mb-2 flex items-center gap-1.5">
+                <HelpCircle className="w-3 h-3" />
+                Critérios de Pontuação
+              </div>
+              {item.criterios}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-zinc-900 dark:border-t-white" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </td>
       <td className="px-6 py-4">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setIsModalOpen(true)}
           className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${localNossaAcao.trim()
             ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20'
@@ -209,95 +222,111 @@ export const AutoauditoriaRow = React.memo(({
               <span>Adicionar Plano</span>
             </>
           )}
-        </button>
+        </motion.button>
 
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <div
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden"
-            >
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/50">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Plano de Ação / Observações</h3>
-                    {tipo === 'EXTERNA' && localNossaAcao && (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
-                        Ref: Autoavaliação
-                      </span>
+        <AnimatePresence>
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsModalOpen(false)}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden"
+              >
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/50">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Plano de Ação / Observações</h3>
+                      {tipo === 'EXTERNA' && localNossaAcao && (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
+                          Ref: Autoavaliação
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">{item.pilar} {' > '} {item.bloco}</p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Item:</label>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-950 p-3 rounded-lg border border-gray-100 dark:border-zinc-800 italic">
+                      "{item.item}"
+                    </p>
+                  </div>
+
+                  <div className="mb-4 flex justify-between items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Descrição Detalhada:</label>
+                    </div>
+                    {canEdit && !isNossaAcaoReadOnly && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAISuggestion}
+                        disabled={isSuggesting}
+                        className="mb-2 flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md text-[10px] font-bold hover:shadow-lg disabled:opacity-50 transition-all shrink-0"
+                      >
+                        {isSuggesting ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        <span>{isSuggesting ? 'Sugestionando...' : 'Sugerir com IA'}</span>
+                      </motion.button>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">{item.pilar} {' > '} {item.bloco}</p>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Item:</label>
-                  <p className="text-sm text-gray-600 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-950 p-3 rounded-lg border border-gray-100 dark:border-zinc-800 italic">
-                    "{item.item}"
-                  </p>
+                  <textarea
+                    value={localNossaAcao}
+                    onChange={(e) => !isNossaAcaoReadOnly && handleNossaAcaoChange(e.target.value)}
+                    onBlur={handleNossaAcaoBlur}
+                    disabled={!canEdit || isNossaAcaoReadOnly}
+                    placeholder={canEdit && !isNossaAcaoReadOnly ? "Descreva detalhadamente a ação corretiva ou observação técnica..." : "Nenhum plano registrado."}
+                    className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-900 dark:text-white transition-all min-h-[150px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${(!canEdit || isNossaAcaoReadOnly) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  />
                 </div>
 
-                <div className="mb-4 flex justify-between items-end">
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">Descrição Detalhada:</label>
-                  </div>
-                  {canEdit && !isNossaAcaoReadOnly && (
-                    <button
-                      onClick={handleAISuggestion}
-                      disabled={isSuggesting}
-                      className="mb-2 flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md text-[10px] font-bold hover:shadow-lg disabled:opacity-50 transition-all shrink-0"
-                    >
-                      {isSuggesting ? (
-                        <Loader2 className="w-3 h-3" />
-                      ) : (
-                        <Sparkles className="w-3 h-3" />
-                      )}
-                      <span>{isSuggesting ? 'Sugestionando...' : 'Sugerir com IA'}</span>
-                    </button>
-                  )}
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsModalOpen(false)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all text-sm"
+                  >
+                    {isNossaAcaoReadOnly ? 'Fechar' : 'Salvar e Fechar'}
+                  </motion.button>
                 </div>
-                <textarea
-                  value={localNossaAcao}
-                  onChange={(e) => !isNossaAcaoReadOnly && handleNossaAcaoChange(e.target.value)}
-                  onBlur={handleNossaAcaoBlur}
-                  disabled={!canEdit || isNossaAcaoReadOnly}
-                  placeholder={canEdit && !isNossaAcaoReadOnly ? "Descreva detalhadamente a ação corretiva ou observação técnica..." : "Nenhum plano registrado."}
-                  className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-900 dark:text-white transition-all min-h-[150px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${(!canEdit || isNossaAcaoReadOnly) ? 'opacity-70 cursor-not-allowed' : ''}`}
-                />
-              </div>
-
-              <div className="px-6 py-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/50 flex justify-end">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all text-sm"
-                >
-                  {isNossaAcaoReadOnly ? 'Fechar' : 'Salvar e Fechar'}
-                </button>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </td >
       <td className="px-6 py-4">
         <div className="flex flex-col space-y-2">
           {evidenciaUrl && (
-            <div className="flex flex-col gap-1">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col gap-1"
+            >
               <a
                 href={evidenciaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20"
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20 transition-all"
               >
                 <CheckCircle2 className="w-3 h-3 mr-1.5" />
                 Ver Evidência Salva
@@ -305,11 +334,13 @@ export const AutoauditoriaRow = React.memo(({
               {tipo === 'EXTERNA' && (
                 <span className="text-[9px] text-blue-500/70 dark:text-blue-400/50 font-bold px-1 uppercase tracking-tighter">Referência CD</span>
               )}
-            </div>
+            </motion.div>
           )}
 
           {(evidenciaUrl && canEdit) && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleAIAnalysis}
               disabled={isAnalyzing}
               className={`flex items-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all ${aiAnalysis
@@ -318,19 +349,27 @@ export const AutoauditoriaRow = React.memo(({
                 }`}
               title={aiAnalysis || "Analisar evidência com Vision IA"}
             >
-              {isAnalyzing ? <Loader2 className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+              {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
               <span>{aiAnalysis ? 'Evidência Analisada' : 'Validar com IA'}</span>
-            </button>
+            </motion.button>
           )}
 
           {aiAnalysis && (
-            <div className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded border border-dashed border-gray-200 dark:border-zinc-700 mt-1">
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded border border-dashed border-gray-200 dark:border-zinc-700 mt-1"
+            >
               <span className="font-bold text-gray-700 dark:text-zinc-300">Análise IA: </span>
               {aiAnalysis}
-            </div>
+            </motion.div>
           )}
 
-          <label className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}>
+          <motion.label
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+          >
             <Upload className="w-3.5 h-3.5" />
             <span>{isUploading ? 'Enviando...' : (evidenciaUrl ? 'Substituir' : 'Anexar')}</span>
             <input
@@ -339,9 +378,9 @@ export const AutoauditoriaRow = React.memo(({
               disabled={!canEdit || isUploading}
               onChange={handleFileUpload}
             />
-          </label>
+          </motion.label>
         </div>
       </td>
-    </tr >
+    </motion.tr >
   );
 });
