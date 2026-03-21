@@ -184,17 +184,17 @@ export const AutoauditoriaRow = React.memo(({
         <AnimatePresence>
           {showCriteria && item.criterios && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute z-[70] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg shadow-xl text-xs whitespace-pre-wrap border border-zinc-800 dark:border-zinc-200"
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute z-[70] top-full left-1/2 -translate-x-1/2 mt-2 w-64 p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg shadow-xl text-xs whitespace-pre-wrap border border-zinc-800 dark:border-zinc-200"
             >
               <div className="font-bold border-b border-zinc-800 dark:border-zinc-100 pb-1 mb-2 flex items-center gap-1.5">
                 <HelpCircle className="w-3 h-3" />
                 Critérios de Pontuação
               </div>
               {item.criterios}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-zinc-900 dark:border-t-white" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-8 border-transparent border-b-zinc-900 dark:border-b-white" />
             </motion.div>
           )}
         </AnimatePresence>
