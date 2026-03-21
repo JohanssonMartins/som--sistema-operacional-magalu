@@ -4,6 +4,7 @@ import { Plus, User, Mail, Shield, Check, X, Edit2, Trash2, Save, Search } from 
 import { useStore } from '../store/useStore';
 import { api } from '../api';
 import { User as UserType } from '../data';
+import { UNIDADES_DISPONIVEIS } from '../constants/appConstants';
 
 export const UserManagement = () => {
   const { usersList, setUsersList } = useStore();
@@ -271,14 +272,18 @@ export const UserManagement = () => {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Unidade</label>
-                      <input
-                        type="text"
+                      <select
                         required
                         value={formData.unidade}
                         onChange={e => setFormData({ ...formData, unidade: e.target.value })}
                         className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        placeholder="Ex: 50 ou Master"
-                      />
+                      >
+                        <option value="">Selecione uma unidade</option>
+                        <option value="Master">Master (Todas)</option>
+                        {UNIDADES_DISPONIVEIS.map(u => (
+                          <option key={u} value={u}>CD {u}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
