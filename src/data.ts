@@ -8,16 +8,17 @@ export type User = {
   unidade: string;
   password?: string;
   photo?: string;
+  active: boolean;
 };
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Ana (Admin)', email: 'admin@magalu.com', role: 'ADMIN', password: '123', unidade: 'Master' },
-  { id: '7', name: 'Gisele (Diretoria)', email: 'diretoria@magalu.com', role: 'DIRETORIA', password: '123', unidade: 'Master' },
-  { id: '2', name: 'Beto (Gerente CD)', email: 'gerentecd@magalu.com', role: 'GERENTE_DO_CD', password: '123', unidade: '6991' },
-  { id: '3', name: 'Carlos (Colab)', email: 'colab@magalu.com', role: 'COLABORADOR', password: '123', unidade: '994' },
-  { id: '4', name: 'Diana (Divisional)', email: 'divisional@magalu.com', role: 'GERENTE_DIVISIONAL', password: '123', unidade: 'Master' },
-  { id: '5', name: 'Eduardo (Dono Pilar)', email: 'donopilar@magalu.com', role: 'DONO_DO_PILAR', password: '123', unidade: '6991' },
-  { id: '6', name: 'Fábio (Auditor)', email: 'auditor@magalu.com', role: 'AUDITOR', password: '123', unidade: 'Master' },
+  { id: '1', name: 'Ana (Admin)', email: 'admin@magalu.com', role: 'ADMIN', password: '123', unidade: 'Master', active: true },
+  { id: '7', name: 'Gisele (Diretoria)', email: 'diretoria@magalu.com', role: 'DIRETORIA', password: '123', unidade: 'Master', active: true },
+  { id: '2', name: 'Beto (Gerente CD)', email: 'gerentecd@magalu.com', role: 'GERENTE_DO_CD', password: '123', unidade: '6991', active: true },
+  { id: '3', name: 'Carlos (Colab)', email: 'colab@magalu.com', role: 'COLABORADOR', password: '123', unidade: '994', active: true },
+  { id: '4', name: 'Diana (Divisional)', email: 'divisional@magalu.com', role: 'GERENTE_DIVISIONAL', password: '123', unidade: 'Master', active: true },
+  { id: '5', name: 'Eduardo (Dono Pilar)', email: 'donopilar@magalu.com', role: 'DONO_DO_PILAR', password: '123', unidade: '6991', active: true },
+  { id: '6', name: 'Fábio (Auditor)', email: 'auditor@magalu.com', role: 'AUDITOR', password: '123', unidade: 'Master', active: true },
 ];
 
 export type ChecklistItem = {

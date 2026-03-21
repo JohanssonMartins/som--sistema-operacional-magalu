@@ -19,6 +19,7 @@ model User {
   unidade  String
   password String?
   photo    String?
+  active   Boolean @default(true)
 }
 
 model ChecklistItem {
