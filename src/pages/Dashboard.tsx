@@ -52,6 +52,12 @@ export const Dashboard = () => {
           setIsLoadingHistory(true);
           const history = await api.getHistory(selectedUnit);
           setHistoryData(history);
+
+          // Sincronizar filtro Divisional com o CD selecionado
+          const unitInfo = CD_REGIONS[selectedUnit];
+          if (unitInfo && filterDivisional !== unitInfo.divisao) {
+            setFilterDivisional(unitInfo.divisao);
+          }
         } catch (error) {
           console.error("Erro ao carregar histórico:", error);
           setHistoryData([]);
