@@ -259,29 +259,31 @@ export const AutoauditoriaRow = React.memo(({
         </AnimatePresence>
       </td>
       <td className="px-6 py-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setIsModalOpen(true)}
-          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${localNossaAcao.trim()
-            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20'
-            : (pontoValue === '0' || pontoValue === '1')
-              ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 ring-2 ring-red-500/20'
-              : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
-            }`}
-        >
-          {localNossaAcao.trim() ? (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Ver/Editar Plano</span>
-            </>
-          ) : (
-            <>
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Adicionar Plano</span>
-            </>
-          )}
-        </motion.button>
+        <div className="flex justify-center">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setIsModalOpen(true)}
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${localNossaAcao.trim()
+              ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+              : (pontoValue === '0' || pontoValue === '1')
+                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 ring-2 ring-red-500/20'
+                : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+              }`}
+          >
+            {localNossaAcao.trim() ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Ver/Editar Plano</span>
+              </>
+            ) : (
+              <>
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Adicionar Plano</span>
+              </>
+            )}
+          </motion.button>
+        </div>
 
         <AnimatePresence>
           {isModalOpen && (
@@ -374,21 +376,21 @@ export const AutoauditoriaRow = React.memo(({
         </AnimatePresence>
       </td >
       <td className="px-6 py-4">
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col items-center space-y-2">
           {evidenciaUrl && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col gap-1"
+              className="flex flex-col items-center gap-1 w-full"
             >
               <a
                 href={evidenciaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20 transition-all"
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20 transition-all w-full"
               >
                 <CheckCircle2 className="w-3 h-3 mr-1.5" />
-                Ver Evidência Salva
+                Ver Evidência
               </a>
               {tipo === 'EXTERNA' && (
                 <span className="text-[9px] text-blue-500/70 dark:text-blue-400/50 font-bold px-1 uppercase tracking-tighter">Referência CD</span>
@@ -402,35 +404,24 @@ export const AutoauditoriaRow = React.memo(({
               whileTap={{ scale: 0.98 }}
               onClick={handleAIAnalysis}
               disabled={isAnalyzing}
-              className={`flex items-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all ${aiAnalysis
+              className={`flex items-center justify-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all w-full ${aiAnalysis
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800'
                 : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-800 hover:bg-purple-100'
                 }`}
               title={aiAnalysis || "Analisar evidência com Vision IA"}
             >
               {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              <span>{aiAnalysis ? 'Evidência Analisada' : 'Validar com IA'}</span>
+              <span>{aiAnalysis ? 'Analisado' : 'Validar IA'}</span>
             </motion.button>
-          )}
-
-          {aiAnalysis && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="text-[10px] text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded border border-dashed border-gray-200 dark:border-zinc-700 mt-1"
-            >
-              <span className="font-bold text-gray-700 dark:text-zinc-300">Análise IA: </span>
-              {aiAnalysis}
-            </motion.div>
           )}
 
           <motion.label
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm w-full ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>{isUploading ? 'Enviando...' : (evidenciaUrl ? 'Substituir' : 'Anexar')}</span>
+            <span>{isUploading ? '...' : (evidenciaUrl ? 'Trocar' : 'Anexar')}</span>
             <input
               type="file"
               className="hidden"

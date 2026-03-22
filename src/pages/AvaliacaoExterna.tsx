@@ -535,8 +535,8 @@ export const AvaliacaoExterna = () => {
                     <th className="px-6 py-3">Trilha</th>
                     <th className="px-6 py-3">Item</th>
                     <th className="px-6 py-3 w-32 text-center">CD / Auditor</th>
-                    <th className="px-6 py-3 w-32">Plano</th>
-                    <th className="px-6 py-3 w-40">Evidência</th>
+                    <th className="px-6 py-3 w-32 text-center">Plano</th>
+                    <th className="px-6 py-3 w-40 text-center">Evidência</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/50">
