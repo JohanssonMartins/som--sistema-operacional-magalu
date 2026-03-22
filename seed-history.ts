@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function seedHistory() {
-  const unidads = ['50', '94', '300'];
+  const unidads = ['50', '94', '300', '350', '550', '590', '991', '994', '1100', '1250', '1500', '1800', '2500', '2650', '2900', '5200'];
   const months = [
     { name: 'Setembro-2025', date: new Date(2025, 8, 15), baseScore: 40 },
     { name: 'Outubro-2025', date: new Date(2025, 9, 15), baseScore: 55 },
@@ -20,7 +20,7 @@ async function seedHistory() {
     for (const month of months) {
       const autoauditoria = await prisma.autoauditoria.upsert({
         where: {
-          unidade_mesAno: { unidade, mesAno: month.name },
+          unidade_mesAno_tipo: { unidade, mesAno: month.name, tipo: 'AUTO' },
         },
         update: {
           createdAt: month.date,
@@ -38,7 +38,7 @@ async function seedHistory() {
         // Random score based on a trend
         const rand = Math.random() * 20 - 5; // -5 to +15
         const targetScore = month.baseScore + rand;
-        
+
         let score = '0';
         if (targetScore > 75) score = '3';
         else if (targetScore > 40) score = '1';
