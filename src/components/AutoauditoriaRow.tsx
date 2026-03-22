@@ -156,52 +156,60 @@ export const AutoauditoriaRow = React.memo(({
         </div>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center justify-center gap-2">
-          {/* Nota do CD (Autoavaliação) - Apenas Leitura */}
-          {tipo === 'EXTERNA' && (
-            <div
-              title="Nota da Autoavaliação (CD)"
-              className={`w-9 h-9 flex items-center justify-center rounded-md border text-sm font-bold shadow-sm cursor-help ${cdPontoValue === '3'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : cdPontoValue === '1'
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : cdPontoValue === '0'
-                      ? 'bg-red-50 text-red-700 border-red-200'
-                      : 'bg-gray-50 text-gray-400 border-gray-200 border-dashed'
+        <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2 min-w-[100px]">
+            {/* Slot Esquerdo: Nota do CD (apenas em visão EXTERNA) */}
+            <div className="w-10 flex justify-end">
+              {tipo === 'EXTERNA' && (
+                <div
+                  title="Nota da Autoavaliação (CD)"
+                  className={`w-9 h-9 flex items-center justify-center rounded-md border text-sm font-bold shadow-sm cursor-help shrink-0 ${cdPontoValue === '3'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : cdPontoValue === '1'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : cdPontoValue === '0'
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-gray-50 text-gray-400 border-gray-200 border-dashed'
+                    }`}
+                >
+                  {cdPontoValue || '-'}
+                </div>
+              )}
+            </div>
+
+            {/* Slot Central: Seletor Principal */}
+            <select
+              value={pontoValue}
+              disabled={!canEdit}
+              onChange={(e) => onPontoChange(item.id, e.target.value)}
+              className={`w-12 h-9 border border-gray-200 dark:border-zinc-800 rounded-md px-1 py-0 text-sm font-bold transition-all text-center shrink-0 ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
+                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+                : pontoValue === '1'
+                  ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                  : pontoValue === '0'
+                    ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
+                    : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
                 }`}
             >
-              {cdPontoValue || '-'}
-            </div>
-          )}
+              <option value=""></option>
+              <option value="1">1</option>
+              <option value="3">3</option>
+              <option value="0">0</option>
+            </select>
 
-          {/* Nota do Auditor */}
-          <select
-            value={pontoValue}
-            disabled={!canEdit}
-            onChange={(e) => onPontoChange(item.id, e.target.value)}
-            className={`w-12 h-9 border border-gray-200 dark:border-zinc-800 rounded-md px-1 py-0 text-sm font-bold transition-all text-center ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
-              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-              : pontoValue === '1'
-                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-                : pontoValue === '0'
-                  ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
-                  : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
-              }`}
-          >
-            <option value=""></option>
-            <option value="1">1</option>
-            <option value="3">3</option>
-            <option value="0">0</option>
-          </select>
-          {item.criterios && (
-            <button
-              onClick={() => setIsCriteriaModalOpen(true)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors group/help"
-              title="Ver critérios de pontuação"
-            >
-              <HelpCircle className="w-4 h-4 text-gray-400 group-hover/help:text-blue-500 transition-colors" />
-            </button>
-          )}
+            {/* Slot Direito: Botão de Critérios */}
+            <div className="w-10 flex justify-start">
+              {item.criterios && (
+                <button
+                  onClick={() => setIsCriteriaModalOpen(true)}
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors group/help"
+                  title="Ver critérios de pontuação"
+                >
+                  <HelpCircle className="w-4 h-4 text-gray-400 group-hover/help:text-blue-500 transition-colors" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <AnimatePresence>
