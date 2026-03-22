@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Mail, Lock, ShieldAlert, Users } from 'lucide-react';
+import {
+  Sun, Moon, Mail, Lock, ShieldAlert, Users,
+  ShieldCheck, BarChart3, Map, Warehouse, Columns3, ClipboardCheck
+} from 'lucide-react';
 import { MainLogo } from '../components/Logos';
 import { useStore } from '../store/useStore';
 
@@ -94,19 +97,22 @@ export const Login = () => {
             </p>
             <div className="grid grid-cols-1 gap-2">
               {[
-                { label: 'Admin', email: 'admin@magalu.com' },
-                { label: 'Diretoria', email: 'diretoria@magalu.com' },
-                { label: 'G. Divisional', email: 'divisional@magalu.com' },
-                { label: 'Gerente CD', email: 'gerentecd@magalu.com' },
-                { label: 'Dono Pilar', email: 'donopilar@magalu.com' },
-                { label: 'Auditor', email: 'auditor@magalu.com' }
+                { label: 'Admin', email: 'admin@magalu.com', icon: ShieldCheck, color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'Diretoria', email: 'diretoria@magalu.com', icon: BarChart3, color: 'text-purple-600 dark:text-purple-400' },
+                { label: 'G. Divisional', email: 'divisional@magalu.com', icon: Map, color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Gerente CD', email: 'gerentecd@magalu.com', icon: Warehouse, color: 'text-amber-600 dark:text-amber-400' },
+                { label: 'Dono Pilar', email: 'donopilar@magalu.com', icon: Columns3, color: 'text-indigo-600 dark:text-indigo-400' },
+                { label: 'Auditor', email: 'auditor@magalu.com', icon: ClipboardCheck, color: 'text-rose-600 dark:text-rose-400' }
               ].map((account) => (
                 <div
                   key={account.email}
-                  className="flex justify-center items-center bg-gray-50 dark:bg-zinc-950 p-2.5 rounded border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="flex items-center space-x-3 bg-gray-50 dark:bg-zinc-950 p-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 hover:scale-[1.02] active:scale-[0.98] transition-all group"
                   onClick={() => { setLoginEmail(account.email); setLoginPassword('123'); }}
                 >
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">{account.label}</span>
+                  <div className={`p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm transition-colors group-hover:border-current ${account.color}`}>
+                    <account.icon className="w-4 h-4" />
+                  </div>
+                  <span className={`${account.color} font-bold text-sm`}>{account.label}</span>
                 </div>
               ))}
             </div>
