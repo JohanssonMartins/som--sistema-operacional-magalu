@@ -67,7 +67,7 @@ export const BaseChecklist = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                 >
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Base de Dados do Check-List</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cadastro de Itens da Base</h2>
                     <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Gerencie os itens mestres que compõem a auditoria.</p>
                 </motion.div>
                 <motion.button

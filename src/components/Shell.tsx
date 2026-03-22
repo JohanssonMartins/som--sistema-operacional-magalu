@@ -89,7 +89,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     { to: '/rank', icon: Trophy, label: 'Top Magalog', roles: ['ANY'] },
     { to: '/autoauditoria', icon: CheckCircle2, label: 'Autoavaliação', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD', 'DONO_DO_PILAR', 'COLABORADOR'] },
     { to: '/avaliacao-externa', icon: CheckCircle2, label: 'Avaliação Externa', roles: ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'] },
-    { to: '/base-checklist', icon: Database, label: 'Base Check-List', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'] },
+    { to: '/base-checklist', icon: Database, label: 'Cadastro', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'] },
     { to: '/usuarios', icon: Users, label: 'Usuários', roles: ['ADMIN'] },
   ];
 
