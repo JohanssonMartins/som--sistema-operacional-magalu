@@ -534,7 +534,7 @@ export const AvaliacaoExterna = () => {
                     <th className="px-6 py-3">Bloco</th>
                     <th className="px-6 py-3">Trilha</th>
                     <th className="px-6 py-3">Item</th>
-                    <th className="px-6 py-3 w-24">Ponto</th>
+                    <th className="px-6 py-3 w-32 text-center">CD / Auditor</th>
                     <th className="px-6 py-3 w-32">Plano</th>
                     <th className="px-6 py-3 w-40">Evidência</th>
                   </tr>
@@ -558,6 +558,7 @@ export const AvaliacaoExterna = () => {
                         mesAno={localMesAno}
                         tipo="EXTERNA"
                         isNossaAcaoReadOnly={true}
+                        cdPontoValue={autoReferenceData[item.id]?.score || ''}
                       />
                     ))}
                   </AnimatePresence>

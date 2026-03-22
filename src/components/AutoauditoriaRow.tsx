@@ -18,6 +18,7 @@ interface AutoauditoriaRowProps {
   existingEvidenciaUrl?: string;
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
+  cdPontoValue?: string;
 }
 
 export const AutoauditoriaRow = React.memo(({
@@ -33,7 +34,8 @@ export const AutoauditoriaRow = React.memo(({
   tipo = 'AUTO',
   existingEvidenciaUrl,
   onEvidenciaUploaded,
-  isNossaAcaoReadOnly = false
+  isNossaAcaoReadOnly = false,
+  cdPontoValue
 }: AutoauditoriaRowProps) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
@@ -154,12 +156,30 @@ export const AutoauditoriaRow = React.memo(({
         </div>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center justify-center gap-1">
+        <div className="flex items-center justify-center gap-2">
+          {/* Nota do CD (Autoavaliação) - Apenas Leitura */}
+          {tipo === 'EXTERNA' && (
+            <div
+              title="Nota da Autoavaliação (CD)"
+              className={`w-9 h-9 flex items-center justify-center rounded-md border text-sm font-bold shadow-sm cursor-help ${cdPontoValue === '3'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : cdPontoValue === '1'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : cdPontoValue === '0'
+                      ? 'bg-red-50 text-red-700 border-red-200'
+                      : 'bg-gray-50 text-gray-400 border-gray-200 border-dashed'
+                }`}
+            >
+              {cdPontoValue || '-'}
+            </div>
+          )}
+
+          {/* Nota do Auditor */}
           <select
             value={pontoValue}
             disabled={!canEdit}
             onChange={(e) => onPontoChange(item.id, e.target.value)}
-            className={`border border-gray-200 dark:border-zinc-800 rounded-md px-2 py-1.5 text-sm font-medium transition-all ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
+            className={`w-12 h-9 border border-gray-200 dark:border-zinc-800 rounded-md px-1 py-0 text-sm font-bold transition-all text-center ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
               ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
               : pontoValue === '1'
                 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
