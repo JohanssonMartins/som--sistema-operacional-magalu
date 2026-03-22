@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, ChecklistItem, Autoauditoria } from '../data';
 
 interface AppState {
@@ -88,6 +88,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'som-storage',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         currentUser: state.currentUser,
         theme: state.theme,

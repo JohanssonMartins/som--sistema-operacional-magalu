@@ -16,15 +16,12 @@ export const Login = () => {
     const user = usersList.find(u => u.email === loginEmail && u.password === loginPassword);
     if (user) {
       setCurrentUser(user);
-      localStorage.setItem('som_user', JSON.stringify(user));
 
       const targetUnit = user.unidade === 'Master' ? 'Todas' : (user.unidade || 'Todas');
       setSelectedUnit(targetUnit);
-      localStorage.setItem('som_selectedUnit', targetUnit);
 
       setLoginError('');
       setActiveTab('home');
-      localStorage.setItem('som_activeTab', 'home');
     } else {
       setLoginError('E-mail ou senha incorretos.');
     }
