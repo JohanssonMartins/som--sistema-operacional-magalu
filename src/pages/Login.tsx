@@ -99,8 +99,7 @@ export const Login = () => {
                 { label: 'G. Divisional', email: 'divisional@magalu.com' },
                 { label: 'Gerente CD', email: 'gerentecd@magalu.com' },
                 { label: 'Dono Pilar', email: 'donopilar@magalu.com' },
-                { label: 'Auditor', email: 'auditor@magalu.com' },
-                { label: 'Colab', email: 'colab@magalu.com' }
+                { label: 'Auditor', email: 'auditor@magalu.com' }
               ].map((account) => (
                 <div
                   key={account.email}
