@@ -1,11 +1,8 @@
-const CACHE_NAME = 'som-cache-v1';
+const CACHE_NAME = 'som-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css',
   '/Logo SOM - Completo - Azul.png'
 ];
 
@@ -15,6 +12,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,9 +27,26 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Estratégia Network-First para navegação (index.html)
+  // Isso evita o erro de 404 em assets após um novo deploy
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-First para outros assets
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
