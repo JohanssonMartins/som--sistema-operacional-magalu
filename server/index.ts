@@ -119,6 +119,19 @@ app.delete('/api/base-items/pilar/:pilar', async (req, res) => {
     }
 });
 
+app.post('/api/base-items/bulk', async (req, res) => {
+    try {
+        const items = await prisma.baseChecklistItem.createMany({ 
+            data: req.body,
+            skipDuplicates: true 
+        });
+        res.json(items);
+    } catch (error) {
+        console.error('BULK CREATE BASE ITEMS ERROR:', error);
+        res.status(500).json({ error: 'Erro ao criar itens base em massa' });
+    }
+});
+
 app.delete('/api/base-items/:id', async (req, res) => {
     try {
         await prisma.baseChecklistItem.delete({ where: { id: req.params.id } });

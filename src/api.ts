@@ -37,6 +37,10 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/base-items`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
         return res.json();
     },
+    bulkCreateBaseItems: async (items: any[]) => {
+        const res = await fetch(`${API_BASE_URL}/base-items/bulk`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(items) });
+        return res.json();
+    },
     updateBaseItem: async (id: string, item: any) => {
         const res = await fetch(`${API_BASE_URL}/base-items/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
         return res.json();

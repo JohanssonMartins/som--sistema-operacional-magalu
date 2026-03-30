@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Database, Check, X, Edit2, Trash2, Save } from 'lucide-react';
+import { Plus, Database, Check, X, Edit2, Trash2, Save, FileUp, Download } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
+import * as XLSX from 'xlsx';
 
 export const BaseChecklist = () => {
     const { baseItems, setBaseItems, currentUser } = useStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
     const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
     const [formData, setFormData] = useState<Partial<ChecklistItem>>({
         pilar: '',
@@ -46,7 +48,11 @@ export const BaseChecklist = () => {
                 await api.updateBaseItem(editingItem.id, formData);
                 setBaseItems(baseItems.map(i => i.id === editingItem.id ? { ...i, ...formData } as ChecklistItem : i));
             } else {
-                const newItem = { ...formData, id: Math.random().toString(36).substr(2, 9) };
+                const newItem = {
+                    ...formData,
+                    id: Math.random().toString(36).substr(2, 9),
+                    code: formData.code || `${formData.pilar?.substring(0, 3).toUpperCase()}-${formData.bloco?.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 100)}`
+                };
                 await api.createBaseItem(newItem);
                 setBaseItems([...baseItems, newItem as ChecklistItem]);
             }
@@ -54,6 +60,71 @@ export const BaseChecklist = () => {
         } catch (error) {
             console.error("Erro ao salvar item base:", error);
         }
+    };
+
+    const handleDownloadTemplate = () => {
+        const templateData = [
+            {
+                'Pilar': 'Gestão',
+                'Bloco': '5S',
+                'Trilha': 'Básico bem feito',
+                'Item (Pergunta/Verificação)': 'As áreas estão limpas e organizadas?',
+                'Descrição / Ajuda': 'Verificar se não há lixo no chão e se as ferramentas estão nos lugares devidos.',
+                'Critérios de Pontuação': '3 - Tudo organizado; 1 - Parcial; 0 - Desorganizado',
+                'Exige Evidência (Sim/Não)': 'Sim',
+                'Item Ativo (Sim/Não)': 'Sim'
+            }
+        ];
+
+        const ws = XLSX.utils.json_to_sheet(templateData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        XLSX.writeFile(wb, "modelo_importacao_checklist.xlsx");
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+                const newItems: Partial<ChecklistItem>[] = data.map((row, index) => ({
+                    id: Math.random().toString(36).substr(2, 9),
+                    pilar: row['Pilar'] || '',
+                    bloco: row['Bloco'] || '',
+                    trilha: row['Trilha'] || 'Básico bem feito',
+                    item: row['Item (Pergunta/Verificação)'] || '',
+                    descricao: row['Descrição / Ajuda'] || '',
+                    criterios: row['Critérios de Pontuação'] || '',
+                    exigeEvidencia: String(row['Exige Evidência (Sim/Não)']).toLowerCase() === 'sim',
+                    ativo: String(row['Item Ativo (Sim/Não)']).toLowerCase() !== 'não',
+                    order: baseItems.length + index + 1,
+                    code: `${String(row['Pilar'] || 'XXX').substring(0, 3).toUpperCase()}-${String(row['Bloco'] || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`
+                }));
+
+                if (newItems.length > 0) {
+                    await api.bulkCreateBaseItems(newItems);
+                    const updatedBaseItems = await api.getBaseItems();
+                    setBaseItems(updatedBaseItems);
+                    alert(`${newItems.length} itens importados com sucesso!`);
+                }
+            } catch (error) {
+                console.error("Erro ao importar planilha:", error);
+                alert("Erro ao importar planilha. Verifique o formato do arquivo.");
+            } finally {
+                setIsImporting(false);
+                if (e.target) e.target.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
     };
 
     return (
@@ -70,19 +141,51 @@ export const BaseChecklist = () => {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cadastro de Itens da Base</h2>
                     <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Gerencie os itens mestres que compõem a auditoria.</p>
                 </motion.div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                        setEditingItem(null);
-                        setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', nossaAcao: '', exigeEvidencia: false, ativo: true, order: baseItems.length + 1, criterios: '' });
-                        setIsModalOpen(true);
-                    }}
-                    className="bg-amber-500 text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-amber-400 transition-colors flex items-center space-x-2 shadow-lg"
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>Novo Item Base</span>
-                </motion.button>
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={handleDownloadTemplate}
+                        className="text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+                        title="Baixar modelo de planilha"
+                    >
+                        <Download className="w-4 h-4" />
+                        <span className="hidden sm:inline">Modelo</span>
+                    </button>
+
+                    <div className="relative">
+                        <input
+                            type="file"
+                            id="import-excel"
+                            className="hidden"
+                            accept=".xlsx, .xls, .csv"
+                            onChange={handleFileUpload}
+                            disabled={isImporting}
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => document.getElementById('import-excel')?.click()}
+                            disabled={isImporting}
+                            className={`${isImporting ? 'bg-gray-400' : 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700'} text-gray-700 dark:text-zinc-300 border px-4 py-2 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors flex items-center space-x-2 shadow-sm`}
+                        >
+                            <FileUp className="w-4 h-4" />
+                            <span>{isImporting ? 'Importando...' : 'Importar'}</span>
+                        </motion.button>
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                            setEditingItem(null);
+                            setFormData({ pilar: '', bloco: '', trilha: '', item: '', descricao: '', nossaAcao: '', exigeEvidencia: false, ativo: true, order: baseItems.length + 1, criterios: '' });
+                            setIsModalOpen(true);
+                        }}
+                        className="bg-amber-500 text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-amber-400 transition-colors flex items-center space-x-2 shadow-lg"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Novo Item Base</span>
+                    </motion.button>
+                </div>
             </div>
 
             <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
