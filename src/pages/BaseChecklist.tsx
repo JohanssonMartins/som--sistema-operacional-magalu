@@ -90,35 +90,65 @@ export const BaseChecklist = () => {
         const reader = new FileReader();
         reader.onload = async (evt) => {
             try {
-                const bstr = evt.target?.result;
-                const wb = XLSX.read(bstr, { type: 'binary' });
-                const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                const data = XLSX.utils.sheet_to_json(ws) as any[];
+                const dataArr = evt.target?.result;
+                const workbook = XLSX.read(dataArr, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet) as any[];
 
-                const newItems: Partial<ChecklistItem>[] = data.map((row, index) => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    pilar: row['Pilar'] || '',
-                    bloco: row['Bloco'] || '',
-                    trilha: row['Trilha'] || 'Básico bem feito',
-                    item: row['Item (Pergunta/Verificação)'] || '',
-                    descricao: row['Descrição / Ajuda'] || '',
-                    criterios: row['Critérios de Pontuação'] || '',
-                    exigeEvidencia: String(row['Exige Evidência (Sim/Não)']).toLowerCase() === 'sim',
-                    ativo: String(row['Item Ativo (Sim/Não)']).toLowerCase() !== 'não',
-                    order: baseItems.length + index + 1,
-                    code: `${String(row['Pilar'] || 'XXX').substring(0, 3).toUpperCase()}-${String(row['Bloco'] || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`
-                }));
+                if (!jsonData || jsonData.length === 0) {
+                    throw new Error("A planilha está vazia ou no formato incorreto.");
+                }
+
+                // Função auxiliar para achar a chave correta mesmo com espaços extras ou diferença de caixa
+                const getVal = (row: any, ...aliases: string[]) => {
+                    const keys = Object.keys(row);
+                    for (const alias of aliases) {
+                        const directMatch = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
+                        if (directMatch) return row[directMatch];
+                    }
+                    return '';
+                };
+
+                const newItems: Partial<ChecklistItem>[] = jsonData.map((row, index) => {
+                    const pilar = getVal(row, 'Pilar');
+                    const bloco = getVal(row, 'Bloco');
+                    const trilha = getVal(row, 'Trilha') || 'Básico bem feito';
+                    const item = getVal(row, 'Item (Pergunta/Verificação)', 'Item', 'Pergunta');
+                    const descricao = getVal(row, 'Descrição / Ajuda', 'Descrição', 'Ajuda');
+                    const criterios = getVal(row, 'Critérios de Pontuação', 'Critérios');
+                    const exigeEvidenciaStr = String(getVal(row, 'Exige Evidência (Sim/Não)', 'Exige Evidência') || '').toLowerCase();
+                    const ativoStr = String(getVal(row, 'Item Ativo (Sim/Não)', 'Ativo') || '').toLowerCase();
+
+                    return {
+                        id: Math.random().toString(36).substr(2, 9),
+                        pilar: String(pilar),
+                        bloco: String(bloco),
+                        trilha: String(trilha),
+                        item: String(item),
+                        descricao: String(descricao),
+                        criterios: String(criterios),
+                        exigeEvidencia: exigeEvidenciaStr === 'sim' || exigeEvidenciaStr === 'true' || exigeEvidenciaStr === 's',
+                        ativo: ativoStr !== 'não' && ativoStr !== 'false' && ativoStr !== 'n',
+                        order: baseItems.length + index + 1,
+                        code: `${String(pilar || 'XXX').substring(0, 3).toUpperCase()}-${String(bloco || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`
+                    };
+                });
 
                 if (newItems.length > 0) {
-                    await api.bulkCreateBaseItems(newItems);
+                    const response = await api.bulkCreateBaseItems(newItems);
+                    if (response.error) {
+                        throw new Error(response.error);
+                    }
                     const updatedBaseItems = await api.getBaseItems();
                     setBaseItems(updatedBaseItems);
                     alert(`${newItems.length} itens importados com sucesso!`);
+                } else {
+                    alert("Nenhum item válido encontrado na planilha.");
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Erro ao importar planilha:", error);
-                alert("Erro ao importar planilha. Verifique o formato do arquivo.");
+                alert(`Erro ao importar planilha: ${error.message || 'Verifique o formato do arquivo.'}`);
             } finally {
                 setIsImporting(false);
                 if (e.target) e.target.value = '';
