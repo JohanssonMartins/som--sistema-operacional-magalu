@@ -82,7 +82,7 @@ model BaseChecklistItem {
   createdBy      String?
   createdAt      DateTime @default(now())
   updatedBy      String?
-  updatedAt      DateTime @updatedAt
+  updatedAt      DateTime @default(now()) @updatedAt
 }
 
 // Modelos para a Autoauditoria Mensal
