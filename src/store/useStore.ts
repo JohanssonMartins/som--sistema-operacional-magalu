@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, ChecklistItem, Autoauditoria } from '../data';
+import { User, ChecklistItem, Autoauditoria, MOCK_USERS, INITIAL_CHECKLIST } from '../data';
 
 interface AppState {
   currentUser: User | null;
@@ -48,8 +48,8 @@ export const useStore = create<AppState>()(
       activeTab: 'home',
 
       items: [],
-      baseItems: [],
-      usersList: [],
+      baseItems: INITIAL_CHECKLIST,
+      usersList: MOCK_USERS,
       allAutoauditorias: [],
       autoauditoriaData: {},
       avaliacaoExternaData: {},
