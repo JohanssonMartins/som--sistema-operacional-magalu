@@ -317,30 +317,33 @@ export const Dashboard = () => {
             </div>
             <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-center text-[11px] sm:text-sm border-collapse matrix-tt-included">
-                <thead className="bg-[#1e293b] text-white">
-                  <tr className="bg-[#0f172a] text-[10px] uppercase tracking-tighter sm:tracking-normal">
-                    <th className="px-2 py-2 border-b border-gray-700 sticky left-0 z-20 w-[120px] sm:w-[180px] bg-[#0f172a]"></th>
+                <thead className="bg-[#0f172a] text-white border-b border-zinc-800">
+                  <tr className="bg-[#020617] text-[10px] uppercase tracking-widest text-zinc-400">
+                    <th className="px-2 py-3 border-r border-zinc-800 sticky left-0 z-20 w-[120px] sm:w-[180px] bg-[#020617] shadow-[2px_0_10px_rgba(0,0,0,0.3)]"></th>
                     {matrixStats.orderedDivisions.map((div, idx) => (
                       <th
                         key={div}
                         colSpan={matrixStats.divisions[div].length}
-                        className={`px-1 py-2 border-b border-gray-700 border-r border-gray-800 ${idx > 0 ? 'border-l-2 border-amber-500/30 bg-[#161e2e]' : ''}`}
+                        className={`px-1 py-3 border-b border-zinc-800 border-r border-zinc-800 bg-[#0f172a]/50 ${idx > 0 ? 'border-l-2 border-amber-500/20' : ''}`}
                       >
-                        <span className="opacity-80">{div}</span>
+                        <span className="text-zinc-300 font-black">{div}</span>
                       </th>
                     ))}
-                    <th rowSpan={2} className="px-2 py-2 border border-gray-700 bg-[#0f172a] text-[10px] min-w-[80px] align-middle shadow-[-2px_0_5px_rgba(0,0,0,0.2)] sticky right-0 z-20">
-                      Aderência<br />Pilar TT
+                    <th rowSpan={2} className="px-2 py-3 border border-gray-700 bg-[#0f172a] text-[10px] min-w-[90px] align-middle shadow-[-4px_0_10px_rgba(0,0,0,0.3)] sticky right-0 z-20 border-l-2 border-l-amber-500/50">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-amber-400 font-black">ADERÊNCIA</span>
+                        <span className="text-white opacity-90 tracking-widest">PILAR TT</span>
+                      </div>
                     </th>
                   </tr>
-                  <tr>
-                    <th className="px-2 py-3 border border-gray-700 font-bold bg-[#1e293b] sticky left-0 z-20 w-[120px] sm:w-[180px] shadow-[2px_0_5px_rgba(0,0,0,0.2)]">Pilar</th>
+                  <tr className="bg-[#1e293b] text-white border-b border-zinc-800">
+                    <th className="px-2 py-3 border-r border-zinc-700 font-bold bg-[#1e293b] sticky left-0 z-20 w-[120px] sm:w-[180px] shadow-[2px_0_10px_rgba(0,0,0,0.3)]">Pilar</th>
                     {matrixStats.flatOrderedUnits.map(unit => {
                       const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
                       return (
                         <th
                           key={unit}
-                          className={`px-1 py-1 sm:py-3 border border-gray-700 font-bold min-w-[38px] sm:min-w-[42px] ${isFirstInDiv ? 'border-l-4 border-gray-600/50' : ''}`}
+                          className={`px-1 py-1 sm:py-3 border-r border-zinc-700 font-black text-xs min-w-[38px] sm:min-w-[42px] bg-[#1e293b] ${isFirstInDiv ? 'border-l-2 border-amber-500/20' : ''}`}
                         >
                           {unit}
                         </th>
@@ -353,21 +356,17 @@ export const Dashboard = () => {
                     <React.Fragment key={pilar}>
                       <tr
                         onClick={() => togglePilarExpansion(pilar)}
-                        className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group border-b border-zinc-200 dark:border-zinc-800/50"
                       >
-                        <td className="px-2 py-3 border border-gray-200 dark:border-zinc-800 font-bold text-left bg-gray-50 dark:bg-zinc-950/50 sticky left-0 z-10 text-gray-900 dark:text-white whitespace-nowrap shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
-                          <div className="flex items-center gap-1">
+                        <td className="px-3 py-4 border-r border-zinc-200 dark:border-zinc-800 font-bold text-left bg-white dark:bg-[#09090b] sticky left-0 z-10 text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-[4px_0_15px_rgba(0,0,0,0.05)] group-hover:bg-zinc-50 dark:group-hover:bg-zinc-800/60">
+                          <div className="flex items-center gap-2">
                             <motion.div
                               animate={{ rotate: expandedPilars.has(pilar) ? 0 : -90 }}
-                              transition={{ duration: 0.2 }}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/30 transition-colors"
                             >
-                              {expandedPilars.has(pilar) ? (
-                                <ChevronDown className="w-3 h-3 text-amber-500" />
-                              ) : (
-                                <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-amber-500" />
-                              )}
+                              <ChevronDown className={`w-3 h-3 ${expandedPilars.has(pilar) ? "text-amber-600" : "text-zinc-400"}`} />
                             </motion.div>
-                            {pilar}
+                            <span className="tracking-tight">{pilar}</span>
                           </div>
                         </td>
                         {matrixStats.flatOrderedUnits.map(unit => {
@@ -378,13 +377,13 @@ export const Dashboard = () => {
                           return (
                             <td
                               key={`${unit}-${pilar}`}
-                              className={`px-1 py-3 border border-gray-200 dark:border-zinc-800 ${colorClass} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                              className={`px-1 py-4 border-r border-zinc-200 dark:border-zinc-800/50 ${colorClass} ${isFirstInDiv ? 'border-l-2 border-zinc-300 dark:border-zinc-700' : ''}`}
                             >
-                              {value}%
+                              <span className="text-[13px]">{value}%</span>
                             </td>
                           );
                         })}
-                        <td className={`px-2 py-3 border border-gray-200 dark:border-zinc-800 font-black bg-gray-50 dark:bg-zinc-950 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages[pilar] || '0'))}`}>
+                        <td className={`px-2 py-4 border-l border-zinc-300 dark:border-zinc-700 font-black bg-zinc-50/80 dark:bg-zinc-900/80 sticky right-0 z-10 shadow-[-4px_0_15px_rgba(0,0,0,0.08)] ${getPercentageColor(parseInt(matrixStats.pilarAverages[pilar] || '0'))}`}>
                           {matrixStats.pilarAverages[pilar] || '0'}%
                         </td>
                       </tr>
@@ -422,28 +421,25 @@ export const Dashboard = () => {
                       </AnimatePresence>
                     </React.Fragment>
                   ))}
-                  <tr className="bg-gray-50 dark:bg-zinc-950/50 font-extrabold border-t-2 border-gray-300 dark:border-zinc-700">
-                    <td className="px-2 py-3 border border-gray-300 dark:border-zinc-700 text-left sticky left-0 z-10 text-blue-600 dark:text-blue-400 whitespace-nowrap bg-gray-100 dark:bg-zinc-900 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                  <tr className="bg-[#0f172a] text-white font-black border-t-2 border-zinc-600">
+                    <td className="px-3 py-4 border border-zinc-700 text-left sticky left-0 z-10 text-white uppercase tracking-widest text-[10px] bg-[#0f172a] shadow-[4px_0_10px_rgba(0,0,0,0.15)]">
                       Aderência Total
                     </td>
                     {matrixStats.flatOrderedUnits.map(unit => {
                       const value = parseInt(matrixStats.matrix[unit]['Total'] || '0');
                       const isFirstInDiv = matrixStats.divFirstUnits.has(unit);
-                      const baseColorClass = getPercentageColor(value);
-                      const colorClass = baseColorClass.includes('/10')
-                        ? baseColorClass.replace('/10', '/20')
-                        : baseColorClass; // Slightly stronger background for Total row
+                      const colorClass = getPercentageColor(value).replace('/10', '/30');
 
                       return (
                         <td
                           key={`${unit}-total`}
-                          className={`px-1 py-3 border border-gray-300 dark:border-zinc-700 ${colorClass} ${isFirstInDiv ? 'border-l-4 border-gray-400/30' : ''}`}
+                          className={`px-1 py-4 border border-zinc-700 ${colorClass} ${isFirstInDiv ? 'border-l-2 border-zinc-500' : ''}`}
                         >
                           {value}%
                         </td>
                       );
                     })}
-                    <td className={`px-2 py-3 border border-gray-300 dark:border-zinc-700 font-black bg-gray-100 dark:bg-zinc-900 sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)] ${getPercentageColor(parseInt(matrixStats.pilarAverages['Total'] || '0')).replace('/10', '/30')}`}>
+                    <td className={`px-2 py-4 border border-zinc-700 font-black bg-[#1e293b] sticky right-0 z-10 shadow-[-4px_0_10px_rgba(0,0,0,0.15)] text-base ${getPercentageColor(parseInt(matrixStats.pilarAverages['Total'] || '0')).replace('/10', '/40')}`}>
                       {matrixStats.pilarAverages['Total'] || '0'}%
                     </td>
                   </tr>

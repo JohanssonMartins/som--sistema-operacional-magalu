@@ -155,15 +155,15 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-1 py-3">
         <div className="flex items-center justify-center">
-          <div className="flex items-center justify-center gap-2 min-w-[100px]">
+          <div className="flex items-center justify-center gap-1 min-w-[80px]">
             {/* Slot Esquerdo: Nota do CD (apenas em visão EXTERNA) */}
-            <div className="w-10 flex justify-end">
+            <div className="w-8 flex justify-end">
               {tipo === 'EXTERNA' && (
                 <div
                   title="Nota da Autoavaliação (CD)"
-                  className={`w-9 h-9 flex items-center justify-center rounded-md border text-sm font-bold shadow-sm cursor-help shrink-0 ${cdPontoValue === '3'
+                  className={`w-7 h-7 flex items-center justify-center rounded-md border text-xs font-bold shadow-sm cursor-help shrink-0 ${cdPontoValue === '3'
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : cdPontoValue === '1'
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
@@ -182,7 +182,7 @@ export const AutoauditoriaRow = React.memo(({
               value={pontoValue}
               disabled={!canEdit}
               onChange={(e) => onPontoChange(item.id, e.target.value)}
-              className={`w-12 h-9 border border-gray-200 dark:border-zinc-800 rounded-md px-1 py-0 text-sm font-bold transition-all text-center shrink-0 ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
+              className={`w-10 h-7 border border-gray-200 dark:border-zinc-800 rounded-md px-0.5 py-0 text-xs font-bold transition-all text-center shrink-0 ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
                 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
                 : pontoValue === '1'
                   ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
@@ -258,30 +258,21 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </AnimatePresence>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-1 py-2">
         <div className="flex justify-center">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsModalOpen(true)}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all shadow-sm border ${localNossaAcao.trim()
-              ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all shadow-sm border ${localNossaAcao.trim()
+              ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
               : (pontoValue === '0' || pontoValue === '1')
-                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 ring-2 ring-red-500/20'
-                : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-500/30 ring-1 ring-red-500/20'
+                : 'bg-gray-50 dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800'
               }`}
           >
-            {localNossaAcao.trim() ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Ver/Editar Plano</span>
-              </>
-            ) : (
-              <>
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>Adicionar Plano</span>
-              </>
-            )}
+            {localNossaAcao.trim() ? <CheckCircle2 className="w-3 h-3" /> : <PlusCircle className="w-3 h-3" />}
+            <span>{localNossaAcao.trim() ? 'Plano' : 'Add Plano'}</span>
           </motion.button>
         </div>
 
@@ -375,59 +366,24 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </AnimatePresence>
       </td >
-      <td className="px-6 py-4">
-        <div className="flex flex-col items-center space-y-2">
+      <td className="px-1 py-2">
+        <div className="flex flex-col items-center gap-1">
           {evidenciaUrl && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-1 w-full"
+            <a
+              href={evidenciaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 w-full text-center"
             >
-              <a
-                href={evidenciaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20 transition-all w-full"
-              >
-                <CheckCircle2 className="w-3 h-3 mr-1.5" />
-                Ver Evidência
-              </a>
-              {tipo === 'EXTERNA' && (
-                <span className="text-[9px] text-blue-500/70 dark:text-blue-400/50 font-bold px-1 uppercase tracking-tighter">Referência CD</span>
-              )}
-            </motion.div>
+              Ver
+            </a>
           )}
-
-          {(evidenciaUrl && canEdit) && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleAIAnalysis}
-              disabled={isAnalyzing}
-              className={`flex items-center justify-center space-x-1 px-2 py-1 rounded border text-[10px] font-bold transition-all w-full ${aiAnalysis
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800'
-                : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-800 hover:bg-purple-100'
-                }`}
-              title={aiAnalysis || "Analisar evidência com Vision IA"}
-            >
-              {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              <span>{aiAnalysis ? 'Analisado' : 'Validar IA'}</span>
-            </motion.button>
-          )}
-
           <motion.label
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm w-full ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-2 py-0.5 rounded text-[9px] font-bold transition-colors shadow-sm w-full ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            <Upload className="w-3.5 h-3.5" />
+            <Upload className="w-2.5 h-2.5" />
             <span>{isUploading ? '...' : (evidenciaUrl ? 'Trocar' : 'Anexar')}</span>
-            <input
-              type="file"
-              className="hidden"
-              disabled={!canEdit || isUploading}
-              onChange={handleFileUpload}
-            />
+            <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
           </motion.label>
         </div>
       </td>

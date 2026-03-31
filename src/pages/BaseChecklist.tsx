@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Database, Check, X, Edit2, Trash2, Save, FileUp, Download } from 'lucide-react';
+import { Plus, Database, Check, X, Edit2, Trash2, Save, FileUp, Download, Filter, RotateCcw } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
@@ -11,6 +11,28 @@ export const BaseChecklist = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
+
+    // Filter state
+    const [filterPilar, setFilterPilar] = useState("");
+    const [filterBloco, setFilterBloco] = useState("");
+    const [filterTrilha, setFilterTrilha] = useState("");
+
+    // Compute filter options
+    const pilarOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.pilar))).filter(Boolean).sort(), [baseItems]);
+    const blocoOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.bloco))).filter(Boolean).sort(), [baseItems]);
+    const trilhaOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.trilha))).filter(Boolean).sort(), [baseItems]);
+
+    // Filter items
+    const filteredItems = useMemo(() => {
+        return baseItems
+            .filter(item => {
+                const matchPilar = !filterPilar || item.pilar === filterPilar;
+                const matchBloco = !filterBloco || item.bloco === filterBloco;
+                const matchTrilha = !filterTrilha || item.trilha === filterTrilha;
+                return matchPilar && matchBloco && matchTrilha;
+            })
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+    }, [baseItems, filterPilar, filterBloco, filterTrilha]);
     const [formData, setFormData] = useState<Partial<ChecklistItem>>({
         pilar: '',
         bloco: '',
@@ -110,29 +132,51 @@ export const BaseChecklist = () => {
                     return '';
                 };
 
-                const newItems: Partial<ChecklistItem>[] = jsonData.map((row, index) => {
-                    const pilar = getVal(row, 'Pilar');
-                    const bloco = getVal(row, 'Bloco');
-                    const trilha = getVal(row, 'Trilha') || 'Básico bem feito';
-                    const item = getVal(row, 'Item (Pergunta/Verificação)', 'Item', 'Pergunta');
+                const existingItemKeys = new Set(baseItems.map(i => `${i.pilar?.trim().toLowerCase()}|${i.bloco?.trim().toLowerCase()}|${i.item?.trim().toLowerCase()}`));
+                let skipCount = 0;
+
+                const newItems: Partial<ChecklistItem>[] = [];
+                
+                jsonData.forEach((row, index) => {
+                    const pilar = String(getVal(row, 'Pilar') || '').trim();
+                    const bloco = String(getVal(row, 'Bloco') || '').trim();
+                    const item = String(getVal(row, 'Item (Pergunta/Verificação)', 'Item', 'Pergunta') || '').trim();
+                    
+                    const key = `${pilar.toLowerCase()}|${bloco.toLowerCase()}|${item.toLowerCase()}`;
+                    
+                    if (existingItemKeys.has(key)) {
+                        skipCount++;
+                        return;
+                    }
+
+                    const rawTrilha = String(getVal(row, 'Trilha') || '').trim();
+                    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                    const nTrilha = normalize(rawTrilha);
+                    
+                    let trilha = "Básico bem feito"; // Default
+                    if (nTrilha.includes("gerenciar") || nTrilha.includes("melhorar")) {
+                        trilha = "Gerenciar para melhorar";
+                    } else if (nTrilha.includes("basico") || nTrilha.includes("feito")) {
+                        trilha = "Básico bem feito";
+                    }
                     const descricao = getVal(row, 'Descrição / Ajuda', 'Descrição', 'Ajuda');
                     const criterios = getVal(row, 'Critérios de Pontuação', 'Critérios');
                     const exigeEvidenciaStr = String(getVal(row, 'Exige Evidência (Sim/Não)', 'Exige Evidência') || '').toLowerCase();
                     const ativoStr = String(getVal(row, 'Item Ativo (Sim/Não)', 'Ativo') || '').toLowerCase();
 
-                    return {
+                    newItems.push({
                         id: Math.random().toString(36).substr(2, 9),
-                        pilar: String(pilar),
-                        bloco: String(bloco),
+                        pilar,
+                        bloco,
                         trilha: String(trilha),
-                        item: String(item),
+                        item,
                         descricao: String(descricao),
                         criterios: String(criterios),
                         exigeEvidencia: exigeEvidenciaStr === 'sim' || exigeEvidenciaStr === 'true' || exigeEvidenciaStr === 's',
                         ativo: ativoStr !== 'não' && ativoStr !== 'false' && ativoStr !== 'n',
-                        order: baseItems.length + index + 1,
+                        order: baseItems.length + newItems.length + 1,
                         code: `${String(pilar || 'XXX').substring(0, 3).toUpperCase()}-${String(bloco || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`
-                    };
+                    });
                 });
 
                 if (newItems.length > 0) {
@@ -142,7 +186,13 @@ export const BaseChecklist = () => {
                     }
                     const updatedBaseItems = await api.getBaseItems();
                     setBaseItems(updatedBaseItems);
-                    alert(`${newItems.length} itens importados com sucesso!`);
+                    
+                    const message = skipCount > 0 
+                        ? `${newItems.length} itens importados com sucesso! (${skipCount} duplicidade(s) ignorada(s))`
+                        : `${newItems.length} itens importados com sucesso!`;
+                    alert(message);
+                } else if (skipCount > 0) {
+                    alert(`Nenhum item novo foi importado. ${skipCount} item(ns) já existiam no sistema.`);
                 } else {
                     alert("Nenhum item válido encontrado na planilha.");
                 }
@@ -161,7 +211,7 @@ export const BaseChecklist = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-7xl mx-auto w-full py-8 space-y-6"
+            className="max-w-[1440px] mx-auto w-full px-4 py-8 space-y-6"
         >
             <div className="flex justify-between items-center">
                 <motion.div
@@ -218,22 +268,89 @@ export const BaseChecklist = () => {
                 </div>
             </div>
 
+            {/* Filter Bar */}
+            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 shadow-sm flex flex-wrap items-center gap-4">
+                <div className="flex items-center space-x-2 text-gray-500 dark:text-zinc-400 mr-2">
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm font-bold uppercase tracking-wider">Filtros</span>
+                </div>
+
+                <div className="flex-1 flex flex-wrap gap-4">
+                    <div className="min-w-[150px]">
+                        <label className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1 ml-1">Pilar</label>
+                        <select
+                            value={filterPilar}
+                            onChange={(e) => setFilterPilar(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
+                        >
+                            <option value="">Todos os Pilares</option>
+                            {pilarOptions.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="min-w-[150px]">
+                        <label className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1 ml-1">Bloco</label>
+                        <select
+                            value={filterBloco}
+                            onChange={(e) => setFilterBloco(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
+                        >
+                            <option value="">Todos os Blocos</option>
+                            {blocoOptions.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="min-w-[150px]">
+                        <label className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase mb-1 ml-1">Trilha</label>
+                        <select
+                            value={filterTrilha}
+                            onChange={(e) => setFilterTrilha(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
+                        >
+                            <option value="">Todas as Trilhas</option>
+                            {trilhaOptions.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {(filterPilar || filterBloco || filterTrilha) && (
+                    <button
+                        onClick={() => {
+                            setFilterPilar("");
+                            setFilterBloco("");
+                            setFilterTrilha("");
+                        }}
+                        className="flex items-center space-x-2 text-red-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-950/20"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Limpar Filtros</span>
+                    </button>
+                )}
+            </div>
+
             <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
                         <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
                             <tr>
-                                <th className="px-6 py-4">Pilar</th>
-                                <th className="px-6 py-4">Bloco</th>
-                                <th className="px-6 py-4">Trilha</th>
-                                <th className="px-6 py-4">Item</th>
-                                <th className="px-6 py-4">Evidência</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Ações</th>
+                                <th className="px-4 py-4">Pilar</th>
+                                <th className="px-4 py-4">Bloco</th>
+                                <th className="px-4 py-4">Trilha</th>
+                                <th className="px-4 py-4">Item</th>
+                                <th className="px-4 py-4">Critérios</th>
+                                <th className="px-4 py-4 text-center">Evidência</th>
+                                <th className="px-4 py-4 text-center">Status</th>
+                                <th className="px-4 py-4 text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                            {baseItems.sort((a, b) => (a.order || 0) - (b.order || 0)).map((item, idx) => (
+                            {filteredItems.map((item, idx) => (
                                 <motion.tr
                                     key={item.id}
                                     initial={{ opacity: 0, x: -10 }}
@@ -241,53 +358,73 @@ export const BaseChecklist = () => {
                                     transition={{ delay: idx * 0.01 }}
                                     className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
                                 >
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
-                                    <td className="px-6 py-4">{item.bloco}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4 font-medium text-gray-900 dark:text-zinc-200 whitespace-nowrap">{item.pilar}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">{item.bloco}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-xs">
                                         {item.trilha ? (
-                                            <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-xs font-bold border border-amber-100 dark:border-amber-500/20">
+                                            <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100 dark:border-amber-500/20">
                                                 {item.trilha}
                                             </span>
                                         ) : (
                                             <span className="text-xs text-gray-400">-</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 max-w-xs md:max-w-md truncate" title={item.item}>
-                                        {item.item}
+                                    <td className="px-4 py-4 max-w-[220px] lg:max-w-[280px]">
+                                        <div className="font-medium text-gray-900 dark:text-zinc-200 text-[13.5px] leading-snug" title={item.item}>{item.item}</div>
+                                        {item.descricao && (
+                                            <div className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 italic line-clamp-2 leading-tight" title={item.descricao}>
+                                                {item.descricao}
+                                            </div>
+                                        )}
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4 max-w-[250px] lg:max-w-[420px]">
+                                        {item.criterios ? (
+                                            <div className="text-[12px] text-gray-700 dark:text-zinc-300 bg-gray-50/50 dark:bg-zinc-800/50 p-2.5 rounded-lg border border-gray-200 dark:border-zinc-700/50 font-medium leading-relaxed shadow-sm" title={item.criterios}>
+                                                {item.criterios.split('\n').map((line, i) => (
+                                                    <div key={i} className={i > 0 ? "mt-1.5 pt-1.5 border-t border-gray-200/50 dark:border-zinc-700/30" : ""}>
+                                                        {line}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-gray-400 italic">Não definido</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-center">
                                         {item.exigeEvidencia ? (
-                                            <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100 dark:border-amber-500/20">
+                                            <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100 dark:border-amber-500/20">
                                                 <Check className="w-3 h-3 mr-1" /> Sim
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-800/50 px-2 py-0.5 rounded text-xs font-medium border border-gray-100 dark:border-zinc-800">
+                                            <span className="inline-flex items-center text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-800/50 px-2 py-0.5 rounded text-[10px] font-medium border border-gray-100 dark:border-zinc-800">
                                                 <X className="w-3 h-3 mr-1" /> Não
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4 whitespace-nowrap text-center">
                                         {item.ativo ? (
-                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Ativo</span>
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[12px]">Ativo</span>
                                         ) : (
-                                            <span className="text-red-500 dark:text-red-400 font-bold">Inativo</span>
+                                            <span className="text-red-500 dark:text-red-400 font-bold text-[12px]">Inativo</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-right flex justify-end space-x-1">
-                                        <button
-                                            onClick={() => handleEditItem(item)}
-                                            className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
-                                            title="Editar"
-                                        >
-                                            <Edit2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteItem(item.id)}
-                                            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    <td className="px-4 py-4">
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button
+                                                onClick={() => handleEditItem(item)}
+                                                className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
+                                                title="Editar"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteItem(item.id)}
+                                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                                                title="Excluir"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </motion.tr>
                             ))}
