@@ -77,6 +77,12 @@ model BaseChecklistItem {
   ativo          Boolean @default(true)
   order          Int
   nossaAcao      String?
+
+  // Audit fields
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedBy      String?
+  updatedAt      DateTime @updatedAt
 }
 
 // Modelos para a Autoauditoria Mensal

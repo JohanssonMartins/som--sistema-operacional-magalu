@@ -67,13 +67,20 @@ export const BaseChecklist = () => {
         e.preventDefault();
         try {
             if (editingItem) {
-                await api.updateBaseItem(editingItem.id, formData);
-                setBaseItems(baseItems.map(i => i.id === editingItem.id ? { ...i, ...formData } as ChecklistItem : i));
+                const updateData = {
+                    ...formData,
+                    updatedBy: currentUser?.name || 'Sistema',
+                    updatedAt: new Date().toISOString()
+                };
+                await api.updateBaseItem(editingItem.id, updateData);
+                setBaseItems(baseItems.map(i => i.id === editingItem.id ? { ...i, ...updateData } as ChecklistItem : i));
             } else {
                 const newItem = {
                     ...formData,
                     id: Math.random().toString(36).substr(2, 9),
-                    code: formData.code || `${formData.pilar?.substring(0, 3).toUpperCase()}-${formData.bloco?.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 100)}`
+                    code: formData.code || `${formData.pilar?.substring(0, 3).toUpperCase()}-${formData.bloco?.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 100)}`,
+                    createdBy: currentUser?.name || 'Sistema',
+                    createdAt: new Date().toISOString()
                 };
                 await api.createBaseItem(newItem);
                 setBaseItems([...baseItems, newItem as ChecklistItem]);
@@ -175,7 +182,9 @@ export const BaseChecklist = () => {
                         exigeEvidencia: exigeEvidenciaStr === 'sim' || exigeEvidenciaStr === 'true' || exigeEvidenciaStr === 's',
                         ativo: ativoStr !== 'não' && ativoStr !== 'false' && ativoStr !== 'n',
                         order: baseItems.length + newItems.length + 1,
-                        code: `${String(pilar || 'XXX').substring(0, 3).toUpperCase()}-${String(bloco || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`
+                        code: `${String(pilar || 'XXX').substring(0, 3).toUpperCase()}-${String(bloco || 'XXX').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`,
+                        createdBy: currentUser?.name || 'Importação',
+                        createdAt: new Date().toISOString()
                     });
                 });
 
@@ -409,21 +418,40 @@ export const BaseChecklist = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-4">
-                                        <div className="flex justify-end items-center space-x-1">
-                                            <button
-                                                onClick={() => handleEditItem(item)}
-                                                className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteItem(item.id)}
-                                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
-                                                title="Excluir"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                        <div className="flex flex-col items-end">
+                                            <div className="flex justify-end items-center space-x-1">
+                                                <button
+                                                    onClick={() => handleEditItem(item)}
+                                                    className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors"
+                                                    title="Editar"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteItem(item.id)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+
+                                            {(item.createdBy || item.updatedBy) && (
+                                                <div className="mt-2 text-right pr-2">
+                                                    {item.createdBy && (
+                                                        <div className="text-[9px] text-gray-400 dark:text-zinc-500 leading-tight">
+                                                            Criado: <span className="font-semibold text-gray-500 dark:text-zinc-400">{item.createdBy}</span>
+                                                            <br />{item.createdAt ? new Date(item.createdAt).toLocaleString('pt-BR') : ''}
+                                                        </div>
+                                                    )}
+                                                    {item.updatedBy && (
+                                                        <div className="text-[9px] text-amber-500/70 dark:text-amber-400/60 leading-tight mt-1 border-t border-gray-100 dark:border-zinc-800 pt-1">
+                                                            Alterado: <span className="font-semibold">{item.updatedBy}</span>
+                                                            <br />{item.updatedAt ? new Date(item.updatedAt).toLocaleString('pt-BR') : ''}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                 </motion.tr>

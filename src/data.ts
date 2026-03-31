@@ -50,6 +50,10 @@ export type ChecklistItem = {
   auditoriaRealizada?: boolean;
   auditoriaAderente?: boolean;
   auditoriaCompletedAt?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 };
 
 export type EvidenciaAutoauditoria = {
