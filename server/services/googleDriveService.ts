@@ -99,9 +99,9 @@ export const googleDriveService = {
     },
 
     /**
-     * Faz o upload físico de um arquivo buffer e retorna a URL permanente
+     * Faz o upload físico de um arquivo buffer e retorna tanto o ID quanto a URL permanente
      */
-    async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, parentFolderId: string): Promise<string> {
+    async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, parentFolderId: string): Promise<{ id: string, url: string }> {
         const bufferStream = new stream.PassThrough();
         bufferStream.end(fileBuffer);
 
@@ -134,7 +134,10 @@ export const googleDriveService = {
             supportsAllDrives: true
         });
 
-        return response.data.webViewLink!;
+        return {
+            id: response.data.id!,
+            url: response.data.webViewLink!
+        };
     },
 
     /**
