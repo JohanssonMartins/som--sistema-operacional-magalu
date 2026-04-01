@@ -392,40 +392,17 @@ export const AutoauditoriaRow = React.memo(({
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 w-full text-center">
             
             {/* --- COLUNA ANEXO (DRIVE) --- */}
-            <div className="flex flex-col items-center justify-between min-h-[60px]">
-              {/* Linha 1: Ver */}
-              <div className="h-4 flex items-center">
-                {driveEvidencia && (
+            <div className="flex flex-col items-center justify-center min-h-[50px] gap-1">
+              {driveEvidencia ? (
+                <>
                   <a
                     href={driveEvidencia.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[9px] font-bold text-blue-600 hover:underline"
+                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                   >
-                    Ver
+                    Ver Anexo
                   </a>
-                )}
-              </div>
-
-              {/* Linha 2: Nome (Fica Azul se existir) */}
-              <div className="flex flex-col items-center">
-                {driveEvidencia ? (
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Anexo</span>
-                ) : (
-                  <motion.label
-                    whileHover={{ scale: 1.05 }}
-                    className={`flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 cursor-pointer hover:text-blue-500 transition-colors ${isUploading ? 'opacity-50' : ''}`}
-                  >
-                    <Upload className="w-3 h-3 mb-0.5" />
-                    <span>Anexo</span>
-                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
-                  </motion.label>
-                )}
-              </div>
-
-              {/* Linha 3: Edite (Discreto) */}
-              <div className="h-4 flex items-center">
-                {driveEvidencia && (
                   <motion.label
                     whileHover={{ scale: 1.05 }}
                     className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2"
@@ -433,45 +410,31 @@ export const AutoauditoriaRow = React.memo(({
                     Edite
                     <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
                   </motion.label>
-                )}
-              </div>
+                </>
+              ) : (
+                <motion.label
+                  whileHover={{ scale: 1.05 }}
+                  className={`flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 cursor-pointer hover:text-blue-500 transition-colors ${isUploading ? 'opacity-50' : ''}`}
+                >
+                  <Upload className="w-3 h-3 mb-0.5" />
+                  <span>Anexo</span>
+                  <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                </motion.label>
+              )}
             </div>
 
             {/* --- COLUNA LINK (MANUAL) --- */}
-            <div className="flex flex-col items-center justify-between min-h-[60px]">
-              {/* Linha 1: Ver */}
-              <div className="h-4 flex items-center">
-                {manualLink && (
+            <div className="flex flex-col items-center justify-center min-h-[50px] gap-1">
+              {manualLink ? (
+                <>
                   <a
                     href={manualLink.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[9px] font-bold text-blue-600 hover:underline"
+                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                   >
-                    Ver
+                    Ver Link
                   </a>
-                )}
-              </div>
-
-              {/* Linha 2: Nome (Fica Azul se existir) */}
-              <div className="flex flex-col items-center">
-                {manualLink ? (
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Link</span>
-                ) : (
-                  <button
-                    onClick={handleLinkUpload}
-                    disabled={!canEdit || isUploading}
-                    className="flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors disabled:opacity-50"
-                  >
-                    <Link className="w-3 h-3 mb-0.5" />
-                    <span>Link</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Linha 3: Edite (Discreto) */}
-              <div className="h-4 flex items-center">
-                {manualLink && (
                   <button
                     onClick={handleLinkUpload}
                     disabled={!canEdit || isUploading}
@@ -479,8 +442,17 @@ export const AutoauditoriaRow = React.memo(({
                   >
                     Edite
                   </button>
-                )}
-              </div>
+                </>
+              ) : (
+                <button
+                  onClick={handleLinkUpload}
+                  disabled={!canEdit || isUploading}
+                  className="flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors disabled:opacity-50"
+                >
+                  <Link className="w-3 h-3 mb-0.5" />
+                  <span>Link</span>
+                </button>
+              )}
             </div>
             
           </div>
