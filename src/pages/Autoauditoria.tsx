@@ -526,6 +526,7 @@ export const Autoauditoria = () => {
                         unidade={selectedUnit}
                         mesAno={localMesAno}
                         existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}
+                        existingEvidenciaName={autoauditoriaData[item.id]?.evidencias?.[0]?.name}
                       />
                     ))}
                   </AnimatePresence>

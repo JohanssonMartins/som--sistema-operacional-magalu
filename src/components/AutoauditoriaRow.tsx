@@ -16,6 +16,7 @@ interface AutoauditoriaRowProps {
   mesAno: string;
   tipo?: 'AUTO' | 'EXTERNA';
   existingEvidenciaUrl?: string;
+  existingEvidenciaName?: string;
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
   cdPontoValue?: string;
@@ -33,6 +34,7 @@ export const AutoauditoriaRow = React.memo(({
   mesAno,
   tipo = 'AUTO',
   existingEvidenciaUrl,
+  existingEvidenciaName,
   onEvidenciaUploaded,
   isNossaAcaoReadOnly = false,
   cdPontoValue
@@ -40,6 +42,7 @@ export const AutoauditoriaRow = React.memo(({
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
   const [evidenciaUrl, setEvidenciaUrl] = useState<string | undefined>(existingEvidenciaUrl);
+  const [evidenceName, setEvidenceName] = useState<string | undefined>(existingEvidenciaName);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -54,7 +57,8 @@ export const AutoauditoriaRow = React.memo(({
 
   useEffect(() => {
     setEvidenciaUrl(existingEvidenciaUrl);
-  }, [existingEvidenciaUrl]);
+    setEvidenceName(existingEvidenciaName);
+  }, [existingEvidenciaUrl, existingEvidenciaName]);
 
   const handleNossaAcaoChange = (val: string) => {
     setLocalNossaAcao(val);
@@ -87,7 +91,10 @@ export const AutoauditoriaRow = React.memo(({
       if (res.success && res.url) {
         setEvidenciaUrl(res.url);
         const driveId = res.evidencia?.name || '';
-        if (driveId) setEvidenceId(driveId);
+        if (driveId) {
+          setEvidenceId(driveId);
+          setEvidenceName(driveId);
+        }
 
         // Notifica o pai para persistir no estado global
         onEvidenciaUploaded?.(item.id, res.url, driveId);
@@ -118,6 +125,7 @@ export const AutoauditoriaRow = React.memo(({
       if (res.success && res.url) {
         setEvidenciaUrl(res.url);
         const driveId = 'Manual Link';
+        setEvidenceName(driveId);
         onEvidenciaUploaded?.(item.id, res.url, driveId);
       }
     } catch (error) {
@@ -393,34 +401,71 @@ export const AutoauditoriaRow = React.memo(({
           )}
         </AnimatePresence>
       </td >
-      <td className="px-1 py-2">
-        <div className="flex flex-col items-center gap-1">
+      <td className="px-1 py-1">
+        <div className="flex flex-col items-center gap-1.5">
           {evidenciaUrl && (
             <a
               href={evidenciaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 w-full text-center"
+              className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
             >
-              Ver
+              Ver Evidência
             </a>
           )}
-          <motion.label
-            className={`inline-flex items-center justify-center space-x-1 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-2 py-0.5 rounded text-[9px] font-bold transition-colors shadow-sm w-full ${!canEdit || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <Upload className="w-2.5 h-2.5" />
-            <span>{isUploading ? '...' : (evidenciaUrl ? 'Trocar' : 'Anexar')}</span>
-            <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
-          </motion.label>
 
-          <button
-            onClick={handleLinkUpload}
-            disabled={!canEdit || isUploading}
-            className={`inline-flex items-center justify-center space-x-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-0.5 text-[9px] font-bold transition-colors w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <Link className="w-2.5 h-2.5" />
-            <span>Link</span>
-          </button>
+          <div className="grid grid-cols-2 gap-2 w-full">
+            {/* Coluna Anexo (Drive) */}
+            <div className="flex flex-col items-center justify-center">
+              {evidenceName && evidenceName !== 'Manual Link' ? (
+                <>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Anexo</span>
+                  <motion.label
+                    whileHover={{ scale: 1.05 }}
+                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer decoration-dotted underline underline-offset-2"
+                  >
+                    Edite
+                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                  </motion.label>
+                </>
+              ) : (
+                <motion.label
+                  whileHover={{ scale: 1.02 }}
+                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-0.5 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
+                >
+                  <Upload className="w-3 h-3 mb-0.5" />
+                  <span>Anexo</span>
+                  <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                </motion.label>
+              )}
+            </div>
+
+            {/* Coluna Link (Manual) */}
+            <div className="flex flex-col items-center justify-center">
+              {evidenceName === 'Manual Link' ? (
+                <>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Link</span>
+                  <button
+                    onClick={handleLinkUpload}
+                    disabled={!canEdit || isUploading}
+                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer decoration-dotted underline underline-offset-2 disabled:opacity-50"
+                  >
+                    Edite
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleLinkUpload}
+                  disabled={!canEdit || isUploading}
+                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-0.5 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
+                >
+                  <Link className="w-3 h-3 mb-0.5" />
+                  <span>Link</span>
+                </button>
+              )}
+            </div>
+          </div>
+          {isUploading && <div className="text-[8px] animate-pulse text-blue-500 font-bold">Processando...</div>}
         </div>
       </td>
     </motion.tr >
