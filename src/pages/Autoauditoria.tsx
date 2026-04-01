@@ -525,8 +525,7 @@ export const Autoauditoria = () => {
                         onEvidenciaUploaded={handleEvidenciaUploaded}
                         unidade={selectedUnit}
                         mesAno={localMesAno}
-                        existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url}
-                        existingEvidenciaName={autoauditoriaData[item.id]?.evidencias?.[0]?.name}
+                        evidencias={autoauditoriaData[item.id]?.evidencias || []}
                       />
                     ))}
                   </AnimatePresence>

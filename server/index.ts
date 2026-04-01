@@ -494,12 +494,20 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
             }
         });
 
-        // Finalmente, cria a evidencia apontando a url
+        // 3. Limpeza de evidências de DRIVE anteriores (Substituição)
+        await prisma.evidenciaAutoauditoria.deleteMany({
+            where: {
+                autoauditoriaItemId: autoauditoriaItem.id,
+                name: { not: 'Manual Link' }
+            }
+        });
+
+        // 4. Finalmente, cria a evidencia apontando a url
         const evidencia = await prisma.evidenciaAutoauditoria.create({
             data: {
                 autoauditoriaItemId: autoauditoriaItem.id,
                 url: webViewLink,
-                name: fileId, // Vamos guardar o FileID do drive no campo name ou criar um novo campo
+                name: fileId, // ID no Drive
             }
         });
 
@@ -554,7 +562,15 @@ app.post('/api/autoauditoria/evidencia/link', async (req: any, res: any) => {
             }
         });
 
-        // 3. Finalmente, cria a evidencia apontando a url
+        // 3. Limpeza de evidência de LINK anterior (Substituição de link por link)
+        await prisma.evidenciaAutoauditoria.deleteMany({
+            where: {
+                autoauditoriaItemId: autoauditoriaItem.id,
+                name: 'Manual Link'
+            }
+        });
+
+        // 4. Finalmente, cria a evidencia apontando a url
         const evidencia = await prisma.evidenciaAutoauditoria.create({
             data: {
                 autoauditoriaItemId: autoauditoriaItem.id,

@@ -15,8 +15,7 @@ interface AutoauditoriaRowProps {
   unidade: string;
   mesAno: string;
   tipo?: 'AUTO' | 'EXTERNA';
-  existingEvidenciaUrl?: string;
-  existingEvidenciaName?: string;
+  evidencias?: any[];
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
   cdPontoValue?: string;
@@ -33,22 +32,19 @@ export const AutoauditoriaRow = React.memo(({
   unidade,
   mesAno,
   tipo = 'AUTO',
-  existingEvidenciaUrl,
-  existingEvidenciaName,
+  evidencias = [],
   onEvidenciaUploaded,
   isNossaAcaoReadOnly = false,
   cdPontoValue
 }: AutoauditoriaRowProps) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
-  const [evidenciaUrl, setEvidenciaUrl] = useState<string | undefined>(existingEvidenciaUrl);
-  const [evidenceName, setEvidenceName] = useState<string | undefined>(existingEvidenciaName);
+  const [driveEvidencia, setDriveEvidencia] = useState(evidencias.find(e => e.tipo === 'DRIVE'));
+  const [manualLink, setManualLink] = useState(evidencias.find(e => e.tipo === 'LINK'));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [evidenceId, setEvidenceId] = useState<string | undefined>(undefined); // ID do Drive para análise
-  const [showCriteria, setShowCriteria] = useState(false);
   const [isCriteriaModalOpen, setIsCriteriaModalOpen] = useState(false);
 
   useEffect(() => {
@@ -56,9 +52,9 @@ export const AutoauditoriaRow = React.memo(({
   }, [nossaAcaoValue]);
 
   useEffect(() => {
-    setEvidenciaUrl(existingEvidenciaUrl);
-    setEvidenceName(existingEvidenciaName);
-  }, [existingEvidenciaUrl, existingEvidenciaName]);
+    setDriveEvidencia(evidencias.find(e => e.tipo === 'DRIVE'));
+    setManualLink(evidencias.find(e => e.tipo === 'LINK'));
+  }, [evidencias]);
 
   const handleNossaAcaoChange = (val: string) => {
     setLocalNossaAcao(val);
@@ -89,14 +85,7 @@ export const AutoauditoriaRow = React.memo(({
 
       const res = await api.uploadEvidenciaGoogleDrive(formData);
       if (res.success && res.url) {
-        setEvidenciaUrl(res.url);
         const driveId = res.evidencia?.name || '';
-        if (driveId) {
-          setEvidenceId(driveId);
-          setEvidenceName(driveId);
-        }
-
-        // Notifica o pai para persistir no estado global
         onEvidenciaUploaded?.(item.id, res.url, driveId);
       }
     } catch (error) {
@@ -123,10 +112,7 @@ export const AutoauditoriaRow = React.memo(({
         tipo
       });
       if (res.success && res.url) {
-        setEvidenciaUrl(res.url);
-        const driveId = 'Manual Link';
-        setEvidenceName(driveId);
-        onEvidenciaUploaded?.(item.id, res.url, driveId);
+        onEvidenciaUploaded?.(item.id, res.url, 'Manual Link');
       }
     } catch (error) {
       console.error('Erro ao salvar link:', error);
@@ -152,13 +138,13 @@ export const AutoauditoriaRow = React.memo(({
   };
 
   const handleAIAnalysis = async () => {
-    if (!evidenceId) {
+    if (!driveEvidencia?.id) {
       alert('ID da evidência não disponível para análise.');
       return;
     }
     try {
       setIsAnalyzing(true);
-      const res = await api.analyzeEvidence(item.pilar, item.bloco, item.item, item.descricao || '', evidenceId);
+      const res = await api.analyzeEvidence(item.pilar, item.bloco, item.item, item.descricao || '', driveEvidencia.id);
       if (res.analysis) {
         setAiAnalysis(res.analysis);
       }
@@ -403,21 +389,21 @@ export const AutoauditoriaRow = React.memo(({
       </td >
       <td className="px-1 py-1">
         <div className="flex flex-col items-center gap-1.5">
-          {evidenciaUrl && (
-            <a
-              href={evidenciaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-            >
-              Ver Evidência
-            </a>
-          )}
-
           <div className="grid grid-cols-2 gap-2 w-full">
             {/* Coluna Anexo (Drive) */}
-            <div className="flex flex-col items-center justify-center">
-              {evidenceName && evidenceName !== 'Manual Link' ? (
+            <div className="flex flex-col items-center justify-center gap-1">
+              {driveEvidencia && (
+                <a
+                  href={driveEvidencia.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[8px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                >
+                  Ver Anexo
+                </a>
+              )}
+              
+              {driveEvidencia ? (
                 <>
                   <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Anexo</span>
                   <motion.label
@@ -431,7 +417,7 @@ export const AutoauditoriaRow = React.memo(({
               ) : (
                 <motion.label
                   whileHover={{ scale: 1.02 }}
-                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-0.5 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
+                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-1 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
                 >
                   <Upload className="w-3 h-3 mb-0.5" />
                   <span>Anexo</span>
@@ -441,8 +427,19 @@ export const AutoauditoriaRow = React.memo(({
             </div>
 
             {/* Coluna Link (Manual) */}
-            <div className="flex flex-col items-center justify-center">
-              {evidenceName === 'Manual Link' ? (
+            <div className="flex flex-col items-center justify-center gap-1">
+              {manualLink && (
+                <a
+                  href={manualLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[8px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                >
+                  Ver Link
+                </a>
+              )}
+
+              {manualLink ? (
                 <>
                   <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Link</span>
                   <button
@@ -457,7 +454,7 @@ export const AutoauditoriaRow = React.memo(({
                 <button
                   onClick={handleLinkUpload}
                   disabled={!canEdit || isUploading}
-                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-0.5 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
+                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-1 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
                 >
                   <Link className="w-3 h-3 mb-0.5" />
                   <span>Link</span>
