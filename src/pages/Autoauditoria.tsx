@@ -230,13 +230,26 @@ export const Autoauditoria = () => {
   };
 
   const handleEvidenciaUploaded = (itemId: string, url: string, evidenceId: string) => {
-    setAutoauditoriaData(prev => ({
-      ...prev,
-      [itemId]: {
-        ...(prev[itemId] || { score: '', nossaAcao: '' }),
-        evidencias: [{ name: evidenceId, url, category: 'Drive' }]
-      }
-    }));
+    setAutoauditoriaData(prev => {
+      const currentEvidencias = prev[itemId]?.evidencias || [];
+      const isManualLink = evidenceId === 'Manual Link';
+      
+      // Filtra para manter apenas as de OUTRA categoria
+      const otherEvidencias = currentEvidencias.filter(e => 
+        isManualLink ? e.name !== 'Manual Link' : e.name === 'Manual Link'
+      );
+
+      // Adiciona a nova
+      const newEvidencia = { name: evidenceId, url, category: isManualLink ? 'Manual' : 'Drive' };
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...(prev[itemId] || { score: '', nossaAcao: '' }),
+          evidencias: [...otherEvidencias, newEvidencia]
+        }
+      };
+    });
     // Forçar auto-save
     pendingEdits.current.add(itemId);
     needsSave.current = true;

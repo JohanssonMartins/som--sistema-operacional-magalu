@@ -39,8 +39,8 @@ export const AutoauditoriaRow = React.memo(({
 }: AutoauditoriaRowProps) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
   const [isUploading, setIsUploading] = useState(false);
-  const [driveEvidencia, setDriveEvidencia] = useState(evidencias.find(e => e.tipo === 'DRIVE'));
-  const [manualLink, setManualLink] = useState(evidencias.find(e => e.tipo === 'LINK'));
+  const [driveEvidencia, setDriveEvidencia] = useState(evidencias.find(e => e.name !== 'Manual Link'));
+  const [manualLink, setManualLink] = useState(evidencias.find(e => e.name === 'Manual Link'));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -52,8 +52,8 @@ export const AutoauditoriaRow = React.memo(({
   }, [nossaAcaoValue]);
 
   useEffect(() => {
-    setDriveEvidencia(evidencias.find(e => e.tipo === 'DRIVE'));
-    setManualLink(evidencias.find(e => e.tipo === 'LINK'));
+    setDriveEvidencia(evidencias.find(e => e.name !== 'Manual Link'));
+    setManualLink(evidencias.find(e => e.name === 'Manual Link'));
   }, [evidencias]);
 
   const handleNossaAcaoChange = (val: string) => {
