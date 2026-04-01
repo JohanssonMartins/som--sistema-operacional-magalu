@@ -209,13 +209,16 @@ export const AutoauditoriaRow = React.memo(({
                   ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
                   : pontoValue === '0'
                     ? 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300 border-red-300 dark:border-red-500/30'
-                    : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
+                    : pontoValue === 'N/A'
+                      ? 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border-gray-300 dark:border-zinc-700'
+                      : 'bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-white'
                 }`}
             >
               <option value=""></option>
               <option value="1">1</option>
               <option value="3">3</option>
               <option value="0">0</option>
+              <option value="N/A">N/A</option>
             </select>
 
             {/* Slot Direito: Botão de Critérios */}
