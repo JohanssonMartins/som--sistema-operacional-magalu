@@ -203,7 +203,7 @@ export const AutoauditoriaRow = React.memo(({
               value={pontoValue}
               disabled={!canEdit}
               onChange={(e) => onPontoChange(item.id, e.target.value)}
-              className={`w-10 h-7 border border-gray-200 dark:border-zinc-800 rounded-md px-0.5 py-0 text-xs font-bold transition-all text-center shrink-0 ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
+              className={`w-12 h-7 border border-gray-200 dark:border-zinc-800 rounded-md px-0.5 py-0 text-xs font-bold transition-all text-center shrink-0 ${!canEdit ? 'opacity-70 cursor-not-allowed' : 'focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm'} ${pontoValue === '3'
                 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
                 : pontoValue === '1'
                   ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
