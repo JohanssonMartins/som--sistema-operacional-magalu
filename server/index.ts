@@ -514,6 +514,66 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
     }
 });
 
+// Novo Endpoint para Salvar Link Manual
+app.post('/api/autoauditoria/evidencia/link', async (req: any, res: any) => {
+    try {
+        const { unidade, mesAno, baseItemId, url, tipo = 'AUTO' } = req.body;
+
+        if (!unidade || !mesAno || !baseItemId || !url) {
+            return res.status(400).json({ error: 'Faltam dados essenciais para salvar o link.' });
+        }
+
+        console.log(`[Link Manual] Salvando link para: ${mesAno} > CD ${unidade} > Item ${baseItemId} (${tipo})`);
+
+        // 1. Garantir que a autoauditoria pai existe
+        const autoauditoria = await prisma.autoauditoria.upsert({
+            where: {
+                unidade_mesAno_tipo: { unidade, mesAno, tipo }
+            },
+            update: {},
+            create: {
+                unidade,
+                mesAno,
+                tipo,
+                status: 'Pendente de Auditoria'
+            }
+        });
+
+        // 2. Upsert do Item que vai levar a evidencia (tabela pai da evidencia)
+        const autoauditoriaItem = await prisma.autoauditoriaItem.upsert({
+            where: {
+                autoauditoriaId_baseItemId: {
+                    autoauditoriaId: autoauditoria.id,
+                    baseItemId: baseItemId
+                }
+            },
+            update: {},
+            create: {
+                autoauditoriaId: autoauditoria.id,
+                baseItemId: baseItemId
+            }
+        });
+
+        // 3. Finalmente, cria a evidencia apontando a url
+        const evidencia = await prisma.evidenciaAutoauditoria.create({
+            data: {
+                autoauditoriaItemId: autoauditoriaItem.id,
+                url: url,
+                name: 'Manual Link', // Identificador para saber que não é do Drive
+            }
+        });
+
+        res.json({ success: true, url, evidencia });
+
+        // Notifica clientes que houve mudança nos dados
+        notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+
+    } catch (error: any) {
+        console.error('[Link Manual] Error:', error);
+        res.status(500).json({ error: 'Falha ao salvar link manual', details: error?.message });
+    }
+});
+
 // AI endpoints
 app.post('/api/ai/suggest-action', async (req, res) => {
     try {

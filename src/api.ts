@@ -131,5 +131,14 @@ export const api = {
         });
         if (!res.ok) throw new Error('Falha ao analisar evidência com IA');
         return res.json();
+    },
+    saveEvidenciaLink: async (data: { baseItemId: string, url: string, unidade: string, mesAno: string, tipo: string }) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/evidencia/link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Falha ao salvar o link de evidência');
+        return res.json();
     }
 };

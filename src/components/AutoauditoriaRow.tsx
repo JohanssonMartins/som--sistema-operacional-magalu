@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2, HelpCircle } from 'lucide-react';
+import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2, HelpCircle, Link } from 'lucide-react';
 import { ChecklistItem } from '../data';
 import { api } from '../api';
 
@@ -98,6 +98,33 @@ export const AutoauditoriaRow = React.memo(({
     } finally {
       setIsUploading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleLinkUpload = async () => {
+    if (!canEdit) return;
+    const url = window.prompt('Cole aqui o link da evidência (ex: SharePoint, Notion, etc):');
+    if (!url || !url.trim()) return;
+
+    try {
+      setIsUploading(true);
+      const res = await api.saveEvidenciaLink({
+        baseItemId: item.id,
+        url: url.trim(),
+        unidade,
+        mesAno,
+        tipo
+      });
+      if (res.success && res.url) {
+        setEvidenciaUrl(res.url);
+        const driveId = 'Manual Link';
+        onEvidenciaUploaded?.(item.id, res.url, driveId);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar link:', error);
+      alert('Falha ao salvar o link de evidência.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -385,6 +412,15 @@ export const AutoauditoriaRow = React.memo(({
             <span>{isUploading ? '...' : (evidenciaUrl ? 'Trocar' : 'Anexar')}</span>
             <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
           </motion.label>
+
+          <button
+            onClick={handleLinkUpload}
+            disabled={!canEdit || isUploading}
+            className={`inline-flex items-center justify-center space-x-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-0.5 text-[9px] font-bold transition-colors w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <Link className="w-2.5 h-2.5" />
+            <span>Link</span>
+          </button>
         </div>
       </td>
     </motion.tr >
