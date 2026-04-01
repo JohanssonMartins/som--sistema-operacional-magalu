@@ -27,6 +27,12 @@ if (process.env.GOOGLE_CREDENTIALS) {
     }
 }
 
+if (!credentials) {
+    console.error("⚠️ ERRO CRÍTICO: Nenhuma credencial do Google encontrada. O upload do Drive não funcionará!");
+} else {
+    console.log("✅ Credenciais do Google Drive detectadas com sucesso.");
+}
+
 // Iniciar a autenticação
 const auth = new google.auth.GoogleAuth({
     credentials,
@@ -71,6 +77,7 @@ export const googleDriveService = {
                 supportsAllDrives: true
             });
 
+            console.log(`[Drive] Pasta criada com sucesso: ${folderName} (ID: ${folder.data.id})`);
             return folder.data.id!;
         } catch (error) {
             console.error(`Erro ao buscar ou criar a pasta: ${folderName}`, error);
@@ -123,16 +130,20 @@ export const googleDriveService = {
             supportsAllDrives: true
         });
 
-        // É preciso garantir que todos tenham permissão de leitura nesse arquivo caso o root não propague
-        // (Apenas de precaução, usualmente o diretório parent já aplica permissão, mas o Google Drives Service Account é chato as vezes).
-        await drive.permissions.create({
-            fileId: response.data.id!,
-            requestBody: {
-                role: 'reader',
-                type: 'anyone'
-            },
-            supportsAllDrives: true
-        });
+        // 3. Tornar o arquivo público (opcional, pois algumas empresas bloqueiam)
+        try {
+            await drive.permissions.create({
+                fileId: response.data.id!,
+                requestBody: {
+                    role: 'reader',
+                    type: 'anyone'
+                },
+                supportsAllDrives: true
+            });
+            console.log(`[Drive] Permissão 'público' aplicada com sucesso.`);
+        } catch (permError: any) {
+            console.warn(`[Drive] ALERTA: Não foi possível tornar o arquivo público. Isso é comum em contas corporativas. O upload continuará. Erro: ${permError.message}`);
+        }
 
         return {
             id: response.data.id!,
