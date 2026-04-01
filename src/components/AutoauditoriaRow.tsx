@@ -388,81 +388,103 @@ export const AutoauditoriaRow = React.memo(({
         </AnimatePresence>
       </td >
       <td className="px-1 py-1">
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="grid grid-cols-2 gap-2 w-full">
-            {/* Coluna Anexo (Drive) */}
-            <div className="flex flex-col items-center justify-center gap-1">
-              {driveEvidencia && (
-                <a
-                  href={driveEvidencia.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[8px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                >
-                  Ver Anexo
-                </a>
-              )}
-              
-              {driveEvidencia ? (
-                <>
+        <div className="flex flex-col items-center">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 w-full text-center">
+            
+            {/* --- COLUNA ANEXO (DRIVE) --- */}
+            <div className="flex flex-col items-center justify-between min-h-[60px]">
+              {/* Linha 1: Ver */}
+              <div className="h-4 flex items-center">
+                {driveEvidencia && (
+                  <a
+                    href={driveEvidencia.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[9px] font-bold text-blue-600 hover:underline"
+                  >
+                    Ver
+                  </a>
+                )}
+              </div>
+
+              {/* Linha 2: Nome (Fica Azul se existir) */}
+              <div className="flex flex-col items-center">
+                {driveEvidencia ? (
                   <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Anexo</span>
+                ) : (
                   <motion.label
                     whileHover={{ scale: 1.05 }}
-                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer decoration-dotted underline underline-offset-2"
+                    className={`flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 cursor-pointer hover:text-blue-500 transition-colors ${isUploading ? 'opacity-50' : ''}`}
+                  >
+                    <Upload className="w-3 h-3 mb-0.5" />
+                    <span>Anexo</span>
+                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                  </motion.label>
+                )}
+              </div>
+
+              {/* Linha 3: Edite (Discreto) */}
+              <div className="h-4 flex items-center">
+                {driveEvidencia && (
+                  <motion.label
+                    whileHover={{ scale: 1.05 }}
+                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2"
                   >
                     Edite
                     <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
                   </motion.label>
-                </>
-              ) : (
-                <motion.label
-                  whileHover={{ scale: 1.02 }}
-                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-1 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
-                >
-                  <Upload className="w-3 h-3 mb-0.5" />
-                  <span>Anexo</span>
-                  <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
-                </motion.label>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Coluna Link (Manual) */}
-            <div className="flex flex-col items-center justify-center gap-1">
-              {manualLink && (
-                <a
-                  href={manualLink.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[8px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900 w-full text-center hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                >
-                  Ver Link
-                </a>
-              )}
+            {/* --- COLUNA LINK (MANUAL) --- */}
+            <div className="flex flex-col items-center justify-between min-h-[60px]">
+              {/* Linha 1: Ver */}
+              <div className="h-4 flex items-center">
+                {manualLink && (
+                  <a
+                    href={manualLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[9px] font-bold text-blue-600 hover:underline"
+                  >
+                    Ver
+                  </a>
+                )}
+              </div>
 
-              {manualLink ? (
-                <>
+              {/* Linha 2: Nome (Fica Azul se existir) */}
+              <div className="flex flex-col items-center">
+                {manualLink ? (
                   <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Link</span>
+                ) : (
                   <button
                     onClick={handleLinkUpload}
                     disabled={!canEdit || isUploading}
-                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer decoration-dotted underline underline-offset-2 disabled:opacity-50"
+                    className="flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors disabled:opacity-50"
+                  >
+                    <Link className="w-3 h-3 mb-0.5" />
+                    <span>Link</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Linha 3: Edite (Discreto) */}
+              <div className="h-4 flex items-center">
+                {manualLink && (
+                  <button
+                    onClick={handleLinkUpload}
+                    disabled={!canEdit || isUploading}
+                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
                   >
                     Edite
                   </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleLinkUpload}
-                  disabled={!canEdit || isUploading}
-                  className={`flex flex-col items-center justify-center text-[10px] font-bold transition-all px-1 py-1 rounded w-full border border-dashed ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400'}`}
-                >
-                  <Link className="w-3 h-3 mb-0.5" />
-                  <span>Link</span>
-                </button>
-              )}
+                )}
+              </div>
             </div>
+            
           </div>
-          {isUploading && <div className="text-[8px] animate-pulse text-blue-500 font-bold">Processando...</div>}
+          {isUploading && <div className="text-[8px] animate-pulse text-blue-500 font-bold mt-1">Lendo...</div>}
         </div>
       </td>
     </motion.tr >
