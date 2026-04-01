@@ -63,12 +63,8 @@ export const App = () => {
       setUsersList(u);
       setBaseItems(b);
     } catch (e) {
-      console.error("Erro ao carregar dados iniciais da API:", e);
-      // Fallback para mocks em caso de erro da API ou falta de conexão
-      import('./data').then(m => {
-        setUsersList(m.MOCK_USERS);
-        setBaseItems(m.INITIAL_CHECKLIST);
-      });
+      console.error("Erro crítico ao conectar com o banco de dados Supabase:", e);
+      // Mantivemos vazio para não confundir o usuário com dados fakes
     }
   };
 

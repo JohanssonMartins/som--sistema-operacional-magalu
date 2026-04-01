@@ -48,8 +48,8 @@ export const useStore = create<AppState>()(
       activeTab: 'home',
 
       items: [],
-      baseItems: INITIAL_CHECKLIST,
-      usersList: MOCK_USERS,
+      baseItems: [],
+      usersList: [],
       allAutoauditorias: [],
       autoauditoriaData: {},
       avaliacaoExternaData: {},
