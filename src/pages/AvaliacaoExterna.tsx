@@ -549,7 +549,18 @@ export const AvaliacaoExterna = () => {
                         pontoValue={autoauditoriaData[item.id]?.score || ''}
                         // Prioriza o que o Auditor preencheu, senão mostra o do CD para validação
                         nossaAcaoValue={autoauditoriaData[item.id]?.nossaAcao || autoReferenceData[item.id]?.nossaAcao || ''}
-                        existingEvidenciaUrl={autoauditoriaData[item.id]?.evidencias?.[0]?.url || autoReferenceData[item.id]?.evidencias?.[0]?.url}
+                        evidencias={(() => {
+                          const auditorEvs = autoauditoriaData[item.id]?.evidencias || [];
+                          const cdEvs = autoReferenceData[item.id]?.evidencias || [];
+                          // Combina os dois, priorizando o do Auditor se houver duplicata de nome (raro)
+                          const combined = [...auditorEvs];
+                          cdEvs.forEach((cdEv: any) => {
+                            if (!combined.find(ae => ae.name === cdEv.name)) {
+                              combined.push(cdEv);
+                            }
+                          });
+                          return combined;
+                        })()}
                         onPontoChange={handlePontoChange}
                         onNossaAcaoChange={handleNossaAcaoChange}
                         onNossaAcaoBlur={handleNossaAcaoBlur}
@@ -558,6 +569,7 @@ export const AvaliacaoExterna = () => {
                         mesAno={localMesAno}
                         tipo="EXTERNA"
                         isNossaAcaoReadOnly={true}
+                        isEvidenceReadOnly={currentUser?.role === 'AUDITOR'}
                         cdPontoValue={autoReferenceData[item.id]?.score || ''}
                       />
                     ))}

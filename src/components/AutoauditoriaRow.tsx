@@ -18,6 +18,7 @@ interface AutoauditoriaRowProps {
   evidencias?: any[];
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
+  isEvidenceReadOnly?: boolean;
   cdPontoValue?: string;
 }
 
@@ -35,6 +36,7 @@ export const AutoauditoriaRow = React.memo(({
   evidencias = [],
   onEvidenciaUploaded,
   isNossaAcaoReadOnly = false,
+  isEvidenceReadOnly = false,
   cdPontoValue
 }: AutoauditoriaRowProps) => {
   const [localNossaAcao, setLocalNossaAcao] = useState(nossaAcaoValue);
@@ -406,23 +408,30 @@ export const AutoauditoriaRow = React.memo(({
                   >
                     Ver Anexo
                   </a>
-                  <motion.label
-                    whileHover={{ scale: 1.05 }}
-                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2"
-                  >
-                    Edite
-                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
-                  </motion.label>
+                  {!isEvidenceReadOnly && (
+                    <motion.label
+                      whileHover={{ scale: 1.05 }}
+                      className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2"
+                    >
+                      Edite
+                      <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                    </motion.label>
+                  )}
                 </>
               ) : (
-                <motion.label
-                  whileHover={{ scale: 1.05 }}
-                  className={`flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 cursor-pointer hover:text-blue-500 transition-colors ${isUploading ? 'opacity-50' : ''}`}
-                >
-                  <Upload className="w-3 h-3 mb-0.5" />
-                  <span>Anexo</span>
-                  <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
-                </motion.label>
+                !isEvidenceReadOnly && (
+                  <motion.label
+                    whileHover={{ scale: 1.05 }}
+                    className={`flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 cursor-pointer hover:text-blue-500 transition-colors ${isUploading ? 'opacity-50' : ''}`}
+                  >
+                    <Upload className="w-3 h-3 mb-0.5" />
+                    <span>Anexo</span>
+                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                  </motion.label>
+                )
+              )}
+              {isEvidenceReadOnly && !driveEvidencia && (
+                <span className="text-[10px] text-gray-400 italic">Sem anexo</span>
               )}
             </div>
 
@@ -438,23 +447,30 @@ export const AutoauditoriaRow = React.memo(({
                   >
                     Ver Link
                   </a>
+                  {!isEvidenceReadOnly && (
+                    <button
+                      onClick={handleLinkUpload}
+                      disabled={!canEdit || isUploading}
+                      className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
+                    >
+                      Edite
+                    </button>
+                  )}
+                </>
+              ) : (
+                !isEvidenceReadOnly && (
                   <button
                     onClick={handleLinkUpload}
                     disabled={!canEdit || isUploading}
-                    className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
+                    className="flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors disabled:opacity-50"
                   >
-                    Edite
+                    <Link className="w-3 h-3 mb-0.5" />
+                    <span>Link</span>
                   </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleLinkUpload}
-                  disabled={!canEdit || isUploading}
-                  className="flex flex-col items-center text-[10px] font-bold text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors disabled:opacity-50"
-                >
-                  <Link className="w-3 h-3 mb-0.5" />
-                  <span>Link</span>
-                </button>
+                )
+              )}
+              {isEvidenceReadOnly && !manualLink && (
+                <span className="text-[10px] text-gray-400 italic">Sem link</span>
               )}
             </div>
             
