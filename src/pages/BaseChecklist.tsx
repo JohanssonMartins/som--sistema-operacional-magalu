@@ -365,11 +365,8 @@ export const BaseChecklist = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
                             {filteredItems.map((item, idx) => (
-                                <motion.tr
+                                <tr
                                     key={item.id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.01 }}
                                     className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
                                 >
                                     <td className="px-4 py-4 font-medium text-gray-900 dark:text-zinc-200 whitespace-nowrap">{item.pilar}</td>
@@ -459,7 +456,7 @@ export const BaseChecklist = () => {
                                             )}
                                         </div>
                                     </td>
-                                </motion.tr>
+                                </tr>
                             ))}
                         </tbody>
                     </table>

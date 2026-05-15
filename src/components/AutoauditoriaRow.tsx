@@ -159,10 +159,7 @@ export const AutoauditoriaRow = React.memo(({
   };
 
   return (
-    <motion.tr
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
+    <tr
       className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
     >
       <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
@@ -478,6 +475,6 @@ export const AutoauditoriaRow = React.memo(({
           {isUploading && <div className="text-[8px] animate-pulse text-blue-500 font-bold mt-1">Lendo...</div>}
         </div>
       </td>
-    </motion.tr >
+    </tr >
   );
 });
