@@ -148,10 +148,17 @@ export const BaseChecklist = () => {
                 let skipCount = 0;
 
                 const newItems: Partial<ChecklistItem>[] = [];
+                const formatTitleCase = (text: string) => {
+                    if (!text) return '';
+                    return text.trim().toLowerCase().split(' ').map((word, i) => {
+                        if (i > 0 && ['e', 'de', 'da', 'do', 'das', 'dos', 'em', 'com', 'por', 'para', 'a', 'o', 'as', 'os'].includes(word)) return word;
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    }).join(' ');
+                };
                 
                 jsonData.forEach((row, index) => {
-                    const pilar = String(getVal(row, 'Pilar') || '').trim();
-                    const bloco = String(getVal(row, 'Bloco') || '').trim();
+                    const pilar = formatTitleCase(String(getVal(row, 'Pilar') || ''));
+                    const bloco = formatTitleCase(String(getVal(row, 'Bloco') || ''));
                     const item = String(getVal(row, 'Item (Pergunta/Verificação)', 'Item', 'Pergunta') || '').trim();
                     
                     const key = `${pilar.toLowerCase()}|${bloco.toLowerCase()}|${item.toLowerCase()}`;
@@ -368,8 +375,8 @@ export const BaseChecklist = () => {
                                         key={item.id}
                                         className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
                                     >
-                                        <td className="px-4 py-4 font-medium text-gray-900 dark:text-zinc-200 whitespace-nowrap">{item.pilar}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap">{item.bloco}</td>
+                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-800 dark:text-zinc-200 whitespace-nowrap lowercase capitalize">{item.pilar}</td>
+                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-600 dark:text-zinc-300 whitespace-nowrap lowercase capitalize">{item.bloco}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-xs">
                                             {item.trilha ? (
                                                 <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100 dark:border-amber-500/20">
