@@ -119,93 +119,24 @@ export const App = () => {
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route
-            path="/login"
-            element={!currentUser ? <Login /> : <Navigate to="/" replace />}
-          />
-
-          <Route
-            path="/"
-            element={
-              currentUser ? (
-                <Shell>
-                  <Dashboard />
-                </Shell>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-
-          <Route
-            path="/rank"
-            element={
-              currentUser ? (
-                <Shell>
-                  <Rank />
-                </Shell>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-
-          <Route
-            path="/autoauditoria"
-            element={
-              currentUser && currentUser.role !== 'AUDITOR' ? (
-                <Shell>
-                  <Autoauditoria />
-                </Shell>
-              ) : (
-                <Navigate to={currentUser ? "/" : "/login"} replace />
-              )
-            }
-          />
-
-          <Route
-            path="/avaliacao-externa"
-            element={
-              currentUser && ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'].includes(currentUser.role) ? (
-                <Shell>
-                  <AvaliacaoExterna />
-                </Shell>
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-
-          <Route
-            path="/base-checklist"
-            element={
-              currentUser && ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'].includes(currentUser.role) ? (
-                <Shell>
-                  <BaseChecklist />
-                </Shell>
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-
-          <Route
-            path="/usuarios"
-            element={
-              currentUser && currentUser.role === 'ADMIN' ? (
-                <Shell>
-                  <UserManagement />
-                </Shell>
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {currentUser ? (
+          <Shell>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/rank" element={<Rank />} />
+              {currentUser.role !== 'AUDITOR' && <Route path="/autoauditoria" element={<Autoauditoria />} />}
+              {['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'].includes(currentUser.role) && <Route path="/avaliacao-externa" element={<AvaliacaoExterna />} />}
+              {['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'].includes(currentUser.role) && <Route path="/base-checklist" element={<BaseChecklist />} />}
+              {currentUser.role === 'ADMIN' && <Route path="/usuarios" element={<UserManagement />} />}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Shell>
+        ) : (
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        )}
       </Suspense>
     </BrowserRouter>
   );

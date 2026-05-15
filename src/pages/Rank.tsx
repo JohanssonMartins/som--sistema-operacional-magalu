@@ -181,11 +181,8 @@ export const Rank = () => {
                 const division = CD_REGIONS[unidade]?.divisao || 'Geral';
 
                 return (
-                  <motion.tr
+                  <tr
                     key={unidade}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
                     className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors odd:bg-white even:bg-gray-50 dark:odd:bg-zinc-900 dark:even:bg-zinc-800/50"
                   >
                     <td className="px-6 py-5 font-bold text-gray-900 dark:text-zinc-100 border-r border-gray-200 dark:border-zinc-700 sticky left-0 bg-inherit shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(63,63,70,1)] z-10 w-48">
@@ -250,7 +247,7 @@ export const Rank = () => {
                         </td>
                       );
                     })}
-                  </motion.tr>
+                  </tr>
                 );
               })}
             </tbody>
