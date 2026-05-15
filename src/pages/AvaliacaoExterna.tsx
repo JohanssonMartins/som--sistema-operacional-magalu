@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
 import { getPilarWeight, getBlocoWeight } from '../utils/appUtils';
@@ -42,7 +43,17 @@ export const AvaliacaoExterna = () => {
     baseItems,
     allAutoauditorias,
     setAllAutoauditorias
-  } = useStore();
+  } = useStore(useShallow(state => ({
+    currentUser: state.currentUser,
+    selectedUnit: state.selectedUnit,
+    setSelectedUnit: state.setSelectedUnit,
+    autoauditoriaMesAno: state.autoauditoriaMesAno,
+    avaliacaoExternaData: state.avaliacaoExternaData,
+    setAvaliacaoExternaData: state.setAvaliacaoExternaData,
+    baseItems: state.baseItems,
+    allAutoauditorias: state.allAutoauditorias,
+    setAllAutoauditorias: state.setAllAutoauditorias
+  })));
 
   const [autoReferenceData, setAutoReferenceData] = useState<Record<string, any>>({});
 
@@ -242,23 +253,23 @@ export const AvaliacaoExterna = () => {
     return () => clearTimeout(timeoutId);
   }, [autoauditoriaData, selectedUnit, autoauditoriaMesAno, currentUser]);
 
-  const handlePontoChange = (itemId: string, newPonto: string) => {
+  const handlePontoChange = useCallback((itemId: string, newPonto: string) => {
     pendingEdits.current.add(itemId);
     needsSave.current = true;
     setAutoauditoriaData(prev => ({
       ...prev,
       [itemId]: { ...(prev[itemId] || { nossaAcao: '' }), score: newPonto }
     }));
-  };
+  }, [setAutoauditoriaData]);
 
-  const handleNossaAcaoChange = (itemId: string, newAcao: string) => {
+  const handleNossaAcaoChange = useCallback((itemId: string, newAcao: string) => {
     setAutoauditoriaData(prev => ({
       ...prev,
       [itemId]: { ...(prev[itemId] || { score: '' }), nossaAcao: newAcao }
     }));
-  };
+  }, [setAutoauditoriaData]);
 
-  const handleEvidenciaUploaded = (itemId: string, url: string, evidenceId: string) => {
+  const handleEvidenciaUploaded = useCallback((itemId: string, url: string, evidenceId: string) => {
     setAutoauditoriaData(prev => ({
       ...prev,
       [itemId]: {
@@ -269,14 +280,14 @@ export const AvaliacaoExterna = () => {
     // Forçar auto-save
     pendingEdits.current.add(itemId);
     needsSave.current = true;
-  };
+  }, [setAutoauditoriaData]);
 
-  const handleNossaAcaoBlur = (itemId: string, finalAcao: string) => {
+  const handleNossaAcaoBlur = useCallback((itemId: string, finalAcao: string) => {
     pendingEdits.current.add(itemId);
     needsSave.current = true;
     // Trigger save via useEffect
     setAutoauditoriaData(prev => ({ ...prev }));
-  };
+  }, [setAutoauditoriaData]);
 
   const canEdit = currentUser && ['ADMIN', 'AUDITOR', 'DIRETORIA'].includes(currentUser.role) &&
     (currentUser.role === 'ADMIN' || currentUser.role === 'AUDITOR' || currentUser.role === 'DIRETORIA');

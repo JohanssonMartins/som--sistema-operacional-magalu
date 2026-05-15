@@ -2,6 +2,7 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useStore } from './store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { api } from './api';
 import { useRealtime } from './hooks/useRealtime';
 
@@ -49,9 +50,16 @@ export const App = () => {
     autoauditoriaMesAno,
     setAllAutoauditorias,
     selectedUnit
-  } = useStore();
+  } = useStore(useShallow(state => ({
+    currentUser: state.currentUser,
+    setUsersList: state.setUsersList,
+    setBaseItems: state.setBaseItems,
+    autoauditoriaMesAno: state.autoauditoriaMesAno,
+    setAllAutoauditorias: state.setAllAutoauditorias,
+    selectedUnit: state.selectedUnit
+  })));
 
-  const { onEvent } = useRealtime();
+  const { socket } = useRealtime();
 
   // Load Initial Data
   const loadInitialData = async () => {
@@ -86,11 +94,19 @@ export const App = () => {
   }, [autoauditoriaMesAno]);
 
   // Real-time Listeners
-  onEvent('autoauditoria_updated', (data: { unidade: string, mesAno: string }) => {
-    if (data.mesAno === autoauditoriaMesAno) {
-      loadGlobalAudits();
-    }
-  });
+  useEffect(() => {
+    if (!socket) return;
+    const handleAutoauditoriaUpdated = (data: { unidade: string, mesAno: string }) => {
+      if (data.mesAno === autoauditoriaMesAno) {
+        loadGlobalAudits();
+      }
+    };
+    
+    socket.on('autoauditoria_updated', handleAutoauditoriaUpdated);
+    return () => {
+      socket.off('autoauditoria_updated', handleAutoauditoriaUpdated);
+    };
+  }, [socket, autoauditoriaMesAno]);
 
 
   // Global Styles / Effect

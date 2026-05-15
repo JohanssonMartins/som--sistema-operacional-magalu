@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, RefreshCw, ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { dashboardData, CD_NAMES, PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
@@ -9,7 +10,13 @@ import { api } from '../api';
 import { getPerformanceStatus } from '../utils/appUtils';
 
 export const Dashboard = () => {
-  const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore();
+  const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore(useShallow(state => ({
+    selectedUnit: state.selectedUnit,
+    setSelectedUnit: state.setSelectedUnit,
+    autoauditoriaMesAno: state.autoauditoriaMesAno,
+    setAutoauditoriaMesAno: state.setAutoauditoriaMesAno,
+    allAutoauditorias: state.allAutoauditorias
+  })));
 
   const [filterDivisional, setFilterDivisional] = useState<string>('Todas');
   const [filterPilar, setFilterPilar] = useState<string>('Todos');

@@ -2,12 +2,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Database, Check, X, Edit2, Trash2, Save, FileUp, Download, Filter, RotateCcw } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
 import * as XLSX from 'xlsx';
 
 export const BaseChecklist = () => {
-    const { baseItems, setBaseItems, currentUser } = useStore();
+    const { baseItems, setBaseItems, currentUser } = useStore(useShallow(state => ({
+        baseItems: state.baseItems,
+        setBaseItems: state.setBaseItems,
+        currentUser: state.currentUser
+    })));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [editingItem, setEditingItem] = useState<ChecklistItem | null>(null);
