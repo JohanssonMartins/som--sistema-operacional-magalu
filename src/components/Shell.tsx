@@ -7,6 +7,7 @@ import {
   Sun, Moon, LogOut, Lock, User as UserIcon, Check, X
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { MainLogo } from './Logos';
 import { UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
 import { getDueDateStatus } from '../utils/appUtils';
@@ -22,7 +23,17 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     isSidebarCollapsed, setIsSidebarCollapsed,
     selectedUnit, setSelectedUnit,
     items
-  } = useStore();
+  } = useStore(useShallow(state => ({
+    currentUser: state.currentUser,
+    logout: state.logout,
+    theme: state.theme,
+    toggleTheme: state.toggleTheme,
+    isSidebarCollapsed: state.isSidebarCollapsed,
+    setIsSidebarCollapsed: state.setIsSidebarCollapsed,
+    selectedUnit: state.selectedUnit,
+    setSelectedUnit: state.setSelectedUnit,
+    items: state.items
+  })));
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -347,7 +358,6 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       </motion.aside>
 
       <motion.main
-        layout
         className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto"
       >
         <div className="p-6">
