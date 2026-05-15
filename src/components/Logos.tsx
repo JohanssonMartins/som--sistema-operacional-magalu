@@ -73,12 +73,12 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
 
   return (
     <div
-      className={`flex items-center justify-center ${className} select-none ${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-20'} animate-in fade-in zoom-in-95 duration-500`}
+      className={`flex items-center justify-center w-full ${className} select-none ${isSmall ? 'h-10' : isLarge ? 'h-40' : 'h-20'} animate-in fade-in zoom-in-95 duration-500`}
     >
       <img
         src={logoImg}
         alt="Magalog Logo"
-        className={`max-h-full max-w-full object-contain transition-all duration-500 hover:brightness-110 drop-shadow-sm`}
+        className={`h-full w-auto object-contain transition-all duration-500 hover:brightness-110 drop-shadow-sm`}
         style={{ filter: 'brightness(1.1) contrast(1.05)' }}
       />
     </div>

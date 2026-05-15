@@ -293,10 +293,10 @@ export const Autoauditoria = () => {
 
   return (
     <div
-      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200"
     >
       {/* ── Header ── */}
-      <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+      <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-left-4 duration-200">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Autoavaliação Mensal</h2>

@@ -80,12 +80,12 @@ export const Dashboard = () => {
 
   return (
     <div
-      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200"
     >
       <div className="flex flex-col gap-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div
-            className="animate-in fade-in slide-in-from-left-4 duration-500 delay-100"
+            className="animate-in fade-in slide-in-from-left-4 duration-200"
           >
             <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
               {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
@@ -165,7 +165,7 @@ export const Dashboard = () => {
 
         {/* Status Legend */}
         <div
-          className="flex justify-end w-full animate-in fade-in zoom-in-95 duration-500 delay-200"
+          className="flex justify-end w-full animate-in fade-in zoom-in-95 duration-200"
         >
           <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800 w-fit">
             <div className="flex items-center gap-1.5">

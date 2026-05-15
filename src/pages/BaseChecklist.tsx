@@ -222,10 +222,10 @@ export const BaseChecklist = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
             <div className="flex flex-col gap-5">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-200">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-300">
                             <Database className="w-6 h-6 text-white" />
                         </div>

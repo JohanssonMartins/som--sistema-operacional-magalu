@@ -115,20 +115,20 @@ export const Rank = () => {
 
   return (
     <div
-      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200"
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <TopMagalogLogo />
           <p
-            className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1 animate-in fade-in duration-700 delay-300"
+            className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1 animate-in fade-in duration-300"
           >
             Acompanhamento consolidado de Aderência Oficial por CD e Pilar.
           </p>
         </div>
 
         <div
-          className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px] animate-in fade-in slide-in-from-right-4 duration-500 delay-200"
+          className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px] animate-in fade-in slide-in-from-right-4 duration-200"
         >
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2">

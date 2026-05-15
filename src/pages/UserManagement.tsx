@@ -87,7 +87,7 @@ export const UserManagement = () => {
 
   return (
     <div
-      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200"
     >
       <div className="flex justify-between items-center mb-6">
         <div>

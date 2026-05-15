@@ -119,8 +119,14 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       <motion.aside
         initial={false}
         animate={{ width: isSidebarCollapsed ? 80 : 256 }}
-        className="bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl"
+        className="bg-white dark:bg-zinc-900/80 border-r border-gray-200 dark:border-zinc-800 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300 z-50 backdrop-blur-xl relative"
       >
+        {/* Barra de gradiente colorida */}
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-1 z-50"
+          style={{ background: 'linear-gradient(to bottom, #FACC15, #FB923C, #FB7185, #EC4899, #A855F7, #3B82F6, #06B6D4, #22C55E)' }}
+        />
+
         <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden`}>
           {!isSidebarCollapsed && (
             <div
@@ -351,7 +357,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       </motion.aside>
 
       <main
-        className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto animate-in fade-in duration-500"
+        className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto animate-in fade-in duration-200"
       >
         <div className="p-6">
           {children}
