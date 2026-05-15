@@ -114,29 +114,21 @@ export const Rank = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    <div
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <TopMagalogLogo />
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1"
+          <p
+            className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1 animate-in fade-in duration-700 delay-300"
           >
             Acompanhamento consolidado de Aderência Oficial por CD e Pilar.
-          </motion.p>
+          </p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px]"
+        <div
+          className="bg-[#1a1a1a] dark:bg-zinc-900 border border-gray-800 dark:border-zinc-800 rounded-lg p-3 text-sm shadow-md min-w-[320px] animate-in fade-in slide-in-from-right-4 duration-500 delay-200"
         >
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2">
@@ -161,7 +153,7 @@ export const Rank = () => {
               <span className="text-gray-400 text-xs">(Fundo Verde Esmeralda)</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm">
@@ -254,6 +246,6 @@ export const Rank = () => {
           </table>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

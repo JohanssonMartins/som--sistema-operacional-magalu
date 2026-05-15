@@ -123,14 +123,12 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       >
         <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden`}>
           {!isSidebarCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center cursor-pointer h-full flex-1"
+            <div
+              className="flex items-center cursor-pointer h-full flex-1 animate-in fade-in slide-in-from-left-4 duration-300"
               onClick={() => navigate('/')}
             >
-              <MainLogo size="small" className="!px-0" />
-            </motion.div>
+              <MainLogo size="small" className="!px-0 justify-start" />
+            </div>
           )}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -154,10 +152,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                   <Package className="w-4 h-4" />
                 </div>
                 {!isSidebarCollapsed && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left"
+                  <div
+                    className="flex flex-col items-start leading-tight overflow-hidden flex-1 text-left animate-in fade-in slide-in-from-left-2 duration-300"
                   >
                     <span className="text-[13px] font-bold text-gray-800 dark:text-zinc-200 truncate w-full">
                       {selectedUnit === 'Todas' ? 'Todos os CDs' : `CD ${selectedUnit}`}
@@ -167,7 +163,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                         {CD_NAMES[selectedUnit].split(' - ').slice(1).join(' - ')}
                       </span>
                     )}
-                  </motion.div>
+                  </div>
                 )}
               </div>
               {(!isSidebarCollapsed && isPrivileged) && (
@@ -220,12 +216,11 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
             >
               <item.icon className="w-5 h-5 shrink-0" />
               {!isSidebarCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                <span
+                  className="animate-in fade-in slide-in-from-left-2 duration-300"
                 >
                   {item.label}
-                </motion.span>
+                </span>
               )}
             </NavLink>
           ))}
@@ -299,10 +294,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               </div>
 
               {!isSidebarCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="ml-3 flex-1 text-left min-w-0"
+                <div
+                  className="ml-3 flex-1 text-left min-w-0 animate-in fade-in slide-in-from-left-2 duration-300"
                 >
                   <p className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate leading-none mb-1">
                     {currentUser?.name.split(' ')[0]}
@@ -310,7 +303,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                   <p className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest truncate">
                     {currentUser?.role.replace(/_/g, ' ')}
                   </p>
-                </motion.div>
+                </div>
               )}
               {!isSidebarCollapsed && (
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -357,8 +350,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         </div>
       </motion.aside>
 
-      <motion.main
-        className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto"
+      <main
+        className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto animate-in fade-in duration-500"
       >
         <div className="p-6">
           {children}
@@ -367,7 +360,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         <footer className="mt-auto py-6 text-center text-xs text-gray-400 dark:text-zinc-600 opacity-70">
           <p>© 2026 Magalu | Feito com ❤ por J's Martins</p>
         </footer>
-      </motion.main>
+      </main>
 
       <AnimatePresence>
         {isPasswordModalOpen && (

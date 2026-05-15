@@ -86,15 +86,13 @@ export const UserManagement = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    <div
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciamento de Usuários</h2>
-          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Controle de acessos e permissões (RBAC)</p>
+          <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Controle de acesso, funções e unidades permitidas.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
@@ -353,6 +351,6 @@ export const UserManagement = () => {
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };

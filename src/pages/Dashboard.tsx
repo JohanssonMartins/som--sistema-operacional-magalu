@@ -79,22 +79,19 @@ export const Dashboard = () => {
   }, [selectedUnit]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    <div
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       <div className="flex flex-col gap-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+          <div
+            className="animate-in fade-in slide-in-from-left-4 duration-500 delay-100"
           >
             <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
               {selectedUnit === 'Todas' ? 'Visão Empresa' : `CD ${selectedUnit}`}
             </h2>
             <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">Exemplo de consolidação após avaliação oficial</p>
-          </motion.div>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Filtro de Mês */}
@@ -167,10 +164,8 @@ export const Dashboard = () => {
         </div>
 
         {/* Status Legend */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex justify-end w-full"
+        <div
+          className="flex justify-end w-full animate-in fade-in zoom-in-95 duration-500 delay-200"
         >
           <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800 w-fit">
             <div className="flex items-center gap-1.5">
@@ -189,7 +184,7 @@ export const Dashboard = () => {
               <span className="font-bold">Certificado</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -456,6 +451,6 @@ export const Dashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };

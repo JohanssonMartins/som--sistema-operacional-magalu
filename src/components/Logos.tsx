@@ -72,12 +72,8 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
   const isLarge = size === 'large';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={`flex items-center justify-start ${className} select-none w-full ${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-20'}`}
+    <div
+      className={`flex items-center justify-center ${className} select-none ${isSmall ? 'h-10' : isLarge ? 'h-32' : 'h-20'} animate-in fade-in zoom-in-95 duration-500`}
     >
       <img
         src={logoImg}
@@ -85,7 +81,7 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
         className={`max-h-full max-w-full object-contain transition-all duration-500 hover:brightness-110 drop-shadow-sm`}
         style={{ filter: 'brightness(1.1) contrast(1.05)' }}
       />
-    </motion.div>
+    </div>
   );
 };
 

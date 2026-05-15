@@ -308,10 +308,8 @@ export const AvaliacaoExterna = () => {
   const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-7xl mx-auto w-full py-8 space-y-6"
+    <div
+      className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
 
       {/* ── Header ── */}
@@ -591,6 +589,6 @@ export const AvaliacaoExterna = () => {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   );
 };
