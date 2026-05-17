@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, PlusCircle, X, Upload, Sparkles, Loader2, HelpCircle, Link } from 'lucide-react';
 import { ChecklistItem } from '../data';
 import { api } from '../api';
+import { formatBlocoName } from '../utils/appUtils';
 
 interface AutoauditoriaRowProps {
   item: ChecklistItem;
@@ -162,8 +163,8 @@ export const AutoauditoriaRow = React.memo(({
     <tr
       className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
     >
-      <td className="px-6 py-4 font-medium text-gray-900 dark:text-zinc-200">{item.pilar}</td>
-      <td className="px-6 py-4">{item.bloco}</td>
+      <td className="px-6 py-4 font-medium text-[13px] text-gray-800 dark:text-zinc-200 capitalize">{String(item.pilar || '').toLowerCase()}</td>
+      <td className="px-6 py-4 font-medium text-[13px] text-gray-600 dark:text-zinc-300 capitalize">{formatBlocoName(item.bloco).toLowerCase()}</td>
       <td className="px-6 py-4">{item.trilha}</td>
       <td className="px-6 py-4">
         <div className="max-w-md">

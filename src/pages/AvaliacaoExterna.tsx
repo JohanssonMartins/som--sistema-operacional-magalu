@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
-import { getPilarWeight, getBlocoWeight } from '../utils/appUtils';
+import { getPilarWeight, getBlocoWeight, formatBlocoName } from '../utils/appUtils';
 import { AutoauditoriaRow } from '../components/AutoauditoriaRow';
 import { api } from '../api';
 
@@ -77,7 +77,7 @@ export const AvaliacaoExterna = () => {
       const pilarBaseItems = baseItems.filter(i =>
         i.pilar === pilar &&
         i.ativo &&
-        (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
+        (selectedBlocoFilter === 'Todos' || formatBlocoName(i.bloco) === selectedBlocoFilter)
       );
       const total = pilarBaseItems.length;
       let conforme = 0; // score === '3'
@@ -104,7 +104,7 @@ export const AvaliacaoExterna = () => {
     return baseItems.filter(i =>
       i.ativo &&
       (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
-      (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter)
+      (selectedBlocoFilter === 'Todos' || formatBlocoName(i.bloco) === selectedBlocoFilter)
     );
   }, [baseItems, selectedPilarFilter, selectedBlocoFilter]);
 
@@ -137,7 +137,7 @@ export const AvaliacaoExterna = () => {
   const blocosDisponiveis = useMemo(() => {
     if (selectedPilarFilter === 'Todos') return [];
     return Array.from(
-      new Set(baseItems.filter(i => i.pilar === selectedPilarFilter && i.ativo).map(i => i.bloco))
+      new Set(baseItems.filter(i => i.pilar === selectedPilarFilter && i.ativo).map(i => formatBlocoName(i.bloco)))
     ).sort((a, b) => getBlocoWeight(a) - getBlocoWeight(b));
   }, [baseItems, selectedPilarFilter]);
 
@@ -295,7 +295,7 @@ export const AvaliacaoExterna = () => {
   const filteredItems = baseItems
     .filter(i => i.ativo &&
       (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
-      (selectedBlocoFilter === 'Todos' || i.bloco === selectedBlocoFilter) &&
+      (selectedBlocoFilter === 'Todos' || formatBlocoName(i.bloco) === selectedBlocoFilter) &&
       (!showOnlyPending || !(autoauditoriaData[i.id]?.score))
     )
     .sort((a, b) => {

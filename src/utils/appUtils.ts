@@ -1,5 +1,11 @@
 import { PILAR_ORDER, BLOCO_ORDER } from '../constants/appConstants';
 
+export const formatBlocoName = (bloco: string | undefined) => {
+  if (!bloco) return '';
+  return bloco.split(/\s*-\s*Dono/i)[0].trim();
+};
+
+
 export const getPilarWeight = (pilar: string) => {
   const idx = PILAR_ORDER.indexOf(pilar);
   return idx === -1 ? 999 : idx;

@@ -7,7 +7,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats';
 import { dashboardData, CD_NAMES, PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
 import { api } from '../api';
-import { getPerformanceStatus } from '../utils/appUtils';
+import { getPerformanceStatus, formatBlocoName } from '../utils/appUtils';
 
 export const Dashboard = () => {
   const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore(useShallow(state => ({
@@ -399,7 +399,7 @@ export const Dashboard = () => {
                             className="bg-gray-100/30 dark:bg-zinc-900/40 text-[10px] sm:text-xs overflow-hidden"
                           >
                             <td className="px-4 py-2 border border-gray-200 dark:border-zinc-800 text-left bg-gray-100/50 dark:bg-zinc-900/50 sticky left-0 z-10 text-gray-500 dark:text-zinc-400 whitespace-nowrap italic">
-                              {bloco}
+                              {formatBlocoName(bloco)}
                             </td>
                             {matrixStats.flatOrderedUnits.map(unit => {
                               const value = parseInt(matrixStats.matrix[unit][`${pilar}_${bloco}`] || '0');

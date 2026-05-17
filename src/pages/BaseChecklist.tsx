@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
+import { formatBlocoName } from '../utils/appUtils';
 import * as XLSX from 'xlsx';
 
 export const BaseChecklist = () => {
@@ -24,7 +25,7 @@ export const BaseChecklist = () => {
 
     // Compute filter options
     const pilarOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.pilar))).filter(Boolean).sort(), [baseItems]);
-    const blocoOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.bloco))).filter(Boolean).sort(), [baseItems]);
+    const blocoOptions = useMemo(() => Array.from(new Set(baseItems.map(i => formatBlocoName(i.bloco)))).filter(Boolean).sort(), [baseItems]);
     const trilhaOptions = useMemo(() => Array.from(new Set(baseItems.map(i => i.trilha))).filter(Boolean).sort(), [baseItems]);
 
     // Filter items
@@ -32,7 +33,7 @@ export const BaseChecklist = () => {
         return baseItems
             .filter(item => {
                 const matchPilar = !filterPilar || item.pilar === filterPilar;
-                const matchBloco = !filterBloco || item.bloco === filterBloco;
+                const matchBloco = !filterBloco || formatBlocoName(item.bloco) === filterBloco;
                 const matchTrilha = !filterTrilha || item.trilha === filterTrilha;
                 return matchPilar && matchBloco && matchTrilha;
             })
@@ -375,8 +376,8 @@ export const BaseChecklist = () => {
                                         key={item.id}
                                         className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
                                     >
-                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-800 dark:text-zinc-200 whitespace-nowrap lowercase capitalize">{item.pilar}</td>
-                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-600 dark:text-zinc-300 whitespace-nowrap lowercase capitalize">{item.bloco}</td>
+                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-800 dark:text-zinc-200 whitespace-nowrap capitalize">{String(item.pilar || '').toLowerCase()}</td>
+                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-600 dark:text-zinc-300 whitespace-nowrap capitalize">{formatBlocoName(item.bloco).toLowerCase()}</td>
                                         <td className="px-4 py-4 whitespace-nowrap text-xs">
                                             {item.trilha ? (
                                                 <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100 dark:border-amber-500/20">
