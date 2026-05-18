@@ -49,17 +49,29 @@ export const App = () => {
     setBaseItems,
     autoauditoriaMesAno,
     setAllAutoauditorias,
-    selectedUnit
+    selectedUnit,
+    setSelectedUnit
   } = useStore(useShallow(state => ({
     currentUser: state.currentUser,
     setUsersList: state.setUsersList,
     setBaseItems: state.setBaseItems,
     autoauditoriaMesAno: state.autoauditoriaMesAno,
     setAllAutoauditorias: state.setAllAutoauditorias,
-    selectedUnit: state.selectedUnit
+    selectedUnit: state.selectedUnit,
+    setSelectedUnit: state.setSelectedUnit
   })));
 
   const { socket } = useRealtime();
+
+  // Enforce unit restriction for non-privileged users
+  useEffect(() => {
+    if (currentUser) {
+      const isPrivileged = ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'AUDITOR'].includes(currentUser.role);
+      if (!isPrivileged && currentUser.unidade && selectedUnit !== currentUser.unidade) {
+        setSelectedUnit(currentUser.unidade);
+      }
+    }
+  }, [currentUser, selectedUnit, setSelectedUnit]);
 
   // Load Initial Data
   const loadInitialData = async () => {

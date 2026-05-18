@@ -6,8 +6,10 @@ import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
 import { getPilarWeight, getBlocoWeight, formatBlocoName } from '../utils/appUtils';
-import { AutoauditoriaRow } from '../components/AutoauditoriaRow';
+import { AutoauditoriaRow, parse5W2H } from '../components/AutoauditoriaRow';
 import { api } from '../api';
+
+const EMPTY_ARRAY: any[] = [];
 
 const PILAR_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
   'Pessoas': { icon: Users, color: 'bg-purple-600' },
@@ -60,6 +62,22 @@ export const AvaliacaoExterna = () => {
   const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
   const [selectedBlocoFilter, setSelectedBlocoFilter] = useState('Todos');
   const [showOnlyPending, setShowOnlyPending] = useState(false);
+  const [showMyPending, setShowMyPending] = useState(false);
+
+  // Calcula a contagem de pendências atribuídas ao usuário logado atual
+  const myPendingCount = useMemo(() => {
+    if (!currentUser) return 0;
+    return baseItems.filter(i => {
+      if (!i.ativo) return false;
+      const planStr = autoauditoriaData[i.id]?.nossaAcao || '';
+      if (!planStr) return false;
+      const plan = parse5W2H(planStr);
+      return plan.who && (
+        plan.who.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+        currentUser.name.toLowerCase().includes(plan.who.toLowerCase())
+      );
+    }).length;
+  }, [baseItems, autoauditoriaData, currentUser]);
 
   // Mês local — carrega a avaliação do mês selecionado sem alterar o global
   const [localMesAno, setLocalMesAno] = useState(autoauditoriaMesAno);
@@ -263,6 +281,8 @@ export const AvaliacaoExterna = () => {
   }, [setAutoauditoriaData]);
 
   const handleNossaAcaoChange = useCallback((itemId: string, newAcao: string) => {
+    pendingEdits.current.add(itemId);
+    needsSave.current = true;
     setAutoauditoriaData(prev => ({
       ...prev,
       [itemId]: { ...(prev[itemId] || { score: '' }), nossaAcao: newAcao }
@@ -296,13 +316,30 @@ export const AvaliacaoExterna = () => {
     .filter(i => i.ativo &&
       (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
       (selectedBlocoFilter === 'Todos' || formatBlocoName(i.bloco) === selectedBlocoFilter) &&
-      (!showOnlyPending || !(autoauditoriaData[i.id]?.score))
+      (!showOnlyPending || !(autoauditoriaData[i.id]?.score)) &&
+      (!showMyPending || (() => {
+        const planStr = autoauditoriaData[i.id]?.nossaAcao || '';
+        if (!planStr) return false;
+        const plan = parse5W2H(planStr);
+        return plan.who && currentUser && (
+          plan.who.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+          currentUser.name.toLowerCase().includes(plan.who.toLowerCase())
+        );
+      })())
     )
     .sort((a, b) => {
       const wA = getPilarWeight(a.pilar);
       const wB = getPilarWeight(b.pilar);
       if (wA !== wB) return wA - wB;
-      return getBlocoWeight(a.bloco) - getBlocoWeight(b.bloco);
+      
+      const wbA = getBlocoWeight(a.bloco);
+      const wbB = getBlocoWeight(b.bloco);
+      if (wbA !== wbB) return wbA - wbB;
+      
+      const cmp = formatBlocoName(a.bloco).localeCompare(formatBlocoName(b.bloco));
+      if (cmp !== 0) return cmp;
+      
+      return (a.order || 0) - (b.order || 0);
     });
 
   const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
@@ -414,7 +451,23 @@ export const AvaliacaoExterna = () => {
             </select>
           </div>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {currentUser && (
+              <button
+                onClick={() => setShowMyPending(!showMyPending)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${showMyPending
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30'
+                  : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                  }`}
+              >
+                <span>{showMyPending ? '✓ Minhas Pendências' : 'Minhas Pendências'}</span>
+                {myPendingCount > 0 && (
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-600 dark:bg-blue-500 text-white dark:text-white leading-none">
+                    {myPendingCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               onClick={() => setShowOnlyPending(!showOnlyPending)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showOnlyPending

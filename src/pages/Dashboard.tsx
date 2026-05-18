@@ -10,13 +10,16 @@ import { api } from '../api';
 import { getPerformanceStatus, formatBlocoName } from '../utils/appUtils';
 
 export const Dashboard = () => {
-  const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias } = useStore(useShallow(state => ({
+  const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias, currentUser } = useStore(useShallow(state => ({
     selectedUnit: state.selectedUnit,
     setSelectedUnit: state.setSelectedUnit,
     autoauditoriaMesAno: state.autoauditoriaMesAno,
     setAutoauditoriaMesAno: state.setAutoauditoriaMesAno,
-    allAutoauditorias: state.allAutoauditorias
+    allAutoauditorias: state.allAutoauditorias,
+    currentUser: state.currentUser
   })));
+
+  const isPrivileged = currentUser && ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'AUDITOR'].includes(currentUser.role);
 
   const [filterDivisional, setFilterDivisional] = useState<string>('Todas');
   const [filterPilar, setFilterPilar] = useState<string>('Todos');
@@ -109,42 +112,46 @@ export const Dashboard = () => {
             </div>
 
             {/* Filtro Divisional */}
-            <div className="relative min-w-[160px]">
-              <select
-                value={filterDivisional}
-                onChange={(e) => {
-                  const newDiv = e.target.value;
-                  setFilterDivisional(newDiv);
-                  if (selectedUnit !== 'Todas' && newDiv !== 'Todas') {
-                    if (CD_REGIONS[selectedUnit]?.divisao !== newDiv) {
-                      setSelectedUnit('Todas');
+            {isPrivileged && (
+              <div className="relative min-w-[160px]">
+                <select
+                  value={filterDivisional}
+                  onChange={(e) => {
+                    const newDiv = e.target.value;
+                    setFilterDivisional(newDiv);
+                    if (selectedUnit !== 'Todas' && newDiv !== 'Todas') {
+                      if (CD_REGIONS[selectedUnit]?.divisao !== newDiv) {
+                        setSelectedUnit('Todas');
+                      }
                     }
-                  }
-                }}
-                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
-              >
-                <option value="Todas">Todas Divisionais</option>
-                <option value="SP">SP</option>
-                <option value="Sul / Sudeste">Sul / Sudeste</option>
-                <option value="NE/NO/CO">NE/NO/CO</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
+                  }}
+                  className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+                >
+                  <option value="Todas">Todas Divisionais</option>
+                  <option value="SP">SP</option>
+                  <option value="Sul / Sudeste">Sul / Sudeste</option>
+                  <option value="NE/NO/CO">NE/NO/CO</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            )}
 
             {/* Filtro CD */}
-            <div className="relative min-w-[160px]">
-              <select
-                value={selectedUnit}
-                onChange={(e) => setSelectedUnit(e.target.value)}
-                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
-              >
-                <option value="Todas">Todos os CDs</option>
-                {cdOptions.map(u => (
-                  <option key={u} value={u}>CD {u}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
+            {isPrivileged && (
+              <div className="relative min-w-[160px]">
+                <select
+                  value={selectedUnit}
+                  onChange={(e) => setSelectedUnit(e.target.value)}
+                  className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+                >
+                  <option value="Todas">Todos os CDs</option>
+                  {cdOptions.map(u => (
+                    <option key={u} value={u}>CD {u}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            )}
 
             {/* Filtro Pilar */}
             <div className="relative min-w-[160px]">

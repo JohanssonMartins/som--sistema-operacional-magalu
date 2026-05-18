@@ -216,31 +216,33 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
     try {
         const { unidade } = req.params;
 
-        // 1. Buscar itens base para mapear pilares
-        const baseItems = await prisma.baseChecklistItem.findMany();
+        // 1 & 2. Buscar itens base e auditorias da unidade em paralelo
+        const [baseItems, autoauditorias] = await Promise.all([
+            prisma.baseChecklistItem.findMany(),
+            prisma.autoauditoria.findMany({
+                where: { unidade, tipo: 'AUTO' },
+                include: {
+                    items: true
+                }
+            })
+        ]);
         const baseItemMap = new Map(baseItems.map(item => [item.id, item.pilar]));
-
-        // 2. Buscar auditorias da unidade selecionada
-        const autoauditorias = await prisma.autoauditoria.findMany({
-            where: { unidade, tipo: 'AUTO' },
-            include: {
-                items: true
-            }
-        });
 
         // 3. Identificar os meses presentes para calcular média da rede
         const uniqueMonths = [...new Set(autoauditorias.map(a => a.mesAno))];
 
         // 4. Buscar todas as auditorias desses meses para o benchmark
-        const allAuditsInMonths = await prisma.autoauditoria.findMany({
-            where: {
-                mesAno: { in: uniqueMonths },
-                tipo: 'AUTO'
-            },
-            include: {
-                items: true
-            }
-        });
+        const allAuditsInMonths = uniqueMonths.length > 0
+            ? await prisma.autoauditoria.findMany({
+                where: {
+                    mesAno: { in: uniqueMonths },
+                    tipo: 'AUTO'
+                },
+                include: {
+                    items: true
+                }
+            })
+            : [];
 
         // 5. Calcular média da rede por mês
         const networkAvgByMonth: Record<string, number> = {};

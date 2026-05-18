@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { api } from '../api';
 import { ChecklistItem } from '../data';
-import { formatBlocoName } from '../utils/appUtils';
+import { formatBlocoName, getPilarWeight, getBlocoWeight } from '../utils/appUtils';
 import * as XLSX from 'xlsx';
 
 export const BaseChecklist = () => {
@@ -37,7 +37,20 @@ export const BaseChecklist = () => {
                 const matchTrilha = !filterTrilha || item.trilha === filterTrilha;
                 return matchPilar && matchBloco && matchTrilha;
             })
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
+            .sort((a, b) => {
+                const wA = getPilarWeight(a.pilar);
+                const wB = getPilarWeight(b.pilar);
+                if (wA !== wB) return wA - wB;
+
+                const wbA = getBlocoWeight(a.bloco);
+                const wbB = getBlocoWeight(b.bloco);
+                if (wbA !== wbB) return wbA - wbB;
+
+                const cmp = formatBlocoName(a.bloco).localeCompare(formatBlocoName(b.bloco));
+                if (cmp !== 0) return cmp;
+
+                return (a.order || 0) - (b.order || 0);
+            });
     }, [baseItems, filterPilar, filterBloco, filterTrilha]);
     const [formData, setFormData] = useState<Partial<ChecklistItem>>({
         pilar: '',
@@ -54,7 +67,10 @@ export const BaseChecklist = () => {
 
     const handleEditItem = (item: ChecklistItem) => {
         setEditingItem(item);
-        setFormData({ ...item });
+        setFormData({ 
+            ...item,
+            bloco: formatBlocoName(item.bloco || '')
+        });
         setIsModalOpen(true);
     };
 
@@ -72,9 +88,11 @@ export const BaseChecklist = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const sanitizedBloco = formatBlocoName(formData.bloco || '');
             if (editingItem) {
                 const updateData = {
                     ...formData,
+                    bloco: sanitizedBloco,
                     updatedBy: currentUser?.name || 'Sistema',
                     updatedAt: new Date().toISOString()
                 };
@@ -83,8 +101,9 @@ export const BaseChecklist = () => {
             } else {
                 const newItem = {
                     ...formData,
+                    bloco: sanitizedBloco,
                     id: Math.random().toString(36).substr(2, 9),
-                    code: formData.code || `${formData.pilar?.substring(0, 3).toUpperCase()}-${formData.bloco?.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 100)}`,
+                    code: formData.code || `${formData.pilar?.substring(0, 3).toUpperCase()}-${sanitizedBloco?.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 100)}`,
                     createdBy: currentUser?.name || 'Sistema',
                     createdAt: new Date().toISOString()
                 };

@@ -8,7 +8,10 @@ let globalSocket: Socket | null = null;
 
 export const useRealtime = () => {
     if (!globalSocket) {
-        globalSocket = io(SOCKET_URL);
+        globalSocket = io(SOCKET_URL, {
+            transports: ['websocket'],
+            upgrade: false
+        });
     }
 
     useEffect(() => {

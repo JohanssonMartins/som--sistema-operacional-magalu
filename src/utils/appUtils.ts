@@ -12,7 +12,8 @@ export const getPilarWeight = (pilar: string) => {
 };
 
 export const getBlocoWeight = (bloco: string) => {
-  const idx = BLOCO_ORDER.indexOf(bloco);
+  const formatted = formatBlocoName(bloco);
+  const idx = BLOCO_ORDER.indexOf(formatted);
   return idx === -1 ? 999 : idx;
 };
 
