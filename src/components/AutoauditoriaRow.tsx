@@ -81,6 +81,7 @@ interface AutoauditoriaRowProps {
   tipo?: 'AUTO' | 'EXTERNA';
   evidencias?: any[];
   onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
+  onEvidenciaDeleted?: (itemId: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
   isEvidenceReadOnly?: boolean;
   cdPontoValue?: string;
@@ -99,6 +100,7 @@ export const AutoauditoriaRow = React.memo(({
   tipo = 'AUTO',
   evidencias = [],
   onEvidenciaUploaded,
+  onEvidenciaDeleted,
   isNossaAcaoReadOnly = false,
   isEvidenceReadOnly = false,
   cdPontoValue
@@ -109,8 +111,8 @@ export const AutoauditoriaRow = React.memo(({
   const [planState, setPlanState] = useState<ActionPlan5W2H>(() => parse5W2H(nossaAcaoValue));
 
   const [isUploading, setIsUploading] = useState(false);
-  const [driveEvidencia, setDriveEvidencia] = useState(evidencias.find(e => e.name !== 'Manual Link'));
-  const [manualLink, setManualLink] = useState(evidencias.find(e => e.name === 'Manual Link'));
+  const [driveEvidencias, setDriveEvidencias] = useState<any[]>(() => evidencias.filter(e => e.name !== 'Manual Link'));
+  const [manualLink, setManualLink] = useState(() => evidencias.find(e => e.name === 'Manual Link'));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -138,7 +140,7 @@ export const AutoauditoriaRow = React.memo(({
   }, [nossaAcaoValue]);
 
   useEffect(() => {
-    setDriveEvidencia(evidencias.find(e => e.name !== 'Manual Link'));
+    setDriveEvidencias(evidencias.filter(e => e.name !== 'Manual Link'));
     setManualLink(evidencias.find(e => e.name === 'Manual Link'));
   }, [evidencias]);
 
@@ -170,32 +172,64 @@ export const AutoauditoriaRow = React.memo(({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     try {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('unidade', unidade);
-      formData.append('mesAno', mesAno);
-      formData.append('pilar', item.pilar);
-      formData.append('bloco', item.bloco);
-      formData.append('pergunta', item.item);
-      formData.append('baseItemId', item.id);
-      formData.append('tipo', tipo);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('unidade', unidade);
+        formData.append('mesAno', mesAno);
+        formData.append('pilar', item.pilar);
+        formData.append('bloco', item.bloco);
+        formData.append('pergunta', item.item);
+        formData.append('baseItemId', item.id);
+        formData.append('tipo', tipo);
 
-      const res = await api.uploadEvidenciaGoogleDrive(formData);
-      if (res.success && res.url) {
-        const driveId = res.evidencia?.name || '';
-        onEvidenciaUploaded?.(item.id, res.url, driveId);
+        const res = await api.uploadEvidenciaGoogleDrive(formData);
+        if (res.success && res.url) {
+          const driveId = res.evidencia?.name || '';
+          onEvidenciaUploaded?.(item.id, res.url, driveId);
+        }
       }
     } catch (error) {
       console.error('Erro no upload da evidência:', error);
-      alert('Falha ao enviar arquivo para o Google Drive. Verifique o console.');
+      alert('Falha ao enviar arquivo(s) para o Google Drive. Verifique o console.');
     } finally {
       setIsUploading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleEvidenceDelete = async (evidenceIdOrName: string) => {
+    if (!canEdit) return;
+    
+    const ev = evidencias.find(e => e.id === evidenceIdOrName || e.name === evidenceIdOrName);
+    if (!ev) return;
+    
+    const confirmDelete = window.confirm("Deseja realmente remover esta evidência?");
+    if (!confirmDelete) return;
+
+    try {
+      setIsUploading(true);
+      if (ev.id) {
+        const res = await api.deleteEvidencia(ev.id);
+        if (res.success) {
+          onEvidenciaDeleted?.(item.id, ev.id);
+        } else {
+          alert('Falha ao deletar a evidência.');
+        }
+      } else {
+        onEvidenciaDeleted?.(item.id, ev.name);
+      }
+    } catch (error) {
+      console.error("Erro ao deletar evidência:", error);
+      alert("Erro ao deletar evidência.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -240,13 +274,15 @@ export const AutoauditoriaRow = React.memo(({
   };
 
   const handleAIAnalysis = async () => {
-    if (!driveEvidencia?.id) {
+    const mainDriveEv = driveEvidencias[0];
+    if (!mainDriveEv?.name && !mainDriveEv?.id) {
       alert('ID da evidência não disponível para análise.');
       return;
     }
     try {
       setIsAnalyzing(true);
-      const res = await api.analyzeEvidence(item.pilar, item.bloco, item.item, item.descricao || '', driveEvidencia.id);
+      const driveFileId = mainDriveEv.name && mainDriveEv.name !== 'Manual Link' ? mainDriveEv.name : mainDriveEv.id;
+      const res = await api.analyzeEvidence(item.pilar, item.bloco, item.item, item.descricao || '', driveFileId);
       if (res.analysis) {
         setAiAnalysis(res.analysis);
       }
@@ -706,27 +742,42 @@ export const AutoauditoriaRow = React.memo(({
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 w-full text-center">
             
             {/* --- COLUNA ANEXO (DRIVE) --- */}
-            <div className="flex flex-col items-center justify-center min-h-[50px] gap-1">
-              {driveEvidencia ? (
-                <>
-                  <a
-                    href={driveEvidencia.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    Ver Anexo
-                  </a>
+            <div className="flex flex-col items-center justify-center min-h-[50px] gap-1 px-1">
+              {driveEvidencias.length > 0 ? (
+                <div className="flex flex-col gap-1 w-full items-center">
+                  {driveEvidencias.map((ev, index) => (
+                    <div key={ev.id || ev.name || index} className="flex items-center gap-1 max-w-full">
+                      <a
+                        href={ev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[50px]"
+                        title={ev.name === 'Manual Link' ? 'Link' : 'Anexo'}
+                      >
+                        Anexo {index + 1}
+                      </a>
+                      {!isEvidenceReadOnly && canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => handleEvidenceDelete(ev.id || ev.name)}
+                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none shrink-0"
+                          title="Remover anexo"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                   {!isEvidenceReadOnly && (
                     <motion.label
                       whileHover={{ scale: 1.05 }}
-                      className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2"
+                      className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 mt-0.5"
                     >
-                      Edite
-                      <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                      + Anexo
+                      <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} multiple />
                     </motion.label>
                   )}
-                </>
+                </div>
               ) : (
                 !isEvidenceReadOnly && (
                   <motion.label
@@ -735,11 +786,11 @@ export const AutoauditoriaRow = React.memo(({
                   >
                     <Upload className="w-3 h-3 mb-0.5" />
                     <span>Anexo</span>
-                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} />
+                    <input type="file" className="hidden" disabled={!canEdit || isUploading} onChange={handleFileUpload} multiple />
                   </motion.label>
                 )
               )}
-              {isEvidenceReadOnly && !driveEvidencia && (
+              {isEvidenceReadOnly && driveEvidencias.length === 0 && (
                 <span className="text-[10px] text-gray-400 italic">Sem anexo</span>
               )}
             </div>
@@ -757,13 +808,25 @@ export const AutoauditoriaRow = React.memo(({
                     Ver Link
                   </a>
                   {!isEvidenceReadOnly && (
-                    <button
-                      onClick={handleLinkUpload}
-                      disabled={!canEdit || isUploading}
-                      className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
-                    >
-                      Edite
-                    </button>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <button
+                        onClick={handleLinkUpload}
+                        disabled={!canEdit || isUploading}
+                        className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
+                      >
+                        Edite
+                      </button>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => handleEvidenceDelete(manualLink.id || manualLink.name)}
+                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                          title="Remover link"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </>
               ) : (

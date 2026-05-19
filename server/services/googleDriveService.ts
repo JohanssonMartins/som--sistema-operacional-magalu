@@ -161,5 +161,21 @@ export const googleDriveService = {
             buffer: Buffer.from(res.data as ArrayBuffer),
             mimeType: metadata.data.mimeType || 'image/jpeg'
         };
+    },
+
+    /**
+     * Remove um arquivo do Google Drive pelo ID.
+     */
+    async deleteFile(fileId: string): Promise<void> {
+        try {
+            await drive.files.delete({
+                fileId,
+                supportsAllDrives: true
+            });
+            console.log(`[Drive] Arquivo ${fileId} deletado com sucesso.`);
+        } catch (error) {
+            console.error(`[Drive] Erro ao deletar o arquivo ${fileId}:`, error);
+            throw error;
+        }
     }
 };

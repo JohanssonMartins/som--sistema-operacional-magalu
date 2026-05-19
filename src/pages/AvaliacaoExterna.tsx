@@ -290,13 +290,42 @@ export const AvaliacaoExterna = () => {
   }, [setAutoauditoriaData]);
 
   const handleEvidenciaUploaded = useCallback((itemId: string, url: string, evidenceId: string) => {
-    setAutoauditoriaData(prev => ({
-      ...prev,
-      [itemId]: {
-        ...(prev[itemId] || { score: '', nossaAcao: '' }),
-        evidencias: [{ name: evidenceId, url, category: 'Drive' }]
+    setAutoauditoriaData(prev => {
+      const currentEvidencias = prev[itemId]?.evidencias || [];
+      const isManualLink = evidenceId === 'Manual Link';
+      
+      let newEvidencias;
+      if (isManualLink) {
+        newEvidencias = currentEvidencias.filter(e => e.name !== 'Manual Link');
+        newEvidencias.push({ name: 'Manual Link', url, category: 'Manual' });
+      } else {
+        newEvidencias = [...currentEvidencias, { name: evidenceId, url, category: 'Drive' }];
       }
-    }));
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...(prev[itemId] || { score: '', nossaAcao: '' }),
+          evidencias: newEvidencias
+        }
+      };
+    });
+    // Forçar auto-save
+    pendingEdits.current.add(itemId);
+    needsSave.current = true;
+  }, [setAutoauditoriaData]);
+
+  const handleEvidenciaDeleted = useCallback((itemId: string, evidenceId: string) => {
+    setAutoauditoriaData(prev => {
+      const currentEvidencias = prev[itemId]?.evidencias || [];
+      return {
+        ...prev,
+        [itemId]: {
+          ...(prev[itemId] || { score: '', nossaAcao: '' }),
+          evidencias: currentEvidencias.filter(e => e.id !== evidenceId && e.name !== evidenceId)
+        }
+      };
+    });
     // Forçar auto-save
     pendingEdits.current.add(itemId);
     needsSave.current = true;
@@ -627,6 +656,7 @@ export const AvaliacaoExterna = () => {
                         onNossaAcaoChange={handleNossaAcaoChange}
                         onNossaAcaoBlur={handleNossaAcaoBlur}
                         onEvidenciaUploaded={handleEvidenciaUploaded}
+                        onEvidenciaDeleted={handleEvidenciaDeleted}
                         unidade={selectedUnit}
                         mesAno={localMesAno}
                         tipo="EXTERNA"

@@ -496,13 +496,7 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
             }
         });
 
-        // 3. Limpeza de evidências de DRIVE anteriores (Substituição)
-        await prisma.evidenciaAutoauditoria.deleteMany({
-            where: {
-                autoauditoriaItemId: autoauditoriaItem.id,
-                name: { not: 'Manual Link' }
-            }
-        });
+        // 3. (Removido) Mantemos os anexos de DRIVE anteriores para permitir múltiplos envios
 
         // 4. Finalmente, cria a evidencia apontando a url
         const evidencia = await prisma.evidenciaAutoauditoria.create({
@@ -589,6 +583,56 @@ app.post('/api/autoauditoria/evidencia/link', async (req: any, res: any) => {
     } catch (error: any) {
         console.error('[Link Manual] Error:', error);
         res.status(500).json({ error: 'Falha ao salvar link manual', details: error?.message });
+    }
+});
+
+// Novo Endpoint para Deletar Evidência (Drive ou Link Manual) com deleção física no Drive
+app.delete('/api/autoauditoria/evidencia/:id', async (req: any, res: any) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Busca a evidência no banco
+        const evidencia = await prisma.evidenciaAutoauditoria.findUnique({
+            where: { id },
+            include: {
+                autoauditoriaItem: {
+                    include: {
+                        autoauditoria: true
+                    }
+                }
+            }
+        });
+
+        if (!evidencia) {
+            return res.status(404).json({ error: 'Evidência não encontrada.' });
+        }
+
+        // 2. Se for arquivo do Drive, tenta deletar do Drive também
+        if (evidencia.name !== 'Manual Link') {
+            try {
+                await googleDriveService.deleteFile(evidencia.name);
+                console.log(`[Drive Delete] Arquivo ${evidencia.name} removido do Drive.`);
+            } catch (driveErr: any) {
+                console.warn(`[Drive Delete] Alerta: Não foi possível deletar do Drive:`, driveErr.message);
+            }
+        }
+
+        // 3. Deleta do banco de dados
+        await prisma.evidenciaAutoauditoria.delete({
+            where: { id }
+        });
+
+        res.json({ success: true });
+
+        // Notifica clientes que houve mudança nos dados
+        if (evidencia.autoauditoriaItem?.autoauditoria) {
+            const { unidade, mesAno } = evidencia.autoauditoriaItem.autoauditoria;
+            notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+        }
+
+    } catch (error: any) {
+        console.error('[Delete Evidencia] Error:', error);
+        res.status(500).json({ error: 'Falha ao deletar evidência', details: error?.message });
     }
 });
 

@@ -265,19 +265,35 @@ export const Autoauditoria = () => {
       const currentEvidencias = prev[itemId]?.evidencias || [];
       const isManualLink = evidenceId === 'Manual Link';
       
-      // Filtra para manter apenas as de OUTRA categoria
-      const otherEvidencias = currentEvidencias.filter(e => 
-        isManualLink ? e.name !== 'Manual Link' : e.name === 'Manual Link'
-      );
-
-      // Adiciona a nova
-      const newEvidencia = { name: evidenceId, url, category: isManualLink ? 'Manual' : 'Drive' };
+      let newEvidencias;
+      if (isManualLink) {
+        newEvidencias = currentEvidencias.filter(e => e.name !== 'Manual Link');
+        newEvidencias.push({ name: 'Manual Link', url, category: 'Manual' });
+      } else {
+        newEvidencias = [...currentEvidencias, { name: evidenceId, url, category: 'Drive' }];
+      }
 
       return {
         ...prev,
         [itemId]: {
           ...(prev[itemId] || { score: '', nossaAcao: '' }),
-          evidencias: [...otherEvidencias, newEvidencia]
+          evidencias: newEvidencias
+        }
+      };
+    });
+    // Forçar auto-save
+    pendingEdits.current.add(itemId);
+    needsSave.current = true;
+  }, [setAutoauditoriaData]);
+
+  const handleEvidenciaDeleted = useCallback((itemId: string, evidenceId: string) => {
+    setAutoauditoriaData(prev => {
+      const currentEvidencias = prev[itemId]?.evidencias || [];
+      return {
+        ...prev,
+        [itemId]: {
+          ...(prev[itemId] || { score: '', nossaAcao: '' }),
+          evidencias: currentEvidencias.filter(e => e.id !== evidenceId && e.name !== evidenceId)
         }
       };
     });
@@ -597,6 +613,7 @@ export const Autoauditoria = () => {
                         onNossaAcaoChange={handleNossaAcaoChange}
                         onNossaAcaoBlur={handleNossaAcaoBlur}
                         onEvidenciaUploaded={handleEvidenciaUploaded}
+                        onEvidenciaDeleted={handleEvidenciaDeleted}
                         unidade={selectedUnit}
                         mesAno={localMesAno}
                         evidencias={autoauditoriaData[item.id]?.evidencias || EMPTY_ARRAY}

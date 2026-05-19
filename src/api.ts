@@ -140,5 +140,12 @@ export const api = {
         });
         if (!res.ok) throw new Error('Falha ao salvar o link de evidência');
         return res.json();
+    },
+    deleteEvidencia: async (id: string) => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/evidencia/${id}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) throw new Error('Falha ao deletar evidência');
+        return res.json();
     }
 };
