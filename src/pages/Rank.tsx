@@ -31,15 +31,17 @@ export const Rank = () => {
 
       let totalPoints = 0;
       let respondidosCount = 0;
+      let naCount = 0;
 
       activeBaseItems.forEach(bi => {
         const ai = auditMap.get(bi.id) as any;
         if (ai?.score === '3') totalPoints += 3;
         else if (ai?.score === '1') totalPoints += 1;
+        else if (ai?.score === 'N/A') naCount++;
         if (ai && ai.score && ai.score !== '') respondidosCount++;
       });
 
-      const maxPoints = activeBaseItems.length * 3;
+      const maxPoints = (activeBaseItems.length - naCount) * 3;
       const aderenciaGeral = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
 
       // Calculate pilar adherence
@@ -48,15 +50,17 @@ export const Rank = () => {
         const pItems = pilarActiveItems[pilar];
         let pPoints = 0;
         let pRespondidos = 0;
+        let pNaCount = 0;
 
         pItems.forEach(bi => {
           const ai = auditMap.get(bi.id) as any;
           if (ai?.score === '3') pPoints += 3;
           else if (ai?.score === '1') pPoints += 1;
+          else if (ai?.score === 'N/A') pNaCount++;
           if (ai && ai.score && ai.score !== '') pRespondidos++;
         });
 
-        const pMaxPoints = pItems.length * 3;
+        const pMaxPoints = (pItems.length - pNaCount) * 3;
         pillarsStats[pilar] = {
           aderencia: pMaxPoints === 0 ? 0 : (pPoints / pMaxPoints) * 100,
           respondidos: pRespondidos,

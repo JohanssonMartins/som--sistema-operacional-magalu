@@ -41,13 +41,15 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
           const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
 
           let unitPilarPoints = 0;
+          let unitPilarNaCount = 0;
           pilarBaseItems.forEach(bi => {
             const ai = auditMap.get(bi.id);
             if (ai?.score === '3') unitPilarPoints += 3;
             else if (ai?.score === '1') unitPilarPoints += 1;
+            else if (ai?.score === 'N/A') unitPilarNaCount++;
           });
 
-          const maxUnitPilarPoints = pilarBaseItems.length * 3;
+          const maxUnitPilarPoints = (pilarBaseItems.length - unitPilarNaCount) * 3;
           const unitPercentage = maxUnitPilarPoints === 0 ? 0 : (unitPilarPoints / maxUnitPilarPoints) * 100;
           sumOfPercentages += unitPercentage;
         });
@@ -63,12 +65,14 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
         const unitAudit = allAutoauditorias.find(a => a.unidade === selectedUnit && a.mesAno === autoauditoriaMesAno);
         const auditMap = new Map(unitAudit?.items?.map((ai: any) => [ai.baseItemId, ai]) || []);
 
-        possiblePoints = pilarBaseItems.length * 3;
+        let pilarNaCount = 0;
         pilarBaseItems.forEach(bi => {
           const ai = auditMap.get(bi.id);
           if (ai?.score === '3') totalPoints += 3;
           else if (ai?.score === '1') totalPoints += 1;
+          else if (ai?.score === 'N/A') pilarNaCount++;
         });
+        possiblePoints = (pilarBaseItems.length - pilarNaCount) * 3;
       }
 
       const pAuditoriaOficial = possiblePoints === 0 ? 0 : (totalPoints / possiblePoints) * 100;
@@ -135,25 +139,29 @@ export const useDashboardStats = (selectedUnit: string, autoauditoriaMesAno: str
       allPilars.forEach(pilar => {
         const pilarItems = pillarBaseItemsOnly[pilar];
         let pilarPoints = 0;
+        let pilarNaCount = 0;
 
         pilarToBlocks[pilar].forEach(bloco => {
           const blocoItems = groupedBaseItems[pilar][bloco];
           let blocoPoints = 0;
+          let blocoNaCount = 0;
           blocoItems.forEach(bi => {
             const auditItem = auditMap.get(bi.id) as any;
             const score = String(auditItem?.score || '');
             if (score === '3') blocoPoints += 3;
             else if (score === '1') blocoPoints += 1;
+            else if (score === 'N/A') blocoNaCount++;
           });
           pilarPoints += blocoPoints;
-          const maxBlocoPoints = blocoItems.length * 3;
+          pilarNaCount += blocoNaCount;
+          const maxBlocoPoints = (blocoItems.length - blocoNaCount) * 3;
           matrix[unit][`${pilar}_${bloco}`] = maxBlocoPoints === 0 ? '0' : Math.round((blocoPoints / maxBlocoPoints) * 100).toString();
         });
 
         unitTotalPoints += pilarPoints;
-        unitMaxPoints += (pilarItems.length * 3);
+        unitMaxPoints += ((pilarItems.length - pilarNaCount) * 3);
 
-        const maxPoints = pilarItems.length * 3;
+        const maxPoints = (pilarItems.length - pilarNaCount) * 3;
         const percentage = maxPoints === 0 ? '0' : Math.round((pilarPoints / maxPoints) * 100).toString();
         matrix[unit][pilar] = percentage;
       });
