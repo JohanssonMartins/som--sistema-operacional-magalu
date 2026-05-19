@@ -57,3 +57,5 @@ dev.db
 server/check-users.ts
 server/reset-password.ts
 scripts/dev-commit.ps1
+scripts/use-supabase.ps1
+scripts/use-sqlite.ps1

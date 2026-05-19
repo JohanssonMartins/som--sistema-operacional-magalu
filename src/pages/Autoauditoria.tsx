@@ -99,20 +99,22 @@ export const Autoauditoria = () => {
       let conforme = 0; // score === '3'
       let parcial = 0;  // score === '1'
       let naoConforme = 0; // score === '0'
+      let na = 0; // score === 'N/A'
       let respondidos = 0;
       let totalPoints = 0;
-      const maxPoints = total * 3;
 
       pilarBaseItems.forEach(bi => {
         const s = autoauditoriaData[bi.id]?.score;
         if (s === '3') { conforme++; respondidos++; totalPoints += 3; }
         else if (s === '1') { parcial++; respondidos++; totalPoints += 1; }
         else if (s === '0') { naoConforme++; respondidos++; }
+        else if (s === 'N/A') { na++; respondidos++; }
       });
 
+      const maxPoints = (total - na) * 3;
       const aderencia = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
       const status = aderencia >= 80 ? 'Aderente' : 'Não Aderente';
-      return { pilar, total, conforme, parcial, naoConforme, respondidos, aderencia, status };
+      return { pilar, total, na, conforme, parcial, naoConforme, respondidos, aderencia, status };
     }).filter(row => row.total > 0);
   }, [baseItems, autoauditoriaData, selectedPilarFilter, selectedBlocoFilter]);
 
@@ -128,7 +130,7 @@ export const Autoauditoria = () => {
   const totalRespondidos = useMemo(() => {
     return itemsForStats.filter(bi => {
       const s = autoauditoriaData[bi.id]?.score;
-      return s === '3' || s === '1' || s === '0';
+      return s === '3' || s === '1' || s === '0' || s === 'N/A';
     }).length;
   }, [itemsForStats, autoauditoriaData]);
 
@@ -141,7 +143,14 @@ export const Autoauditoria = () => {
     }, 0);
   }, [itemsForStats, autoauditoriaData]);
 
-  const maxPossiblePoints = useMemo(() => itemsForStats.length * 3, [itemsForStats]);
+  const totalNa = useMemo(() => {
+    return itemsForStats.filter(bi => {
+      const s = autoauditoriaData[bi.id]?.score;
+      return s === 'N/A';
+    }).length;
+  }, [itemsForStats, autoauditoriaData]);
+
+  const maxPossiblePoints = useMemo(() => (itemsForStats.length - totalNa) * 3, [itemsForStats, totalNa]);
   const aderenciaMedia = maxPossiblePoints === 0 ? 0 : (totalPoints / maxPossiblePoints) * 100;
   const progressoTotal = totalItems === 0 ? 0 : (totalRespondidos / totalItems) * 100;
 
@@ -506,6 +515,7 @@ export const Autoauditoria = () => {
               <tr>
                 <th className="px-3 py-3 text-left">Pilar</th>
                 <th className="px-3 py-3">Total</th>
+                <th className="px-3 py-3 text-gray-500">N/A</th>
                 <th className="px-3 py-3 text-emerald-600">Conforme</th>
                 <th className="px-3 py-3 text-amber-500">Parcial</th>
                 <th className="px-3 py-3 text-red-600">N. Conforme</th>
@@ -547,6 +557,7 @@ export const Autoauditoria = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">{row.total}</td>
+                  <td className="px-6 py-4 text-gray-500">{row.na > 0 ? row.na : '—'}</td>
                   <td className="px-6 py-4 font-bold text-emerald-600">{row.conforme}</td>
                   <td className="px-6 py-4 font-bold text-amber-500">{row.parcial}</td>
                   <td className="px-6 py-4 font-bold text-red-600">{row.naoConforme}</td>
