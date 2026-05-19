@@ -558,13 +558,13 @@ app.post('/api/autoauditoria/evidencia/link', async (req: any, res: any) => {
             }
         });
 
-        // 3. Limpeza de evidência de LINK anterior (Substituição de link por link)
-        await prisma.evidenciaAutoauditoria.deleteMany({
-            where: {
-                autoauditoriaItemId: autoauditoriaItem.id,
-                name: 'Manual Link'
-            }
-        });
+        // 3. Limpeza de evidência de LINK anterior desabilitada para permitir múltiplos links
+        // await prisma.evidenciaAutoauditoria.deleteMany({
+        //     where: {
+        //         autoauditoriaItemId: autoauditoriaItem.id,
+        //         name: 'Manual Link'
+        //     }
+        // });
 
         // 4. Finalmente, cria a evidencia apontando a url
         const evidencia = await prisma.evidenciaAutoauditoria.create({

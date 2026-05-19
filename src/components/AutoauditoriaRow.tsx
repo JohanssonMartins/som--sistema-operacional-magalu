@@ -80,7 +80,7 @@ interface AutoauditoriaRowProps {
   mesAno: string;
   tipo?: 'AUTO' | 'EXTERNA';
   evidencias?: any[];
-  onEvidenciaUploaded?: (itemId: string, url: string, evidenceId: string) => void;
+  onEvidenciaUploaded?: (itemId: string, evidencia: any) => void;
   onEvidenciaDeleted?: (itemId: string, evidenceId: string) => void;
   isNossaAcaoReadOnly?: boolean;
   isEvidenceReadOnly?: boolean;
@@ -111,8 +111,8 @@ export const AutoauditoriaRow = React.memo(({
   const [planState, setPlanState] = useState<ActionPlan5W2H>(() => parse5W2H(nossaAcaoValue));
 
   const [isUploading, setIsUploading] = useState(false);
-  const [driveEvidencias, setDriveEvidencias] = useState<any[]>(() => evidencias.filter(e => e.name !== 'Manual Link'));
-  const [manualLink, setManualLink] = useState(() => evidencias.find(e => e.name === 'Manual Link'));
+  const [driveEvidencias, setDriveEvidencias] = useState<any[]>(() => evidencias.filter(e => e.name !== 'Manual Link' && e.category !== 'Manual'));
+  const [manualLinks, setManualLinks] = useState<any[]>(() => evidencias.filter(e => e.name === 'Manual Link' || e.category === 'Manual'));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -140,8 +140,8 @@ export const AutoauditoriaRow = React.memo(({
   }, [nossaAcaoValue]);
 
   useEffect(() => {
-    setDriveEvidencias(evidencias.filter(e => e.name !== 'Manual Link'));
-    setManualLink(evidencias.find(e => e.name === 'Manual Link'));
+    setDriveEvidencias(evidencias.filter(e => e.name !== 'Manual Link' && e.category !== 'Manual'));
+    setManualLinks(evidencias.filter(e => e.name === 'Manual Link' || e.category === 'Manual'));
   }, [evidencias]);
 
   const activeUsers = useMemo(() => {
@@ -190,9 +190,8 @@ export const AutoauditoriaRow = React.memo(({
         formData.append('tipo', tipo);
 
         const res = await api.uploadEvidenciaGoogleDrive(formData);
-        if (res.success && res.url) {
-          const driveId = res.evidencia?.name || '';
-          onEvidenciaUploaded?.(item.id, res.url, driveId);
+        if (res.success && res.evidencia) {
+          onEvidenciaUploaded?.(item.id, res.evidencia);
         }
       }
     } catch (error) {
@@ -247,8 +246,8 @@ export const AutoauditoriaRow = React.memo(({
         mesAno,
         tipo
       });
-      if (res.success && res.url) {
-        onEvidenciaUploaded?.(item.id, res.url, 'Manual Link');
+      if (res.success && res.evidencia) {
+        onEvidenciaUploaded?.(item.id, res.evidencia);
       }
     } catch (error) {
       console.error('Erro ao salvar link:', error);
@@ -797,38 +796,41 @@ export const AutoauditoriaRow = React.memo(({
 
             {/* --- COLUNA LINK (MANUAL) --- */}
             <div className="flex flex-col items-center justify-center min-h-[50px] gap-1">
-              {manualLink ? (
-                <>
-                  <a
-                    href={manualLink.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    Ver Link
-                  </a>
-                  {!isEvidenceReadOnly && (
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <button
-                        onClick={handleLinkUpload}
-                        disabled={!canEdit || isUploading}
-                        className="text-[9px] text-gray-400 dark:text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer underline underline-offset-2 disabled:opacity-50"
+              {manualLinks.length > 0 ? (
+                <div className="flex flex-col gap-1 w-full px-1">
+                  {manualLinks.map((link, index) => (
+                    <div key={link.id || index} className="flex items-center justify-between gap-1 bg-white/40 dark:bg-zinc-800/40 rounded px-1.5 py-0.5 border border-gray-100 dark:border-zinc-700/50">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[50px]"
+                        title={link.url}
                       >
-                        Edite
-                      </button>
-                      {canEdit && (
+                        Link {index + 1}
+                      </a>
+                      {!isEvidenceReadOnly && canEdit && (
                         <button
                           type="button"
-                          onClick={() => handleEvidenceDelete(manualLink.id || manualLink.name)}
-                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                          onClick={() => handleEvidenceDelete(link.id || link.name)}
+                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none ml-1"
                           title="Remover link"
                         >
                           <X className="w-2.5 h-2.5" />
                         </button>
                       )}
                     </div>
+                  ))}
+                  {!isEvidenceReadOnly && (
+                    <button
+                      onClick={handleLinkUpload}
+                      disabled={!canEdit || isUploading}
+                      className="text-[9px] text-blue-500 hover:text-blue-700 transition-colors font-semibold mt-1"
+                    >
+                      + Link
+                    </button>
                   )}
-                </>
+                </div>
               ) : (
                 !isEvidenceReadOnly && (
                   <button
@@ -841,7 +843,7 @@ export const AutoauditoriaRow = React.memo(({
                   </button>
                 )
               )}
-              {isEvidenceReadOnly && !manualLink && (
+              {isEvidenceReadOnly && manualLinks.length === 0 && (
                 <span className="text-[10px] text-gray-400 italic">Sem link</span>
               )}
             </div>

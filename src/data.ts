@@ -12,13 +12,25 @@ export type User = {
 };
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Ana (Admin)', email: 'admin@magalu.com', role: 'ADMIN', password: '123', unidade: 'Master', active: true },
-  { id: '7', name: 'Gisele (Diretoria)', email: 'diretoria@magalu.com', role: 'DIRETORIA', password: '123', unidade: 'Master', active: true },
-  { id: '2', name: 'Beto (Gerente CD)', email: 'gerentecd@magalu.com', role: 'GERENTE_DO_CD', password: '123', unidade: '6991', active: true },
-  { id: '3', name: 'Carlos (Colab)', email: 'colab@magalu.com', role: 'COLABORADOR', password: '123', unidade: '994', active: true },
-  { id: '4', name: 'Diana (Divisional)', email: 'divisional@magalu.com', role: 'GERENTE_DIVISIONAL', password: '123', unidade: 'Master', active: true },
-  { id: '5', name: 'Eduardo (Dono Pilar)', email: 'donopilar@magalu.com', role: 'DONO_DO_PILAR', password: '123', unidade: '6991', active: true },
-  { id: '6', name: 'Fábio (Auditor)', email: 'auditor@magalu.com', role: 'AUDITOR', password: '123', unidade: 'Master', active: true },
+  { id: '1', name: 'Martins (Admin)', email: 'johansson.gomes@magazineluiza.com.br', role: 'ADMIN', password: '123', unidade: 'Master', active: true },
+  { id: '2', name: 'Palva (Divisional)', email: 'divisional@magalu.com', role: 'GERENTE_DIVISIONAL', password: '123', unidade: 'Master', active: true },
+  { id: '3', name: 'Rossana', email: 'rossana.lopes@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '4', name: 'Renan (Diretoria)', email: 'renan.marquezini@magazineluiza.com.br', role: 'DIRETORIA', password: '123', unidade: 'Master', active: true },
+  { id: '5', name: 'Lucas', email: 'sales.lucas@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '6', name: 'Matheus', email: 'matheus.marley@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '7', name: 'Ribamar', email: 'jose.ribamar@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '8', name: 'John Natil', email: 'john.martins@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '9', name: 'Bruno Campos', email: 'brunocampos@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '10', name: 'Luciano', email: 'luciano.freitas@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '11', name: 'Euzanete', email: 'euzanete1.almeida@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '12', name: 'Jailton', email: 'jailton.souza@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '13', name: 'Max', email: 'max.silva@luizalabs.com', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '14', name: 'Levi', email: 'levi.dantas@luizalabs.com', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '15', name: 'Eduarda', email: 'maria.lemos@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '16', name: 'walber', email: 'walber.damasceno@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '17', name: 'Francisco Rosa', email: 'francisco.carneiro@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '18', name: 'Felipe Falcao', email: 'felipe.falcao@magazineluiza.com.br', role: 'DONO_DO_PILAR', password: '123', unidade: '994', active: true },
+  { id: '19', name: 'Osvaldo (Gerente CD)', email: 'osvaldo.sobrinho@magazineluiza.com.br', role: 'GERENTE_DO_CD', password: '123', unidade: '994', active: true },
 ];
 
 export type ChecklistItem = {

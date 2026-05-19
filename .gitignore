@@ -51,3 +51,9 @@ temp/
 
 # Google Cloud credentials
 som-sistema-operacional-magalu*.json
+
+# Local Dev Helpers & DB
+dev.db
+server/check-users.ts
+server/reset-password.ts
+scripts/dev-commit.ps1

@@ -260,18 +260,15 @@ export const Autoauditoria = () => {
     }));
   }, [setAutoauditoriaData]);
 
-  const handleEvidenciaUploaded = useCallback((itemId: string, url: string, evidenceId: string) => {
+  const handleEvidenciaUploaded = useCallback((itemId: string, evidencia: any) => {
     setAutoauditoriaData(prev => {
       const currentEvidencias = prev[itemId]?.evidencias || [];
-      const isManualLink = evidenceId === 'Manual Link';
-      
-      let newEvidencias;
-      if (isManualLink) {
-        newEvidencias = currentEvidencias.filter(e => e.name !== 'Manual Link');
-        newEvidencias.push({ name: 'Manual Link', url, category: 'Manual' });
-      } else {
-        newEvidencias = [...currentEvidencias, { name: evidenceId, url, category: 'Drive' }];
-      }
+      const newEvidencias = [...currentEvidencias, {
+        id: evidencia.id,
+        name: evidencia.name,
+        url: evidencia.url,
+        category: evidencia.name === 'Manual Link' ? 'Manual' : 'Drive'
+      }];
 
       return {
         ...prev,
