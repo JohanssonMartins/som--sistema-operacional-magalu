@@ -127,18 +127,18 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
           style={{ background: 'linear-gradient(to bottom, #FACC15, #FB923C, #FB7185, #EC4899, #A855F7, #3B82F6, #06B6D4, #22C55E)' }}
         />
 
-        <div className={`h-[72px] flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden`}>
+        <div className="h-[72px] flex items-center justify-center px-5 border-b border-gray-200 dark:border-zinc-800/80 shrink-0 overflow-hidden relative">
           {!isSidebarCollapsed && (
             <div
-              className="flex items-center cursor-pointer h-full flex-1 animate-in fade-in slide-in-from-left-4 duration-300"
+              className="flex items-center justify-center cursor-pointer h-full animate-in fade-in slide-in-from-left-4 duration-300"
               onClick={() => navigate('/')}
             >
-              <MainLogo size="small" className="!px-0 justify-start" />
+              <MainLogo size="small" className="!px-0" />
             </div>
           )}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+            className={`p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors ${isSidebarCollapsed ? '' : 'absolute right-5'}`}
           >
             {isSidebarCollapsed ? <Menu className="w-6 h-6" /> : <PanelLeftClose className="w-5 h-5 text-gray-400" />}
           </button>
