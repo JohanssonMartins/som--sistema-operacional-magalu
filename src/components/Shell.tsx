@@ -233,7 +233,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         </nav>
 
         <div className="p-3 border-t border-gray-200 dark:border-zinc-800/80 bg-gray-50 dark:bg-zinc-950/80">
-          <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2'}`}>
+          <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-center gap-4'}`}>
             <button
               onClick={toggleTheme}
               className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm"
