@@ -57,6 +57,7 @@ dev.db
 prisma/dev.db
 *.db
 backups/
+*.zip
 server/check-users.ts
 server/reset-password.ts
 scripts/dev-commit.ps1
