@@ -579,7 +579,7 @@ export const AvaliacaoExterna = () => {
                               transition={{ duration: 0.8, ease: "easeOut" }}
                             />
                           </div>
-                          <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 shrink-0">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-zinc-400 shrink-0">
                             {row.respondidos - row.na}/{row.total - row.na}
                           </span>
                         </div>
