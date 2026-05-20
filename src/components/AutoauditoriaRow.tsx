@@ -633,7 +633,15 @@ export const AutoauditoriaRow = React.memo(({
                               <input
                                 list={`users-datalist-${item.id}`}
                                 value={whoInput}
-                                onChange={(e) => setWhoInput(e.target.value)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setWhoInput(val);
+                                  const matchedUser = activeUsers.find(u => u.name.toLowerCase() === val.trim().toLowerCase() && !planState.who.includes(u.name));
+                                  if (matchedUser) {
+                                    addUser(matchedUser.name);
+                                    setWhoInput('');
+                                  }
+                                }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
