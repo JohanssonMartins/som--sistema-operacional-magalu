@@ -586,13 +586,13 @@ export const AvaliacaoExterna = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">{row.total}</td>
-                  <td className="px-6 py-4 text-center text-gray-500">{row.na > 0 ? row.na : '—'}</td>
-                  <td className="px-6 py-4 text-center font-bold text-emerald-600">{row.conforme}</td>
-                  <td className="px-6 py-4 text-center font-bold text-amber-500">{row.parcial}</td>
-                  <td className="px-6 py-4 text-center font-bold text-red-600">{row.naoConforme}</td>
-                  <td className="px-6 py-4 text-center">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center align-bottom">{row.total}</td>
+                  <td className="px-6 py-4 text-center align-bottom text-gray-500">{row.na > 0 ? row.na : '—'}</td>
+                  <td className="px-6 py-4 text-center align-bottom font-bold text-emerald-600">{row.conforme}</td>
+                  <td className="px-6 py-4 text-center align-bottom font-bold text-amber-500">{row.parcial}</td>
+                  <td className="px-6 py-4 text-center align-bottom font-bold text-red-600">{row.naoConforme}</td>
+                  <td className="px-6 py-4 text-center align-bottom">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-6 py-4 text-center align-bottom">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${row.status === 'Aderente' ? 'bg-emerald-500' : 'bg-red-500'}`}>
                       {row.status}
                     </span>
