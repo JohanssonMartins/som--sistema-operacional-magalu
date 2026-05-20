@@ -662,7 +662,7 @@ export const AutoauditoriaRow = React.memo(({
                         
                         <datalist id={`users-datalist-${item.id}`}>
                           {activeUsers.filter(u => !planState.who.includes(u.name)).map(u => (
-                            <option key={u.id} value={u.name}>{u.role} - CD {u.unidade}</option>
+                            <option key={u.id} value={u.name}>{u.email}</option>
                           ))}
                         </datalist>
                       </div>
