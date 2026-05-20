@@ -76,3 +76,17 @@ Abra seu navegador em [http://localhost:5173](http://localhost:5173).
 
 ---
 *Documentação oficial do S.O.M - Sistema Operacional Magalog.*
+
+git status; git add .; git commit -m "alteração realizada"; git push origin main
+
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-commit.ps1
+
+💻 Situação 1: "Estou em casa ou roteando o 4G do celular" (Ver dados reais do Supabase)
+Se você estiver fora da rede bloqueada da empresa e quiser rodar localmente com os dados, usuários e fotos reais de produção, basta rodar este comando na pasta raiz do projeto:
+
+powershell -ExecutionPolicy Bypass -File .\scripts\use-supabase.ps1
+
+🏢 Situação 2: "Cheguei no escritório/CD" (Voltar para o banco offline SQLite seguro)
+Ao voltar para a rede corporativa da empresa (com portas de banco bloqueadas), para que seu servidor local continue rodando offline de forma rápida e estável, rode este comando na pasta raiz do projeto:
+
+powershell -ExecutionPolicy Bypass -File .\scripts\use-sqlite.ps1

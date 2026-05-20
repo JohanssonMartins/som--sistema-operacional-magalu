@@ -121,3 +121,5 @@ model EvidenciaAutoauditoria {
   autoauditoriaItemId String
   autoauditoriaItem   AutoauditoriaItem @relation(fields: [autoauditoriaItemId], references: [id], onDelete: Cascade)
 }
+
+

@@ -359,7 +359,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       <main
         className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto animate-in fade-in duration-200"
       >
-        <div className="p-6">
+        <div className="p-4">
           {children}
         </div>
 

@@ -249,7 +249,7 @@ export const BaseChecklist = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="w-full py-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
             <div className="flex flex-col gap-5">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-200">
@@ -379,14 +379,14 @@ export const BaseChecklist = () => {
                         <table className="w-full text-left text-sm text-gray-600 dark:text-zinc-300">
                             <thead className="bg-gray-50 dark:bg-zinc-950/50 border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 font-medium">
                                 <tr>
-                                    <th className="px-4 py-4">Pilar</th>
-                                    <th className="px-4 py-4">Bloco</th>
-                                    <th className="px-4 py-4">Trilha</th>
-                                    <th className="px-4 py-4">Item</th>
-                                    <th className="px-4 py-4">Critérios</th>
-                                    <th className="px-4 py-4 text-center">Evidência</th>
-                                    <th className="px-4 py-4 text-center">Status</th>
-                                    <th className="px-4 py-4 text-right">Ações</th>
+                                    <th className="px-3 py-3 text-xs">Pilar</th>
+                                    <th className="px-3 py-3 text-xs">Bloco</th>
+                                    <th className="px-3 py-3 text-xs">Trilha</th>
+                                    <th className="px-3 py-3 text-xs">Item</th>
+                                    <th className="px-3 py-3 text-xs">Critérios</th>
+                                    <th className="px-3 py-3 text-xs text-center">Evidência</th>
+                                    <th className="px-3 py-3 text-xs text-center">Status</th>
+                                    <th className="px-3 py-3 text-xs text-right min-w-[160px]">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
@@ -395,30 +395,30 @@ export const BaseChecklist = () => {
                                         key={item.id}
                                         className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors group"
                                     >
-                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-800 dark:text-zinc-200 whitespace-nowrap capitalize">{String(item.pilar || '').toLowerCase()}</td>
-                                        <td className="px-4 py-4 font-medium text-[13px] text-gray-600 dark:text-zinc-300 whitespace-nowrap capitalize">{formatBlocoName(item.bloco).toLowerCase()}</td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-xs">
+                                        <td className="px-3 py-3 font-medium text-[12px] text-gray-800 dark:text-zinc-200 whitespace-nowrap capitalize">{String(item.pilar || '').toLowerCase()}</td>
+                                        <td className="px-3 py-3 font-medium text-[12px] text-gray-600 dark:text-zinc-300 whitespace-nowrap capitalize">{formatBlocoName(item.bloco).toLowerCase()}</td>
+                                        <td className="px-3 py-3 whitespace-nowrap text-xs">
                                             {item.trilha ? (
-                                                <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100 dark:border-amber-500/20">
+                                                <span className="inline-flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-100 dark:border-amber-500/20">
                                                     {item.trilha}
                                                 </span>
                                             ) : (
                                                 <span className="text-xs text-gray-400">-</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 max-w-[220px] lg:max-w-[280px]">
-                                            <div className="font-medium text-gray-900 dark:text-zinc-200 text-[13.5px] leading-snug" title={item.item}>{item.item}</div>
+                                        <td className="px-3 py-3 max-w-[200px] lg:max-w-[240px]">
+                                            <div className="font-medium text-gray-900 dark:text-zinc-200 text-[12px] leading-snug" title={item.item}>{item.item}</div>
                                             {item.descricao && (
-                                                <div className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 italic line-clamp-2 leading-tight" title={item.descricao}>
+                                                <div className="text-[10px] text-gray-500 dark:text-zinc-400 mt-1 italic line-clamp-2 leading-tight" title={item.descricao}>
                                                     {item.descricao}
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 max-w-[250px] lg:max-w-[420px]">
+                                        <td className="px-3 py-3 max-w-[220px] lg:max-w-[320px]">
                                             {item.criterios ? (
-                                                <div className="text-[12px] text-gray-700 dark:text-zinc-300 bg-gray-50/50 dark:bg-zinc-800/50 p-2.5 rounded-lg border border-gray-200 dark:border-zinc-700/50 font-medium leading-relaxed shadow-sm" title={item.criterios}>
+                                                <div className="text-[11px] text-gray-700 dark:text-zinc-300 bg-gray-50/50 dark:bg-zinc-800/50 p-2 rounded-lg border border-gray-200 dark:border-zinc-700/50 font-medium leading-relaxed shadow-sm" title={item.criterios}>
                                                     {item.criterios.split('\n').map((line, i) => (
-                                                        <div key={i} className={i > 0 ? "mt-1.5 pt-1.5 border-t border-gray-200/50 dark:border-zinc-700/30" : ""}>
+                                                        <div key={i} className={i > 0 ? "mt-1 pt-1 border-t border-gray-200/50 dark:border-zinc-700/30" : ""}>
                                                             {line}
                                                         </div>
                                                     ))}
@@ -427,7 +427,7 @@ export const BaseChecklist = () => {
                                                 <span className="text-xs text-gray-400 italic">Não definido</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                                        <td className="px-3 py-3 whitespace-nowrap text-center">
                                             {item.exigeEvidencia ? (
                                                 <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100 dark:border-amber-500/20">
                                                     <Check className="w-3 h-3 mr-1" /> Sim
@@ -438,14 +438,14 @@ export const BaseChecklist = () => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                                        <td className="px-3 py-3 whitespace-nowrap text-center">
                                             {item.ativo ? (
                                                 <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[12px]">Ativo</span>
                                             ) : (
                                                 <span className="text-red-500 dark:text-red-400 font-bold text-[12px]">Inativo</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-3 py-3 min-w-[160px] whitespace-nowrap">
                                             <div className="flex flex-col items-end">
                                                 <div className="flex justify-end items-center space-x-1">
                                                     <button
