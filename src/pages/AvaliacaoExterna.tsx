@@ -154,7 +154,7 @@ export const AvaliacaoExterna = () => {
 
   const maxPossiblePoints = useMemo(() => (itemsForStats.length - totalNa) * 3, [itemsForStats, totalNa]);
   const aderenciaMedia = maxPossiblePoints === 0 ? 0 : (totalPoints / maxPossiblePoints) * 100;
-  const progressoTotal = totalItems === 0 ? 0 : (totalRespondidos / totalItems) * 100;
+  const progressoTotal = (totalItems - totalNa) === 0 ? 0 : ((totalRespondidos - totalNa) / (totalItems - totalNa)) * 100;
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -521,7 +521,7 @@ export const AvaliacaoExterna = () => {
           <div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">{progressoTotal.toFixed(1).replace('.', ',')}%</div>
             <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Progresso</div>
-            <div className="text-xs text-gray-400 dark:text-zinc-500">({totalRespondidos}/{totalItems} itens)</div>
+            <div className="text-xs text-gray-400 dark:text-zinc-500">({totalRespondidos - totalNa}/{totalItems - totalNa} itens)</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">{aderenciaMedia.toFixed(1).replace('.', ',')}%</div>
@@ -574,13 +574,13 @@ export const AvaliacaoExterna = () => {
                           <div className="flex-1 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
-                              animate={{ width: row.total === 0 ? '0%' : `${(row.respondidos / row.total) * 100}%` }}
+                              animate={{ width: (row.total - row.na) === 0 ? '0%' : `${((row.respondidos - row.na) / (row.total - row.na)) * 100}%` }}
                               className="h-full bg-blue-500 rounded-full"
                               transition={{ duration: 0.8, ease: "easeOut" }}
                             />
                           </div>
                           <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 shrink-0">
-                            {row.respondidos}/{row.total}
+                            {row.respondidos - row.na}/{row.total - row.na}
                           </span>
                         </div>
                       </div>
