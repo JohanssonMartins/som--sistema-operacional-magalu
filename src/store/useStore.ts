@@ -42,7 +42,7 @@ export const useStore = create<AppState>()(
   persist(
     (set) => ({
       currentUser: null,
-      theme: 'dark',
+      theme: 'light',
       selectedUnit: 'Todas',
       isSidebarCollapsed: false,
       activeTab: 'home',
@@ -91,7 +91,6 @@ export const useStore = create<AppState>()(
       storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         currentUser: state.currentUser,
-        theme: state.theme,
         selectedUnit: state.selectedUnit,
         isSidebarCollapsed: state.isSidebarCollapsed,
         activeTab: state.activeTab,
