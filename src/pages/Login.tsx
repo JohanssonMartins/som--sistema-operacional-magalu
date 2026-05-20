@@ -15,6 +15,10 @@ export const Login = () => {
     e.preventDefault();
     const user = usersList.find(u => u.email === loginEmail && u.password === loginPassword);
     if (user) {
+      if (!user.active) {
+        setLoginError('Sua conta está inativa. Entre em contato com o administrador.');
+        return;
+      }
       setCurrentUser(user);
 
       const targetUnit = user.unidade === 'Master' ? 'Todas' : (user.unidade || 'Todas');

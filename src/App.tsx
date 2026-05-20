@@ -82,6 +82,15 @@ export const App = () => {
       ]);
       setUsersList(u);
       setBaseItems(b);
+
+      // Desconecta o usuário se ele tiver sido inativado no banco de dados
+      if (currentUser) {
+        const freshUser = u.find(user => user.id === currentUser.id);
+        if (!freshUser || !freshUser.active) {
+          useStore.getState().logout();
+          alert('Sua conta foi desativada ou excluída. Você foi desconectado.');
+        }
+      }
     } catch (e) {
       console.error("Erro crítico ao conectar com o banco de dados Supabase:", e);
       // Mantivemos vazio para não confundir o usuário com dados fakes
