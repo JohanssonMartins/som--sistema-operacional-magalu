@@ -59,6 +59,7 @@ export const Autoauditoria = () => {
 
   const [selectedPilarFilter, setSelectedPilarFilter] = useState('Todos');
   const [selectedBlocoFilter, setSelectedBlocoFilter] = useState('Todos');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState('Todos');
   const [showOnlyPending, setShowOnlyPending] = useState(false);
   const [showMyPending, setShowMyPending] = useState(false);
 
@@ -319,20 +320,29 @@ export const Autoauditoria = () => {
     (currentUser.role === 'ADMIN' || currentUser.unidade === selectedUnit);
 
   const filteredItems = baseItems
-    .filter(i => i.ativo &&
-      (selectedPilarFilter === 'Todos' || i.pilar === selectedPilarFilter) &&
-      (selectedBlocoFilter === 'Todos' || formatBlocoName(i.bloco) === selectedBlocoFilter) &&
-      (!showOnlyPending || !(autoauditoriaData[i.id]?.score)) &&
-      (!showMyPending || (() => {
+    .filter(i => {
+      if (!i.ativo) return false;
+      if (selectedPilarFilter !== 'Todos' && i.pilar !== selectedPilarFilter) return false;
+      if (selectedBlocoFilter !== 'Todos' && formatBlocoName(i.bloco) !== selectedBlocoFilter) return false;
+      if (showOnlyPending && autoauditoriaData[i.id]?.score) return false;
+      if (showMyPending) {
         const planStr = autoauditoriaData[i.id]?.nossaAcao || '';
         if (!planStr) return false;
         const plan = parse5W2H(planStr);
-        return plan.who && currentUser && (
-          plan.who.toLowerCase().includes(currentUser.name.toLowerCase()) ||
-          currentUser.name.toLowerCase().includes(plan.who.toLowerCase())
-        );
-      })())
-    )
+        if (!plan.who || !currentUser) return false;
+        const match = plan.who.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+          currentUser.name.toLowerCase().includes(plan.who.toLowerCase());
+        if (!match) return false;
+      }
+      if (selectedStatusFilter !== 'Todos') {
+        const score = autoauditoriaData[i.id]?.score || '';
+        if (selectedStatusFilter === 'N/A' && score !== 'N/A') return false;
+        if (selectedStatusFilter === 'Conforme' && score !== '3') return false;
+        if (selectedStatusFilter === 'Parcial' && score !== '1') return false;
+        if (selectedStatusFilter === 'N. Conforme' && score !== '0') return false;
+      }
+      return true;
+    })
     .sort((a, b) => {
       const wA = getPilarWeight(a.pilar);
       const wB = getPilarWeight(b.pilar);
@@ -392,11 +402,11 @@ export const Autoauditoria = () => {
         </div>
 
         {/* ── Barra de Filtros ── */}
-        <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2 shadow-sm">
+        <div className="flex flex-nowrap items-end gap-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 shadow-sm overflow-x-auto">
 
           {/* CD */}
           {isPrivileged && (
-            <div className="flex flex-col">
+            <div className="flex flex-col shrink-0">
               <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Selecione o CD</label>
               <select
                 value={selectedUnit}
@@ -411,10 +421,10 @@ export const Autoauditoria = () => {
             </div>
           )}
 
-          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 hidden md:block" />
+          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 shrink-0" />
 
           {/* Pilar */}
-          <div className="flex flex-col">
+          <div className="flex flex-col shrink-0">
             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Pilar</label>
             <select
               value={selectedPilarFilter}
@@ -427,7 +437,7 @@ export const Autoauditoria = () => {
           </div>
 
           {/* Bloco */}
-          <div className="flex flex-col">
+          <div className="flex flex-col shrink-0">
             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Bloco</label>
             <select
               value={selectedBlocoFilter}
@@ -440,10 +450,10 @@ export const Autoauditoria = () => {
             </select>
           </div>
 
-          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 hidden md:block" />
+          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 shrink-0" />
 
           {/* Mês */}
-          <div className="flex flex-col">
+          <div className="flex flex-col shrink-0">
             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Mês</label>
             <select
               value={localMesAno}
@@ -456,32 +466,64 @@ export const Autoauditoria = () => {
             </select>
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            {currentUser && (
+          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 shrink-0" />
+
+          {/* Status / Rótulo */}
+          <div className="flex flex-col shrink-0">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Rótulo</label>
+            <select
+              value={selectedStatusFilter}
+              onChange={(e) => setSelectedStatusFilter(e.target.value)}
+              className={`border rounded-lg px-3 py-1 text-sm font-bold focus:outline-none focus:ring-2 cursor-pointer min-w-[150px] transition-colors ${
+                selectedStatusFilter === 'Conforme'
+                  ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500/30'
+                  : selectedStatusFilter === 'Parcial'
+                  ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 focus:ring-amber-500/30'
+                  : selectedStatusFilter === 'N. Conforme'
+                  ? 'bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/30 text-red-700 dark:text-red-400 focus:ring-red-500/30'
+                  : selectedStatusFilter === 'N/A'
+                  ? 'bg-gray-100 dark:bg-zinc-700 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 focus:ring-gray-500/30'
+                  : 'bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 focus:ring-blue-500/30'
+              }`}
+            >
+              <option value="Todos">Todos os Rótulos</option>
+              <option value="N/A">N/A</option>
+              <option value="Conforme">✓ Conforme</option>
+              <option value="Parcial">~ Parcial</option>
+              <option value="N. Conforme">✗ N. Conforme</option>
+            </select>
+          </div>
+
+          {/* Botões — sempre à direita na mesma linha */}
+          <div className="flex flex-col ml-auto shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-transparent mb-1 select-none" aria-hidden="true">Ações</span>
+            <div className="flex items-center gap-2">
+              {currentUser && (
+                <button
+                  onClick={() => setShowMyPending(!showMyPending)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showMyPending
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30'
+                    : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                    }`}
+                >
+                  <span>{showMyPending ? '✓ Minhas Pendências' : 'Minhas Pendências'}</span>
+                  {myPendingCount > 0 && (
+                    <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-600 dark:bg-blue-500 text-white leading-none">
+                      {myPendingCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
-                onClick={() => setShowMyPending(!showMyPending)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${showMyPending
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30'
+                onClick={() => setShowOnlyPending(!showOnlyPending)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${showOnlyPending
+                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
                   : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
                   }`}
               >
-                <span>{showMyPending ? '✓ Minhas Pendências' : 'Minhas Pendências'}</span>
-                {myPendingCount > 0 && (
-                  <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-600 dark:bg-blue-500 text-white dark:text-white leading-none">
-                    {myPendingCount}
-                  </span>
-                )}
+                {showOnlyPending ? '✓ Mostrando Pendentes' : 'Ver Pendências'}
               </button>
-            )}
-            <button
-              onClick={() => setShowOnlyPending(!showOnlyPending)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showOnlyPending
-                ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30'
-                : 'bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
-                }`}
-            >
-              {showOnlyPending ? '✓ Mostrando Pendentes' : 'Ver Pendências'}
-            </button>
+            </div>
           </div>
         </div>
       </div>
