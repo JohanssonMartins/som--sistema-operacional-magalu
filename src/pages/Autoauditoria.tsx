@@ -514,13 +514,13 @@ export const Autoauditoria = () => {
             <thead className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 font-bold">
               <tr>
                 <th className="px-3 py-3 text-left">Pilar</th>
-                <th className="px-3 py-3">Total</th>
-                <th className="px-3 py-3 text-gray-500">N/A</th>
-                <th className="px-3 py-3 text-emerald-600">Conforme</th>
-                <th className="px-3 py-3 text-amber-500">Parcial</th>
-                <th className="px-3 py-3 text-red-600">N. Conforme</th>
-                <th className="px-3 py-3">Aderência</th>
-                <th className="px-3 py-3">Status</th>
+                <th className="px-3 py-3 text-center">Total</th>
+                <th className="px-3 py-3 text-center text-gray-500">N/A</th>
+                <th className="px-3 py-3 text-center text-emerald-600">Conforme</th>
+                <th className="px-3 py-3 text-center text-amber-500">Parcial</th>
+                <th className="px-3 py-3 text-center text-red-600">N. Conforme</th>
+                <th className="px-3 py-3 text-center">Aderência</th>
+                <th className="px-3 py-3 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
@@ -556,13 +556,13 @@ export const Autoauditoria = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">{row.total}</td>
-                  <td className="px-6 py-4 text-gray-500">{row.na > 0 ? row.na : '—'}</td>
-                  <td className="px-6 py-4 font-bold text-emerald-600">{row.conforme}</td>
-                  <td className="px-6 py-4 font-bold text-amber-500">{row.parcial}</td>
-                  <td className="px-6 py-4 font-bold text-red-600">{row.naoConforme}</td>
-                  <td className="px-6 py-4">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 text-center">{row.total}</td>
+                  <td className="px-3 py-3 text-center text-gray-500">{row.na > 0 ? row.na : '—'}</td>
+                  <td className="px-3 py-3 text-center font-bold text-emerald-600">{row.conforme}</td>
+                  <td className="px-3 py-3 text-center font-bold text-amber-500">{row.parcial}</td>
+                  <td className="px-3 py-3 text-center font-bold text-red-600">{row.naoConforme}</td>
+                  <td className="px-3 py-3 text-center">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-3 py-3 text-center">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${row.status === 'Aderente' ? 'bg-emerald-500' : 'bg-red-500'}`}>
                       {row.status}
                     </span>
