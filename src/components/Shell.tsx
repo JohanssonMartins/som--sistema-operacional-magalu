@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, Trophy, CheckCircle2, Database, Users,
   Menu, PanelLeftClose, ChevronDown, Package, Bell,
-  Sun, Moon, LogOut, Lock, User as UserIcon, Check, X
+  Sun, Moon, LogOut, Lock, User as UserIcon, Check, X, ArrowUp
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -48,6 +48,8 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const isPrivileged = currentUser?.role === 'ADMIN' || currentUser?.role === 'GERENTE_DIVISIONAL' || currentUser?.role === 'DIRETORIA' || currentUser?.role === 'AUDITOR';
 
@@ -63,6 +65,29 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const mainEl = mainRef.current;
+    if (!mainEl) return;
+
+    const handleScroll = () => {
+      if (mainEl.scrollTop > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    mainEl.addEventListener('scroll', handleScroll);
+    return () => mainEl.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    mainRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   const handleLogout = () => {
     logout();
@@ -357,6 +382,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       </motion.aside>
 
       <main
+        ref={mainRef}
         className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto animate-in fade-in duration-200"
       >
         <div className="p-4">
@@ -367,6 +393,24 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
           <p>© 2026 Magalu | Feito com ❤ por J's Martins</p>
         </footer>
       </main>
+
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 15 }}
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-3.5 bg-blue-600 dark:bg-blue-500 text-white rounded-full shadow-lg shadow-blue-500/30 dark:shadow-blue-500/20 hover:bg-blue-700 dark:hover:bg-blue-600 transition-all border border-blue-500 cursor-pointer flex items-center justify-center"
+            title="Voltar ao Topo"
+            aria-label="Voltar ao topo"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isPasswordModalOpen && (
