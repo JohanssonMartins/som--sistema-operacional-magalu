@@ -13,7 +13,7 @@ export default function Navbar() {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <span className="text-gray-500 dark:text-zinc-400 text-sm font-medium">
-                Sistema Operacional Magalog
+                Sistema Operacional SOM
               </span>
             </div>
           </div>

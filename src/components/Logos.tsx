@@ -77,7 +77,7 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
     >
       <img
         src={logoImg}
-        alt="Magalog Logo"
+        alt="SOM Logo"
         className={`h-full w-auto object-contain transition-all duration-500 hover:brightness-110 drop-shadow-sm`}
         style={{ filter: 'brightness(1.1) contrast(1.05)' }}
       />
@@ -85,7 +85,7 @@ export const MainLogo = ({ className = '', size = 'medium' }: { className?: stri
   );
 };
 
-export const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
+export const TopSomLogo = ({ className = '' }: { className?: string }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -116,7 +116,7 @@ export const TopMagalogLogo = ({ className = '' }: { className?: string }) => (
           <div className="w-5 h-[3px] bg-fuchsia-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s', boxShadow: '0 0 4px rgba(217,70,239,0.6)' }}></div>
           <div className="w-5 h-[3px] bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s', boxShadow: '0 0 4px rgba(34,211,238,0.6)' }}></div>
         </div>
-        <span className="text-4xl sm:text-5xl font-black text-[#006CEE] pb-0.5 pt-1 group-hover:scale-105 transition-transform duration-500" style={{ fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'lowercase' }}>magalog</span>
+        <span className="text-4xl sm:text-5xl font-black text-[#006CEE] pb-0.5 pt-1 group-hover:scale-105 transition-transform duration-500" style={{ fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'uppercase' }}>som</span>
       </div>
     </div>
     <div className="flex flex-col justify-center border-l-2 border-gray-300 dark:border-zinc-700 pl-3 sm:pl-4 h-full py-1">

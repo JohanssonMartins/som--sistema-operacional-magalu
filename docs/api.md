@@ -1,6 +1,6 @@
 # Documentação da API (Backend)
 
-O backend do Sistema Operacional Magalog foi construído em Node.js utilizando Express e TypeScript. O servidor intermedia a comunicação do Frontend com a base de dados (Supabase) e gerencia o upload seguro de arquivos pesados (fotos de evidências) enviando-os para o Google Drive.
+O backend do Sistema Operacional SOM foi construído em Node.js utilizando Express e TypeScript. O servidor intermedia a comunicação do Frontend com a base de dados (Supabase) e gerencia o upload seguro de arquivos pesados (fotos de evidências) enviando-os para o Google Drive.
 
 ## Estrutura e Inicialização
 
@@ -58,4 +58,4 @@ Uma rota consumida pelo Frontend na hora que o usuário clica em "Adicionar Evid
 - **Retorno:** `{ fileId, webViewLink, message: "Upload success" }`
 
 ---
-*Documento gerado para a API do S.O.M (Sistema Operacional Magalog).*
+*Documento gerado para a API do S.O.M (Sistema Operacional SOM).*

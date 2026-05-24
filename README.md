@@ -1,6 +1,6 @@
-# Sistema Operacional Magalog (S.O.M)
+# Sistema Operacional SOM (S.O.M)
 
-O **Sistema Operacional Magalog (S.O.M)** é uma plataforma web desenvolvida para otimizar, auditar e gerenciar as operações diárias dos Centros de Distribuição (CDs) da Magalog. O sistema permite o acompanhamento de checklists diários, autoavaliações, metas de performance e gestão de usuários de forma intuitiva e segura.
+O **Sistema Operacional SOM (S.O.M)** é uma plataforma web desenvolvida para otimizar, auditar e gerenciar as operações diárias dos Centros de Distribuição (CDs) do SOM. O sistema permite o acompanhamento de checklists diários, autoavaliações, metas de performance e gestão de usuários de forma intuitiva e segura.
 
 ## Tecnologias Principais
 
@@ -75,7 +75,7 @@ npm run dev
 Abra seu navegador em [http://localhost:5173](http://localhost:5173).
 
 ---
-*Documentação oficial do S.O.M - Sistema Operacional Magalog.*
+*Documentação oficial do S.O.M - Sistema Operacional SOM.*
 
 git status; git add .; git commit -m "alteração realizada"; git push origin main
 

@@ -1,6 +1,6 @@
-# Arquitetura em Nuvem - Sistema Operacional Magalog (S.O.M)
+# Arquitetura em Nuvem - Sistema Operacional SOM (S.O.M)
 
-Este documento detalha a infraestrutura em nuvem escolhida para hospedar o Sistema Operacional Magalog (S.O.M), explicando o papel de cada serviço e como eles se comunicam.
+Este documento detalha a infraestrutura em nuvem escolhida para hospedar o Sistema Operacional SOM (S.O.M), explicando o papel de cada serviço e como eles se comunicam.
 
 ## A Arquitetura (O Trio de Ouro)
 
@@ -31,11 +31,11 @@ A Vercel é líder global em entregar sites HTML/React de forma ultra-rápida.
 
 ## Custos e Desempenho (Ideais para MVPs e Sistemas Corporativos)
 
-Essa estrutura utiliza as camadas "Tiers" gratuitos avançados das melhores plataformas do mercado, resultando em altíssima disponibilidade a um custo de infraestrutura quase zero, ideal para o cenário do Sistema Operacional Magalog.
+Essa estrutura utiliza as camadas "Tiers" gratuitos avançados das melhores plataformas do mercado, resultando em altíssima disponibilidade a um custo de infraestrutura quase zero, ideal para o cenário do Sistema Operacional SOM.
 
 - **Vercel (Frontend):** Entrega tráfego gigantesco 100% de graça (Hobby Tier). O uso de caches locais deixa a aplicação instantânea.
 - **Railway (Backend):** Utiliza um modelo de créditos de US$ 5 ao mês (concedidos gratuitamente pela plataforma na versão grátis). Como nosso servidor consome apenas frações de processamento por requisição, o valor permite rodar a API ligada constantemente por meses a fio.
-- **Supabase (Banco de Dados):** O plano grátis fornece PostgreSQL dedicado para abrigar gigabytes de dados, quantidade irreal de esgotar apenas salvando formulários e senhas dos colaboradores da Magalog. Arquivos grandes (fotos/PDFs) não gastam o armazenamento do Supabase, pois são espelhados para a API do Google Drive via Railway.
+- **Supabase (Banco de Dados):** O plano grátis fornece PostgreSQL dedicado para abrigar gigabytes de dados, quantidade irreal de esgotar apenas salvando formulários e senhas dos colaboradores do SOM. Arquivos grandes (fotos/PDFs) não gastam o armazenamento do Supabase, pois são espelhados para a API do Google Drive via Railway.
 
 ---
-*Documento gerado para o projeto S.O.M (Sistema Operacional Magalog).*
+*Documento gerado para o projeto S.O.M (Sistema Operacional SOM).*

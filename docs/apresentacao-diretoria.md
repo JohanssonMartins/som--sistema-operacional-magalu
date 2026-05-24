@@ -1,4 +1,4 @@
-# Guia de Apresentação Executiva: SOM (Sistema Operacional Magalog)
+# Guia de Apresentação Executiva: SOM (Sistema Operacional SOM)
 
 Este guia foi elaborado para uma apresentação objetiva e direta à **Diretoria**, focando no valor estratégico e nos diferenciais tecnológicos da ferramenta.
 

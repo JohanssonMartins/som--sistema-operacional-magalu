@@ -119,7 +119,7 @@ export default function Logo() {
         transition={{ delay: 1, duration: 0.6 }}
         className="text-[#006CEE] font-bold tracking-[0.25em] text-center uppercase text-[8px] md:text-[10px] mt-1 group-hover:tracking-[0.35em] transition-all duration-700"
       >
-        SISTEMA OPERACIONAL MAGALOG
+        SISTEMA OPERACIONAL SOM
       </motion.div>
     </div>
   );

@@ -42,4 +42,4 @@ Após o novo backend estar online:
 4.  Vá na aba **Deployments** e clique nos três pontinhos do último deploy > **Redeploy** para aplicar a mudança.
 
 ---
-*Documento de contingência - Sistema Operacional Magalog (S.O.M)*
+*Documento de contingência - Sistema Operacional SOM (S.O.M)*

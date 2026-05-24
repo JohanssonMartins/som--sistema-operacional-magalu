@@ -122,7 +122,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['ANY'] },
-    { to: '/rank', icon: Trophy, label: 'Top Magalog', roles: ['ANY'] },
+    { to: '/rank', icon: Trophy, label: 'Top SOM', roles: ['ANY'] },
     { to: '/autoauditoria', icon: CheckCircle2, label: 'Autoavaliação', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD', 'DONO_DO_PILAR', 'COLABORADOR'] },
     { to: '/avaliacao-externa', icon: CheckCircle2, label: 'Avaliação Externa', roles: ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'] },
     { to: '/base-checklist', icon: Database, label: 'Cadastro', roles: ['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'] },

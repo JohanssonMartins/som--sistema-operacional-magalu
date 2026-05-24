@@ -54,7 +54,7 @@ export const aiService = {
    */
   async suggestAction(pilar: string, bloco: string, item: string, descricao: string) {
     const prompt = `
-      Você é um especialista em excelência operacional da Magalog (Magalu).
+      Você é um especialista em excelência operacional do SOM (Magalu).
       Um item de auditoria foi marcado como "Não Conforme". Sua tarefa é sugerir um Plano de Ação (Ação Corretiva) curto, prático e direto.
 
       Contexto do Item:
@@ -100,7 +100,7 @@ export const aiService = {
    */
   async analyzeEvidence(pilar: string, bloco: string, item: string, descricao: string, fileBuffer: Buffer, mimeType: string) {
     const prompt = `
-      Você é um auditor de qualidade da Magalog. Analise a imagem anexa de evidência para o seguinte item de auditoria:
+      Você é um auditor de qualidade do SOM. Analise a imagem anexa de evidência para o seguinte item de auditoria:
       
       Item: ${item}
       Descrição/Requisito: ${descricao}

@@ -1,6 +1,6 @@
 # Manual do Usuário - S.O.M
 
-Bem-vindo ao **Sistema Operacional Magalog**. Este guia rápido ajudará você a navegar pelas principais funções do sistema.
+Bem-vindo ao **Sistema Operacional SOM**. Este guia rápido ajudará você a navegar pelas principais funções do sistema.
 
 ## 1. Acesso ao Sistema
 1. Acesse o link fornecido pela gerência.
@@ -10,7 +10,7 @@ Bem-vindo ao **Sistema Operacional Magalog**. Este guia rápido ajudará você a
 
 ## 2. Navegação Principal (Dashboard)
 Ao entrar, você verá o menu lateral à esquerda com as seguintes opções principais:
-- **Dashboard / Top Magalog:** Uma visão geral do desempenho dos Centros de Distribuição (CDs) baseada nas pontuações das autoavaliações preenchidas.
+- **Dashboard / Top SOM:** Uma visão geral do desempenho dos Centros de Distribuição (CDs) baseada nas pontuações das autoavaliações preenchidas.
   - Se você for Administrador ou Auditor, poderá usar o seletor no topo do menu lateral para alternar entre "Todos os CDs" ou escolher um CD específico.
 - **Autoavaliação:** A tela principal de trabalho para Gerentes Diários.
 - **Base Check-List:** Uma tela administrativa para gerenciar quais itens são cobrados nas auditorias.

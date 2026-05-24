@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { useStore } from '../store/useStore';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
-import { TopMagalogLogo } from '../components/Logos';
+import { TopSomLogo } from '../components/Logos';
 import { CustomTrophy } from '../components/CustomTrophy';
 
 export const Rank = () => {
@@ -123,7 +123,7 @@ export const Rank = () => {
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <TopMagalogLogo />
+          <TopSomLogo />
           <p
             className="text-gray-500 dark:text-zinc-400 text-sm mt-4 pl-1 animate-in fade-in duration-300"
           >

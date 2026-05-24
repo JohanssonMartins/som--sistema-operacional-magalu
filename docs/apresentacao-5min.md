@@ -8,7 +8,7 @@ Este é um roteiro otimizado para uma fala rápida e de alto impacto para a Dire
 
 ### 1 min: O Problema e a Missão
 *   "Hoje, a gestão operacional de nossos CDs depende de processos manuais e planilhas fragmentadas. Isso gera falta de visibilidade em tempo-real e subjetividade nas auditorias."
-*   "A missão do **SOM (Sistema Operacional Magalog)** é digitalizar essa camada, trazendo **padronização**, **auditabilidade** e **inteligência** para a tomada de decisão."
+*   "A missão do **SOM (Sistema Operacional SOM)** é digitalizar essa camada, trazendo **padronização**, **auditabilidade** e **inteligência** para a tomada de decisão."
 
 ### 2 min: Funcionalidades Chave (Demonstração Visual)
 *   **Dashboards em Tempo Real**: Mostre o gráfico de performance de aderência por pilares. Explique que o diretor pode filtrar qualquer unidade e ver o "gap" instantaneamente.

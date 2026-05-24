@@ -1,6 +1,6 @@
 # Documentação do Frontend (React/Vite)
 
-A interface de usuário do Sistema Operacional Magalog (S.O.M) adota uma fundação moderna para garantir performance e animações responsivas de primeira linha.
+A interface de usuário do Sistema Operacional SOM (S.O.M) adota uma fundação moderna para garantir performance e animações responsivas de primeira linha.
 
 ## Tecnologias e Camadas
 - **Bibliotecas Base:** React (18+), ReactDOM e Vite como empacotador veloz.
@@ -47,4 +47,4 @@ A aplicação React baseia-se pesadamente na união poderosa de Hooks fundamenta
   Multiplos `isModalOpen` para uploads de fotos, edição de pilar ou troca de senha controlados estritamente e injetados abaixo hierarquicamente junto da tag global.
 
 ---
-*Documentação do Frontend S.O.M (Sistema Operacional Magalog).*
+*Documentação do Frontend S.O.M (Sistema Operacional SOM).*
