@@ -20,12 +20,12 @@ const PILAR_CONFIG: Record<string, { icon: React.ElementType; color: string }> =
   'Armazém': { icon: Package, color: 'bg-orange-500' },
 };
 
-// Gera os últimos 12 meses no formato "Mês-Ano"
+// Gera os últimos 12 meses no formato "Mês-Ano" (iniciando do próximo mês para testes/planejamento)
 const gerarUltimosMeses = (quantidade = 12): string[] => {
   const meses: string[] = [];
   for (let i = 0; i < quantidade; i++) {
     const d = new Date();
-    d.setMonth(d.getMonth() - i);
+    d.setMonth(d.getMonth() + 1 - i);
     const mes = d.toLocaleString('pt-BR', { month: 'long' });
     const ano = d.getFullYear();
     meses.push(`${mes.charAt(0).toUpperCase() + mes.slice(1)}-${ano}`);

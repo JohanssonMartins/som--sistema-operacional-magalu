@@ -63,15 +63,15 @@ export const Rank = () => {
         const pMaxPoints = (pItems.length - pNaCount) * 3;
         pillarsStats[pilar] = {
           aderencia: pMaxPoints === 0 ? 0 : (pPoints / pMaxPoints) * 100,
-          respondidos: pRespondidos,
-          total: pItems.length
+          respondidos: pRespondidos - pNaCount,
+          total: pItems.length - pNaCount
         };
       });
 
       return {
         unidade,
-        totalGeral: activeBaseItems.length,
-        respondidosGeral: respondidosCount,
+        totalGeral: activeBaseItems.length - naCount,
+        respondidosGeral: respondidosCount - naCount,
         aderenciaGeral,
         pillarsStats
       };

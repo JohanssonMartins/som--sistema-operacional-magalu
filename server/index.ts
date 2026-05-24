@@ -31,6 +31,37 @@ const notifyDataChange = (event: string, data: any) => {
     io.emit(event, data);
 };
 
+const monthsArray = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+const monthOrder: Record<string, number> = {
+    'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
+    'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+};
+
+function getCurrentRealWorldMonth(): string {
+    const date = new Date();
+    const month = monthsArray[date.getMonth()];
+    const year = date.getFullYear();
+    return `${month}-${year}`;
+}
+
+function getNextMonthStr(mesAno: string): string {
+    const [month, yearStr] = mesAno.split('-');
+    const year = parseInt(yearStr);
+    const monthIndex = monthOrder[month];
+    if (monthIndex === undefined || isNaN(year)) {
+        return '';
+    }
+    if (monthIndex === 11) {
+        return `${monthsArray[0]}-${year + 1}`;
+    } else {
+        return `${monthsArray[monthIndex + 1]}-${year}`;
+    }
+}
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
@@ -349,7 +380,7 @@ app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
     try {
         const { unidade, mesAno } = req.params;
         const tipo = req.query.tipo as string || 'AUTO';
-        const autoauditoria = await prisma.autoauditoria.findUnique({
+        let autoauditoria = await prisma.autoauditoria.findUnique({
             where: {
                 unidade_mesAno_tipo: {
                     unidade,
@@ -365,6 +396,107 @@ app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
                 }
             }
         });
+
+        if (!autoauditoria) {
+            // Busca todas as autoauditorias dessa unidade e tipo para herdar dados
+            const allAudits = await prisma.autoauditoria.findMany({
+                where: { unidade, tipo },
+                include: {
+                    items: {
+                        include: {
+                            evidencias: true
+                        }
+                    }
+                }
+            });
+
+            if (allAudits.length > 0) {
+                const monthOrder: Record<string, number> = {
+                    'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
+                    'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+                };
+
+                const parseMesAno = (str: string) => {
+                    const [mes, anoStr] = str.split('-');
+                    const ano = parseInt(anoStr) || 0;
+                    const mesIndex = monthOrder[mes] !== undefined ? monthOrder[mes] : -1;
+                    return { ano, mesIndex };
+                };
+
+                const targetTime = parseMesAno(mesAno);
+
+                // Filtra apenas as autoauditorias de meses cronologicamente anteriores ao selecionado
+                const pastAudits = allAudits.filter(a => {
+                    const t = parseMesAno(a.mesAno);
+                    if (t.ano < targetTime.ano) return true;
+                    if (t.ano === targetTime.ano && t.mesIndex < targetTime.mesIndex) return true;
+                    return false;
+                });
+
+                if (pastAudits.length > 0) {
+                    // Ordena de forma decrescente para pegar a mais recente disponível
+                    pastAudits.sort((a, b) => {
+                        const tA = parseMesAno(a.mesAno);
+                        const tB = parseMesAno(b.mesAno);
+                        if (tA.ano !== tB.ano) return tB.ano - tA.ano;
+                        return tB.mesIndex - tA.mesIndex;
+                    });
+
+                    const mostRecentPast = pastAudits[0];
+
+                    console.log(`[API] Herdando/Clonando autoauditoria de ${mostRecentPast.mesAno} para o novo mês ${mesAno} (CD ${unidade}, ${tipo})`);
+
+                    // Cria o novo registro pai de autoauditoria
+                    const newAudit = await prisma.autoauditoria.create({
+                        data: {
+                            unidade,
+                            mesAno,
+                            tipo,
+                            status: mostRecentPast.status || 'Pendente de Auditoria'
+                        }
+                    });
+
+                    // Copia profundamente cada item e suas respectivas evidências
+                    for (const pastItem of mostRecentPast.items) {
+                        const newItem = await prisma.autoauditoriaItem.create({
+                            data: {
+                                autoauditoriaId: newAudit.id,
+                                baseItemId: pastItem.baseItemId,
+                                score: pastItem.score,
+                                nossaAcao: pastItem.nossaAcao
+                            }
+                        });
+
+                        if (pastItem.evidencias && pastItem.evidencias.length > 0) {
+                            for (const pastEv of pastItem.evidencias) {
+                                await prisma.evidenciaAutoauditoria.create({
+                                    data: {
+                                        autoauditoriaItemId: newItem.id,
+                                        url: pastEv.url,
+                                        name: pastEv.name
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    // Recarrega o registro completo recém-clonado com todos os relacionamentos inclusos
+                    autoauditoria = await prisma.autoauditoria.findUnique({
+                        where: { id: newAudit.id },
+                        include: {
+                            items: {
+                                include: {
+                                    evidencias: true
+                                }
+                            }
+                        }
+                    });
+
+                    // Notifica em tempo real a criação/cópia dos dados
+                    notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+                }
+            }
+        }
 
         if (!autoauditoria) {
             return res.json(null);
@@ -398,6 +530,19 @@ app.post('/api/autoauditoria', async (req, res) => {
 
         // 2. Salva os items
         const results = [];
+        const currentRealMonth = getCurrentRealWorldMonth();
+        const isCurrentMonth = mesAno === currentRealMonth;
+        const nextMonthStr = getNextMonthStr(mesAno);
+        
+        let nextMonthAudit = null;
+        if (isCurrentMonth && nextMonthStr) {
+            nextMonthAudit = await prisma.autoauditoria.findUnique({
+                where: {
+                    unidade_mesAno_tipo: { unidade, mesAno: nextMonthStr, tipo }
+                }
+            });
+        }
+
         for (const item of items) {
             const { baseItemId, score, nossaAcao, evidencias } = item;
 
@@ -420,6 +565,28 @@ app.post('/api/autoauditoria', async (req, res) => {
                 }
             });
 
+            // Replicação para o próximo mês (caso esteja aberto)
+            if (nextMonthAudit) {
+                await prisma.autoauditoriaItem.upsert({
+                    where: {
+                        autoauditoriaId_baseItemId: {
+                            autoauditoriaId: nextMonthAudit.id,
+                            baseItemId: baseItemId
+                        }
+                    },
+                    update: {
+                        score,
+                        nossaAcao
+                    },
+                    create: {
+                        autoauditoriaId: nextMonthAudit.id,
+                        baseItemId: baseItemId,
+                        score,
+                        nossaAcao
+                    }
+                });
+            }
+
             // 3. Opcional: lidar com evidências (se as enviarem em base64)
             // Para simplificar no MVP, a gente pode não tratar o base64 no backend aqui se o req.body já vier preparado
             // Mas o setup relacional já está pronto.
@@ -430,6 +597,9 @@ app.post('/api/autoauditoria', async (req, res) => {
 
         // Notifica clientes em tempo real
         notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+        if (nextMonthAudit) {
+            notifyDataChange('autoauditoria_updated', { unidade, mesAno: nextMonthStr });
+        }
     } catch (error) {
         console.error('POST AUTOAUDITORIA ERROR:', error);
         res.status(500).json({ error: 'Erro ao salvar autoauditoria' });
@@ -507,10 +677,59 @@ app.post('/api/autoauditoria/evidencia/upload', upload.single('file'), async (re
             }
         });
 
+        // Replicação para o próximo mês (caso esteja aberto)
+        const currentRealMonth = getCurrentRealWorldMonth();
+        const isCurrentMonth = mesAno === currentRealMonth;
+        const nextMonthStr = getNextMonthStr(mesAno);
+        let nextMonthAudit = null;
+
+        if (isCurrentMonth && nextMonthStr) {
+            nextMonthAudit = await prisma.autoauditoria.findUnique({
+                where: {
+                    unidade_mesAno_tipo: { unidade, mesAno: nextMonthStr, tipo }
+                }
+            });
+            if (nextMonthAudit) {
+                const nextMonthItem = await prisma.autoauditoriaItem.upsert({
+                    where: {
+                        autoauditoriaId_baseItemId: {
+                            autoauditoriaId: nextMonthAudit.id,
+                            baseItemId: baseItemId
+                        }
+                    },
+                    update: {},
+                    create: {
+                        autoauditoriaId: nextMonthAudit.id,
+                        baseItemId: baseItemId
+                    }
+                });
+
+                const existingEv = await prisma.evidenciaAutoauditoria.findFirst({
+                    where: {
+                        autoauditoriaItemId: nextMonthItem.id,
+                        url: webViewLink
+                    }
+                });
+
+                if (!existingEv) {
+                    await prisma.evidenciaAutoauditoria.create({
+                        data: {
+                            autoauditoriaItemId: nextMonthItem.id,
+                            url: webViewLink,
+                            name: fileId
+                        }
+                    });
+                }
+            }
+        }
+
         res.json({ success: true, url: webViewLink, evidencia });
 
         // Notifica clientes que houve upload de evidencia
         notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+        if (nextMonthAudit) {
+            notifyDataChange('autoauditoria_updated', { unidade, mesAno: nextMonthStr });
+        }
 
     } catch (error: any) {
         console.error('[Drive Upload] Error:', error);
@@ -575,10 +794,59 @@ app.post('/api/autoauditoria/evidencia/link', async (req: any, res: any) => {
             }
         });
 
+        // Replicação para o próximo mês (caso esteja aberto)
+        const currentRealMonth = getCurrentRealWorldMonth();
+        const isCurrentMonth = mesAno === currentRealMonth;
+        const nextMonthStr = getNextMonthStr(mesAno);
+        let nextMonthAudit = null;
+
+        if (isCurrentMonth && nextMonthStr) {
+            nextMonthAudit = await prisma.autoauditoria.findUnique({
+                where: {
+                    unidade_mesAno_tipo: { unidade, mesAno: nextMonthStr, tipo }
+                }
+            });
+            if (nextMonthAudit) {
+                const nextMonthItem = await prisma.autoauditoriaItem.upsert({
+                    where: {
+                        autoauditoriaId_baseItemId: {
+                            autoauditoriaId: nextMonthAudit.id,
+                            baseItemId: baseItemId
+                        }
+                    },
+                    update: {},
+                    create: {
+                        autoauditoriaId: nextMonthAudit.id,
+                        baseItemId: baseItemId
+                    }
+                });
+
+                const existingEv = await prisma.evidenciaAutoauditoria.findFirst({
+                    where: {
+                        autoauditoriaItemId: nextMonthItem.id,
+                        url: url
+                    }
+                });
+
+                if (!existingEv) {
+                    await prisma.evidenciaAutoauditoria.create({
+                        data: {
+                            autoauditoriaItemId: nextMonthItem.id,
+                            url: url,
+                            name: 'Manual Link'
+                        }
+                    });
+                }
+            }
+        }
+
         res.json({ success: true, url, evidencia });
 
         // Notifica clientes que houve mudança nos dados
         notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+        if (nextMonthAudit) {
+            notifyDataChange('autoauditoria_updated', { unidade, mesAno: nextMonthStr });
+        }
 
     } catch (error: any) {
         console.error('[Link Manual] Error:', error);
@@ -617,6 +885,46 @@ app.delete('/api/autoauditoria/evidencia/:id', async (req: any, res: any) => {
             }
         }
 
+        // Replicação da deleção para o próximo mês (caso esteja aberto)
+        let nextMonthAudit = null;
+        let nextMonthStr = '';
+        if (evidencia.autoauditoriaItem?.autoauditoria) {
+            const { unidade, mesAno, tipo } = evidencia.autoauditoriaItem.autoauditoria;
+            const { baseItemId } = evidencia.autoauditoriaItem;
+            
+            const currentRealMonth = getCurrentRealWorldMonth();
+            const isCurrentMonth = mesAno === currentRealMonth;
+            nextMonthStr = getNextMonthStr(mesAno);
+
+            if (isCurrentMonth && nextMonthStr) {
+                nextMonthAudit = await prisma.autoauditoria.findUnique({
+                    where: {
+                        unidade_mesAno_tipo: { unidade, mesAno: nextMonthStr, tipo }
+                    },
+                    include: {
+                        items: {
+                            where: { baseItemId }
+                        }
+                    }
+                });
+
+                if (nextMonthAudit && nextMonthAudit.items.length > 0) {
+                    const nextMonthItem = nextMonthAudit.items[0];
+                    const nextMonthEv = await prisma.evidenciaAutoauditoria.findFirst({
+                        where: {
+                            autoauditoriaItemId: nextMonthItem.id,
+                            url: evidencia.url
+                        }
+                    });
+                    if (nextMonthEv) {
+                        await prisma.evidenciaAutoauditoria.delete({
+                            where: { id: nextMonthEv.id }
+                        });
+                    }
+                }
+            }
+        }
+
         // 3. Deleta do banco de dados
         await prisma.evidenciaAutoauditoria.delete({
             where: { id }
@@ -628,6 +936,9 @@ app.delete('/api/autoauditoria/evidencia/:id', async (req: any, res: any) => {
         if (evidencia.autoauditoriaItem?.autoauditoria) {
             const { unidade, mesAno } = evidencia.autoauditoriaItem.autoauditoria;
             notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+            if (nextMonthAudit) {
+                notifyDataChange('autoauditoria_updated', { unidade, mesAno: nextMonthStr });
+            }
         }
 
     } catch (error: any) {
