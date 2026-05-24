@@ -16,6 +16,7 @@ export interface ActionPlan5W2H {
   how: string;
   howMuch: string;
   status: string;
+  observations?: string;
 }
 
 export const parse5W2H = (val: string): ActionPlan5W2H => {
@@ -33,7 +34,8 @@ export const parse5W2H = (val: string): ActionPlan5W2H => {
           whenEnd: parsed.whenEnd || '',
           how: parsed.how || '',
           howMuch: parsed.howMuch || '',
-          status: parsed.status || 'Não Iniciado'
+          status: parsed.status || 'Não Iniciado',
+          observations: parsed.observations || ''
         };
       }
     }
@@ -49,7 +51,8 @@ export const parse5W2H = (val: string): ActionPlan5W2H => {
     whenEnd: '',
     how: '',
     howMuch: '',
-    status: 'Não Iniciado'
+    status: 'Não Iniciado',
+    observations: ''
   };
 };
 
@@ -65,7 +68,8 @@ export const is5W2HEmpty = (plan: ActionPlan5W2H): boolean => {
          !plan.whenStart.trim() && 
          !plan.whenEnd.trim() && 
          !plan.how.trim() && 
-         !plan.howMuch.trim();
+         !plan.howMuch.trim() &&
+         !(plan.observations || '').trim();
 };
 
 interface AutoauditoriaRowProps {
@@ -541,6 +545,21 @@ export const AutoauditoriaRow = React.memo(({
                           disabled={!canEdit || isNossaAcaoReadOnly}
                           placeholder={canEdit && !isNossaAcaoReadOnly ? "Como será feito? Descreva os passos, recursos e metodologia de execução..." : "Nenhum método descrito."}
                           className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white transition-all min-h-[110px] resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${(!canEdit || isNossaAcaoReadOnly) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        />
+                      </div>
+
+                      {/* Observações do Auditor */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-pink-500 dark:text-pink-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-pink-500 shrink-0" />
+                          Observações do Auditor
+                        </label>
+                        <textarea
+                          value={planState.observations || ''}
+                          onChange={(e) => handlePlanChange('observations', e.target.value)}
+                          disabled={!canEdit}
+                          placeholder={canEdit ? "Digite aqui as observações do auditor..." : "Nenhuma observação descrita."}
+                          className={`w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-gray-900 dark:text-white transition-all min-h-[140px] resize-none focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
                         />
                       </div>
 
