@@ -147,7 +147,7 @@ export const App = () => {
               <Route path="/rank" element={<Rank />} />
               {currentUser.role !== 'AUDITOR' && <Route path="/autoauditoria" element={<Autoauditoria />} />}
               {['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'].includes(currentUser.role) && <Route path="/avaliacao-externa" element={<AvaliacaoExterna />} />}
-              {['ADMIN', 'GERENTE_DIVISIONAL', 'DIRETORIA', 'GERENTE_DO_CD'].includes(currentUser.role) && <Route path="/base-checklist" element={<BaseChecklist />} />}
+              {currentUser.role === 'ADMIN' && <Route path="/base-checklist" element={<BaseChecklist />} />}
               {currentUser.role === 'ADMIN' && <Route path="/usuarios" element={<UserManagement />} />}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
