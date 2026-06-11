@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package, ClipboardCheck } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -367,11 +367,18 @@ export const Autoauditoria = () => {
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-left-4 duration-200">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Autoavaliação Mensal</h2>
-            <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1">
-              Realize a autoavaliação — <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedUnit !== 'Todas' ? `CD ${selectedUnit}` : 'Selecione um CD'}</span> · {localMesAno}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm transition-all duration-300 hover:scale-105">
+              <ClipboardCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-cyan-400">
+                Autoavaliação Mensal
+              </h2>
+              <p className="text-gray-500 dark:text-zinc-400 text-sm mt-0.5">
+                Realize a autoavaliação — <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedUnit !== 'Todas' ? `CD ${selectedUnit}` : 'Selecione um CD'}</span> · {localMesAno}
+              </p>
+            </div>
           </div>
 
           {/* Status de salvamento */}

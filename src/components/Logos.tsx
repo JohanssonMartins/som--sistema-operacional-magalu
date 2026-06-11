@@ -119,9 +119,9 @@ export const TopSomLogo = ({ className = '' }: { className?: string }) => (
         <span className="text-4xl sm:text-5xl font-black text-[#006CEE] pb-0.5 pt-1 group-hover:scale-105 transition-transform duration-500" style={{ fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'uppercase' }}>som</span>
       </div>
     </div>
-    <div className="flex flex-col justify-center border-l-2 border-gray-300 dark:border-zinc-700 pl-3 sm:pl-4 h-full py-1">
-      <span className="text-sm sm:text-base font-bold text-[#003865] dark:text-blue-300 leading-tight tracking-tight">Programa de</span>
-      <span className="text-sm sm:text-base font-bold text-[#003865] dark:text-blue-300 leading-tight tracking-tight">Excelência</span>
+    <div className="flex flex-col justify-center border-l-2 border-blue-500/30 dark:border-zinc-700 pl-3 sm:pl-4 h-full py-1">
+      <span className="text-sm sm:text-base font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-cyan-400 leading-tight tracking-tight">Programa de</span>
+      <span className="text-sm sm:text-base font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-cyan-400 leading-tight tracking-tight">Excelência</span>
     </div>
   </motion.div>
 );
