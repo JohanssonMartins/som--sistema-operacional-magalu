@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, Trophy, CheckCircle2, Database, Users,
   Menu, PanelLeftClose, ChevronDown, Package, Bell,
-  Sun, Moon, LogOut, Lock, User as UserIcon, Check, X, ArrowUp
+  Sun, Moon, LogOut, Lock, User as UserIcon, Check, X, ArrowUp,
+  BookOpen
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -127,6 +128,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     { to: '/avaliacao-externa', icon: CheckCircle2, label: 'Avaliação Externa', roles: ['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'] },
     { to: '/base-checklist', icon: Database, label: 'Cadastro', roles: ['ADMIN'] },
     { to: '/usuarios', icon: Users, label: 'Usuários', roles: ['ADMIN'] },
+    { to: '/manual', icon: BookOpen, label: 'Manual', roles: ['ANY'] },
   ];
 
   const filteredNavItems = navItems.filter(item =>

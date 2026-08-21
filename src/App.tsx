@@ -14,6 +14,7 @@ const Autoauditoria = lazy(() => import('./pages/Autoauditoria').then(m => ({ de
 const AvaliacaoExterna = lazy(() => import('./pages/AvaliacaoExterna').then(m => ({ default: m.AvaliacaoExterna })));
 const UserManagement = lazy(() => import('./pages/UserManagement').then(m => ({ default: m.UserManagement })));
 const BaseChecklist = lazy(() => import('./pages/BaseChecklist').then(m => ({ default: m.BaseChecklist })));
+const Manual = lazy(() => import('./pages/Manual').then(m => ({ default: m.Manual })));
 
 // Components
 import { Shell } from './components/Shell';
@@ -149,6 +150,7 @@ export const App = () => {
               {['ADMIN', 'AUDITOR', 'DIRETORIA', 'GERENTE_DIVISIONAL'].includes(currentUser.role) && <Route path="/avaliacao-externa" element={<AvaliacaoExterna />} />}
               {currentUser.role === 'ADMIN' && <Route path="/base-checklist" element={<BaseChecklist />} />}
               {currentUser.role === 'ADMIN' && <Route path="/usuarios" element={<UserManagement />} />}
+              <Route path="/manual" element={<Manual />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Shell>

@@ -200,7 +200,21 @@ export const AvaliacaoExterna = () => {
             evidencias: item.evidencias || []
           };
         });
-        setAutoauditoriaData(mappedExterna);
+
+        if (isPolling) {
+          // Merge inteligente: preserva itens com edições locais pendentes
+          setAutoauditoriaData(prev => {
+            const merged = { ...mappedExterna };
+            pendingEdits.current.forEach(id => {
+              if (prev[id] !== undefined) {
+                merged[id] = prev[id];
+              }
+            });
+            return merged;
+          });
+        } else {
+          setAutoauditoriaData(mappedExterna);
+        }
       } else {
         if (!isPolling) setAutoauditoriaData({});
       }
@@ -242,6 +256,17 @@ export const AvaliacaoExterna = () => {
     }
   }, [selectedUnit, localMesAno]);
 
+  // Polling a cada 30s para puxar alterações externas (ex: feitas no site Vercel)
+  useEffect(() => {
+    if (!selectedUnit || selectedUnit === 'Todas' || selectedUnit === 'Master') return;
+    const interval = setInterval(() => {
+      if (!needsSave.current) {
+        loadAutoauditoria(selectedUnit, localMesAno, true);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [selectedUnit, localMesAno]);
+
   // Debounced Auto-save
   useEffect(() => {
     if (isInitialLoad.current || !currentUser) return;
@@ -254,11 +279,47 @@ export const AvaliacaoExterna = () => {
     const timeoutId = setTimeout(async () => {
       const savingIds = new Set(pendingEdits.current);
       try {
-        const itemsToSave = Object.keys(autoauditoriaData).map(baseItemId => ({
-          baseItemId,
-          score: autoauditoriaData[baseItemId].score,
-          nossaAcao: autoauditoriaData[baseItemId].nossaAcao,
-        }));
+        // 1. Busca dados frescos do servidor para evitar sobrescrever alterações externas (ex: Vercel)
+        let serverData: Record<string, { score?: string; nossaAcao?: string }> = {};
+        try {
+          const serverResult = await api.getAutoauditoria(selectedUnit, localMesAno, 'EXTERNA');
+          if (serverResult?.items) {
+            serverResult.items.forEach((item: any) => {
+              serverData[item.baseItemId] = {
+                score: item.score,
+                nossaAcao: item.nossaAcao,
+              };
+            });
+          }
+        } catch (fetchErr) {
+          console.warn('[Auto-save] Não foi possível buscar dados do servidor. Usando apenas dados locais.', fetchErr);
+        }
+
+        // 2. Monta os itens para salvar:
+        //    - Itens editados localmente (pendingEdits) → usa dado local (tem prioridade)
+        //    - Demais itens → usa dado do servidor (evita sobrescrever mudanças externas)
+        const allBaseItemIds = new Set([
+          ...Object.keys(autoauditoriaData),
+          ...Object.keys(serverData),
+        ]);
+
+        const itemsToSave = Array.from(allBaseItemIds).map(baseItemId => {
+          if (savingIds.has(baseItemId)) {
+            // Editado localmente → prioriza dado local
+            return {
+              baseItemId,
+              score: autoauditoriaData[baseItemId]?.score,
+              nossaAcao: autoauditoriaData[baseItemId]?.nossaAcao,
+            };
+          }
+          // Não editado localmente → usa servidor para não sobrescrever mudanças externas
+          const srv = serverData[baseItemId];
+          return {
+            baseItemId,
+            score: srv?.score ?? autoauditoriaData[baseItemId]?.score,
+            nossaAcao: srv?.nossaAcao ?? autoauditoriaData[baseItemId]?.nossaAcao,
+          };
+        });
 
         await api.saveAutoauditoria({
           unidade: selectedUnit,
