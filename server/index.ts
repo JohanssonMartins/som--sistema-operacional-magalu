@@ -110,33 +110,22 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// Configuração flexível de E-mail (SMTP .env ou Ethereal fallback para dev)
-const getEmailTransporter = async () => {
+// Configuração flexível de E-mail (SMTP .env se fornecido, sem chamadas externas lentas)
+const getEmailTransporter = () => {
     if (process.env.SMTP_HOST && process.env.SMTP_USER) {
         return nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT || 587),
             secure: process.env.SMTP_SECURE === 'true',
+            connectionTimeout: 3000,
+            socketTimeout: 3000,
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             }
         });
     }
-    try {
-        const testAccount = await nodemailer.createTestAccount();
-        return nodemailer.createTransport({
-            host: "smtp.ethereal.email",
-            port: 587,
-            secure: false,
-            auth: {
-                user: testAccount.user,
-                pass: testAccount.pass,
-            },
-        });
-    } catch {
-        return null;
-    }
+    return null;
 };
 
 // 🔑 Solicitacao de Redefinicao de Senha (envia e-mail com codigo de confirmacao)
@@ -165,54 +154,51 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         passwordResetTokens.set(normalizedEmail, { code, expiresAt });
 
         let emailSent = false;
-        let previewUrl: string | null = null;
+        const transporter = getEmailTransporter();
 
-        try {
-            const transporter = await getEmailTransporter();
-            if (transporter) {
-                const info = await transporter.sendMail({
-                    from: '"SOM - Sistema Operacional Magalog" <nao-responda@magalu.com>',
-                    to: normalizedEmail,
-                    subject: '🔑 Código de Redefinição de Senha - SOM Magalog',
-                    html: `
-                        <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-                            <div style="text-align: center; margin-bottom: 24px;">
-                                <h1 style="color: #2563eb; margin: 0; font-size: 24px; font-weight: 800;">SOM MAGALOG</h1>
-                                <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Sistema Operacional Magalog</p>
-                            </div>
-                            
-                            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 12px;">Olá, <strong>${user.name}</strong>!</h2>
-                            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Recebemos uma solicitação para redefinir a sua senha de acesso ao sistema SOM. Use o código abaixo para confirmar a alteração:</p>
-
-                            <div style="background-color: #fffbe6; border: 2px dashed #f59e0b; padding: 20px; text-align: center; border-radius: 12px; margin: 24px 0;">
-                                <span style="font-size: 11px; font-weight: bold; color: #b45309; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;">Código de Confirmação</span>
-                                <div style="font-size: 36px; font-weight: 900; color: #d97706; letter-spacing: 8px;">${code}</div>
-                                <span style="font-size: 12px; color: #78350f; display: block; margin-top: 8px;">⏱ Válido por 15 minutos</span>
-                            </div>
-
-                            <p style="color: #64748b; font-size: 13px; line-height: 1.5;">Se você não fez essa solicitação, pode ignorar este e-mail com segurança. Sua senha permanecerá inalterada.</p>
-                            
-                            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
-                            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">© 2026 Magalu · Sistema Operacional SOM</p>
+        if (transporter) {
+            // Dispara envio de e-mail de forma assíncrona
+            transporter.sendMail({
+                from: '"SOM - Sistema Operacional Magalog" <nao-responda@magalu.com>',
+                to: normalizedEmail,
+                subject: '🔑 Código de Redefinição de Senha - SOM Magalog',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <h1 style="color: #2563eb; margin: 0; font-size: 24px; font-weight: 800;">SOM MAGALOG</h1>
+                            <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Sistema Operacional Magalog</p>
                         </div>
-                    `
-                });
-                emailSent = true;
-                const testUrl = nodemailer.getTestMessageUrl(info);
-                if (testUrl) previewUrl = testUrl;
-            }
-        } catch (mailErr) {
-            console.error('[Mail Error]', mailErr);
+                        
+                        <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 12px;">Olá, <strong>${user.name}</strong>!</h2>
+                        <p style="color: #475569; font-size: 14px; line-height: 1.6;">Recebemos uma solicitação para redefinir a sua senha de acesso ao sistema SOM. Use o código abaixo para confirmar a alteração:</p>
+
+                        <div style="background-color: #fffbe6; border: 2px dashed #f59e0b; padding: 20px; text-align: center; border-radius: 12px; margin: 24px 0;">
+                            <span style="font-size: 11px; font-weight: bold; color: #b45309; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;">Código de Confirmação</span>
+                            <div style="font-size: 36px; font-weight: 900; color: #d97706; letter-spacing: 8px;">${code}</div>
+                            <span style="font-size: 12px; color: #78350f; display: block; margin-top: 8px;">⏱ Válido por 15 minutos</span>
+                        </div>
+
+                        <p style="color: #64748b; font-size: 13px; line-height: 1.5;">Se você não fez essa solicitação, pode ignorar este e-mail com segurança. Sua senha permanecerá inalterada.</p>
+                        
+                        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+                        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">© 2026 Magalu · Sistema Operacional SOM</p>
+                    </div>
+                `
+            }).then(() => {
+                console.log(`[AUTH] E-mail com código de redefinição enviado com sucesso para ${normalizedEmail}`);
+            }).catch(mailErr => {
+                console.error('[AUTH Mail Error]', mailErr.message);
+            });
+            emailSent = true;
         }
 
-        console.log(`[AUTH] Código de redefinição para ${normalizedEmail}: ${code}`);
+        console.log(`[AUTH] Código de redefinição gerado para ${normalizedEmail}: ${code}`);
 
         res.json({
             success: true,
-            message: 'Código de confirmação enviado para o e-mail informado!',
+            message: 'Código de confirmação gerado!',
             emailSent,
-            devCode: code,
-            previewUrl
+            devCode: code
         });
     } catch (error) {
         console.error('Erro ao solicitar redefinicao:', error);
