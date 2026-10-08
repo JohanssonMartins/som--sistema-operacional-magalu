@@ -529,7 +529,6 @@ app.post('/api/autoauditoria', async (req, res) => {
         });
 
         // 2. Salva os items
-        const results = [];
         const currentRealMonth = getCurrentRealWorldMonth();
         const isCurrentMonth = mesAno === currentRealMonth;
         const nextMonthStr = getNextMonthStr(mesAno);
@@ -543,8 +542,8 @@ app.post('/api/autoauditoria', async (req, res) => {
             });
         }
 
-        for (const item of items) {
-            const { baseItemId, score, nossaAcao, evidencias } = item;
+        const results = await Promise.all(items.map(async (item: any) => {
+            const { baseItemId, score, nossaAcao } = item;
 
             const savedItem = await prisma.autoauditoriaItem.upsert({
                 where: {
@@ -587,11 +586,8 @@ app.post('/api/autoauditoria', async (req, res) => {
                 });
             }
 
-            // 3. Opcional: lidar com evidências (se as enviarem em base64)
-            // Para simplificar no MVP, a gente pode não tratar o base64 no backend aqui se o req.body já vier preparado
-            // Mas o setup relacional já está pronto.
-            results.push(savedItem);
-        }
+            return savedItem;
+        }));
 
         res.json({ success: true, autoauditoria, itemsCount: results.length });
 

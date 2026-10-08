@@ -267,59 +267,29 @@ export const AvaliacaoExterna = () => {
     return () => clearInterval(interval);
   }, [selectedUnit, localMesAno]);
 
-  // Debounced Auto-save
+  // Debounced Auto-save (Salva apenas os itens editados - Delta Update ultra rápido)
   useEffect(() => {
     if (isInitialLoad.current || !currentUser) return;
     if (Object.keys(autoauditoriaData).length === 0) return;
     if (selectedUnit === 'Todas' || selectedUnit === 'Master') return;
 
-    if (!needsSave.current) return;
+    if (!needsSave.current || pendingEdits.current.size === 0) return;
 
     setIsSaving(true);
     const timeoutId = setTimeout(async () => {
-      const savingIds = new Set(pendingEdits.current);
+      const savingIds = Array.from(pendingEdits.current);
+      if (savingIds.length === 0) {
+        setIsSaving(false);
+        return;
+      }
+
       try {
-        // 1. Busca dados frescos do servidor para evitar sobrescrever alterações externas (ex: Vercel)
-        let serverData: Record<string, { score?: string; nossaAcao?: string }> = {};
-        try {
-          const serverResult = await api.getAutoauditoria(selectedUnit, localMesAno, 'EXTERNA');
-          if (serverResult?.items) {
-            serverResult.items.forEach((item: any) => {
-              serverData[item.baseItemId] = {
-                score: item.score,
-                nossaAcao: item.nossaAcao,
-              };
-            });
-          }
-        } catch (fetchErr) {
-          console.warn('[Auto-save] Não foi possível buscar dados do servidor. Usando apenas dados locais.', fetchErr);
-        }
-
-        // 2. Monta os itens para salvar:
-        //    - Itens editados localmente (pendingEdits) → usa dado local (tem prioridade)
-        //    - Demais itens → usa dado do servidor (evita sobrescrever mudanças externas)
-        const allBaseItemIds = new Set([
-          ...Object.keys(autoauditoriaData),
-          ...Object.keys(serverData),
-        ]);
-
-        const itemsToSave = Array.from(allBaseItemIds).map(baseItemId => {
-          if (savingIds.has(baseItemId)) {
-            // Editado localmente → prioriza dado local
-            return {
-              baseItemId,
-              score: autoauditoriaData[baseItemId]?.score,
-              nossaAcao: autoauditoriaData[baseItemId]?.nossaAcao,
-            };
-          }
-          // Não editado localmente → usa servidor para não sobrescrever mudanças externas
-          const srv = serverData[baseItemId];
-          return {
-            baseItemId,
-            score: srv?.score ?? autoauditoriaData[baseItemId]?.score,
-            nossaAcao: srv?.nossaAcao ?? autoauditoriaData[baseItemId]?.nossaAcao,
-          };
-        });
+        // Envia apenas os itens alterados localmente (Delta Save)
+        const itemsToSave = savingIds.map(baseItemId => ({
+          baseItemId,
+          score: autoauditoriaData[baseItemId]?.score,
+          nossaAcao: autoauditoriaData[baseItemId]?.nossaAcao,
+        }));
 
         await api.saveAutoauditoria({
           unidade: selectedUnit,
@@ -336,10 +306,10 @@ export const AvaliacaoExterna = () => {
       } finally {
         setIsSaving(false);
       }
-    }, 1000);
+    }, 600);
 
     return () => clearTimeout(timeoutId);
-  }, [autoauditoriaData, selectedUnit, autoauditoriaMesAno, currentUser]);
+  }, [autoauditoriaData, selectedUnit, localMesAno, currentUser]);
 
   const handlePontoChange = useCallback((itemId: string, newPonto: string) => {
     pendingEdits.current.add(itemId);
