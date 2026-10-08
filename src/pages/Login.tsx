@@ -178,21 +178,7 @@ export const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Senha</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetEmail(loginEmail);
-                      setResetMessage(null);
-                      setViewMode('reset');
-                    }}
-                    className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-500 hover:underline transition-all flex items-center gap-1"
-                  >
-                    <KeyRound className="w-3.5 h-3.5" />
-                    <span>Esqueceu a senha? Redefinir</span>
-                  </button>
-                </div>
+                <label className="text-sm font-medium text-gray-700 dark:text-zinc-300">Senha</label>
                 <div className="relative">
                   <Lock className="w-5 h-5 text-gray-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
