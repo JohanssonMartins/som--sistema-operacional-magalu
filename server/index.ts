@@ -4,6 +4,10 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import nodemailer from 'nodemailer';
+
+// Store em memória para códigos de redefinição de senha (email -> { code, expiresAt })
+const passwordResetTokens = new Map<string, { code: string; expiresAt: number }>();
 
 const app = express();
 const httpServer = createServer(app);
@@ -103,6 +107,168 @@ app.delete('/api/users/:id', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Erro ao deletar usuário' });
+    }
+});
+
+// Configuração flexível de E-mail (SMTP .env ou Ethereal fallback para dev)
+const getEmailTransporter = async () => {
+    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+        return nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            }
+        });
+    }
+    try {
+        const testAccount = await nodemailer.createTestAccount();
+        return nodemailer.createTransport({
+            host: "smtp.ethereal.email",
+            port: 587,
+            secure: false,
+            auth: {
+                user: testAccount.user,
+                pass: testAccount.pass,
+            },
+        });
+    } catch {
+        return null;
+    }
+};
+
+// 🔑 Solicitacao de Redefinicao de Senha (envia e-mail com codigo de confirmacao)
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Informe o seu e-mail cadastrado.' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await prisma.user.findFirst({
+            where: {
+                email: { equals: normalizedEmail, mode: 'insensitive' }
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Nenhum usuário foi encontrado com este e-mail.' });
+        }
+
+        // Gera codigo numerico de 6 digitos (ex: 749201) com validade de 15 minutos
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 15 * 60 * 1000;
+
+        passwordResetTokens.set(normalizedEmail, { code, expiresAt });
+
+        let emailSent = false;
+        let previewUrl: string | null = null;
+
+        try {
+            const transporter = await getEmailTransporter();
+            if (transporter) {
+                const info = await transporter.sendMail({
+                    from: '"SOM - Sistema Operacional Magalog" <nao-responda@magalu.com>',
+                    to: normalizedEmail,
+                    subject: '🔑 Código de Redefinição de Senha - SOM Magalog',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                                <h1 style="color: #2563eb; margin: 0; font-size: 24px; font-weight: 800;">SOM MAGALOG</h1>
+                                <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Sistema Operacional Magalog</p>
+                            </div>
+                            
+                            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 12px;">Olá, <strong>${user.name}</strong>!</h2>
+                            <p style="color: #475569; font-size: 14px; line-height: 1.6;">Recebemos uma solicitação para redefinir a sua senha de acesso ao sistema SOM. Use o código abaixo para confirmar a alteração:</p>
+
+                            <div style="background-color: #fffbe6; border: 2px dashed #f59e0b; padding: 20px; text-align: center; border-radius: 12px; margin: 24px 0;">
+                                <span style="font-size: 11px; font-weight: bold; color: #b45309; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;">Código de Confirmação</span>
+                                <div style="font-size: 36px; font-weight: 900; color: #d97706; letter-spacing: 8px;">${code}</div>
+                                <span style="font-size: 12px; color: #78350f; display: block; margin-top: 8px;">⏱ Válido por 15 minutos</span>
+                            </div>
+
+                            <p style="color: #64748b; font-size: 13px; line-height: 1.5;">Se você não fez essa solicitação, pode ignorar este e-mail com segurança. Sua senha permanecerá inalterada.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+                            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">© 2026 Magalu · Sistema Operacional SOM</p>
+                        </div>
+                    `
+                });
+                emailSent = true;
+                const testUrl = nodemailer.getTestMessageUrl(info);
+                if (testUrl) previewUrl = testUrl;
+            }
+        } catch (mailErr) {
+            console.error('[Mail Error]', mailErr);
+        }
+
+        console.log(`[AUTH] Código de redefinição para ${normalizedEmail}: ${code}`);
+
+        res.json({
+            success: true,
+            message: 'Código de confirmação enviado para o e-mail informado!',
+            emailSent,
+            devCode: code,
+            previewUrl
+        });
+    } catch (error) {
+        console.error('Erro ao solicitar redefinicao:', error);
+        res.status(500).json({ error: 'Erro interno ao solicitar a redefinição de senha.' });
+    }
+});
+
+// 🔒 Confirmacao da Redefinicao de Senha
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({ error: 'Informe o e-mail, código e a nova senha.' });
+        }
+
+        if (newPassword.length < 3) {
+            return res.status(400).json({ error: 'A nova senha deve ter pelo menos 3 caracteres.' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const record = passwordResetTokens.get(normalizedEmail);
+
+        if (!record || record.code !== code.trim()) {
+            return res.status(400).json({ error: 'Código de verificação incorreto ou inválido.' });
+        }
+
+        if (Date.now() > record.expiresAt) {
+            passwordResetTokens.delete(normalizedEmail);
+            return res.status(400).json({ error: 'O código de verificação expirou. Solicite um novo código.' });
+        }
+
+        const user = await prisma.user.findFirst({
+            where: { email: { equals: normalizedEmail, mode: 'insensitive' } }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password: newPassword }
+        });
+
+        // Limpa o token utilizado
+        passwordResetTokens.delete(normalizedEmail);
+
+        console.log(`[AUTH] Senha do usuário ${normalizedEmail} atualizada com sucesso!`);
+
+        res.json({
+            success: true,
+            message: 'Senha redefinida com sucesso! Você já pode fazer login.'
+        });
+    } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        res.status(500).json({ error: 'Erro ao salvar nova senha.' });
     }
 });
 

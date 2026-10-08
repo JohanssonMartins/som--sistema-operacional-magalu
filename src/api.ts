@@ -26,6 +26,26 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
         return res.json();
     },
+    requestPasswordReset: async (email: string) => {
+        const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao solicitar redefinição.');
+        return data;
+    },
+    confirmPasswordReset: async (email: string, code: string, newPassword: string) => {
+        const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, newPassword }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao redefinir a senha.');
+        return data;
+    },
 
     // Base Items
     getBaseItems: async (): Promise<ChecklistItem[]> => {
