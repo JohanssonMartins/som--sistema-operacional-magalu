@@ -612,13 +612,13 @@ export const AvaliacaoExterna = () => {
                           <div className="flex-1 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
-                              animate={{ width: (row.total - row.na) === 0 ? '0%' : `${((row.respondidos - row.na) / (row.total - row.na)) * 100}%` }}
+                              animate={{ width: (row.total - row.na) === 0 ? '0%' : `${(((row.conforme + row.parcial + row.naoConforme)) / (row.total - row.na)) * 100}%` }}
                               className="h-full bg-blue-500 rounded-full"
                               transition={{ duration: 0.8, ease: "easeOut" }}
                             />
                           </div>
                           <span className="text-sm font-semibold text-gray-600 dark:text-zinc-400 shrink-0">
-                            {row.respondidos - row.na}/{row.total - row.na}
+                            {row.conforme + row.parcial + row.naoConforme}/{row.total - row.na}
                           </span>
                         </div>
                       </div>
