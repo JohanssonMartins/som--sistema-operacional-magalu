@@ -138,22 +138,22 @@ export const Rank = () => {
             <div className="flex items-center space-x-2">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
               <div className="w-4 h-4 rounded-full bg-red-600 shadow-sm"></div>
-              <span className="text-gray-200 font-bold">&lt; 50% &rarr;</span>
+              <span className="text-gray-200 font-bold">Abaixo de 60% &rarr;</span>
               <span className="text-blue-200 font-bold">Não aderente</span>
               <span className="text-gray-400 text-xs">(Fundo Vermelho)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
               <div className="w-4 h-4 rounded-full bg-yellow-400 shadow-sm"></div>
-              <span className="text-gray-200 font-bold">50% a 69.9% &rarr;</span>
+              <span className="text-gray-200 font-bold">60% a 84% &rarr;</span>
               <span className="text-blue-200 font-bold">Qualificado</span>
               <span className="text-gray-400 text-xs">(Fundo Amarelo)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
               <div className="w-4 h-4 rounded-full bg-green-500 shadow-sm"></div>
-              <span className="text-gray-200 font-bold">&ge; 70% &rarr;</span>
-              <span className="text-blue-200 font-bold">Certificado</span>
+              <span className="text-gray-200 font-bold">&ge; 85% &rarr;</span>
+              <span className="text-blue-200 font-bold">Certificado S.O.M.</span>
               <span className="text-gray-400 text-xs">(Fundo Verde Esmeralda)</span>
             </div>
           </div>

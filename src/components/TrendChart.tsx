@@ -28,19 +28,19 @@ interface TrendChartProps {
 }
 
 const getBarColor = (value: number) => {
-  if (value >= 70) return '#22a06b'; // Certificado (Verde)
-  if (value >= 50) return '#f59e0b'; // Qualificado (Amarelo)
+  if (value >= 85) return '#22a06b'; // Certificado S.O.M. (Verde)
+  if (value >= 60) return '#f59e0b'; // Qualificado (Amarelo)
   return '#e34935';                  // Não Aderente (Vermelho)
 };
 
 const getStatusBadge = (value: number) => {
-  if (value >= 70) return { label: 'Certificado', bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' };
-  if (value >= 50) return { label: 'Qualificado', bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' };
+  if (value >= 85) return { label: 'Certificado S.O.M.', bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' };
+  if (value >= 60) return { label: 'Qualificado', bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' };
   return { label: 'Não aderente', bg: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30' };
 };
 
 export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
-  const [targetScore, setTargetScore] = useState<number>(70);
+  const [targetScore, setTargetScore] = useState<number>(85);
   const [selectedPilar, setSelectedPilar] = useState<string>('Geral');
 
   // Extrair apenas os pilares oficiais do SOM na ordem correta
@@ -154,7 +154,8 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
               onChange={(e) => setTargetScore(Number(e.target.value))}
               className="bg-transparent font-bold text-gray-800 dark:text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value={70}>70% (Certificação)</option>
+              <option value={85}>85% (Certificação S.O.M.)</option>
+              <option value={70}>70%</option>
               <option value={80}>80%</option>
               <option value={90}>90% (Excelente)</option>
             </select>
@@ -272,13 +273,13 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
         <div className="flex items-center gap-4 text-zinc-500">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#22a06b]"></div> ≥ 70% Certificado
+            <div className="w-3 h-3 rounded bg-[#22a06b]"></div> ≥ 85% Certificado S.O.M.
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-amber-500"></div> 50% - 69,9% Qualificado
+            <div className="w-3 h-3 rounded bg-amber-500"></div> 60% - 84% Qualificado
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#e34935]"></div> &lt; 50% Não Aderente
+            <div className="w-3 h-3 rounded bg-[#e34935]"></div> Abaixo de 60% Não Aderente
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-0.5 border-t-2 border-emerald-500 border-dashed"></div> Meta ({targetScore}%)

@@ -177,18 +177,18 @@ export const Dashboard = () => {
           <div className="bg-zinc-900 text-[10px] text-white p-2 rounded-lg flex items-center gap-4 shadow-xl border border-zinc-800 w-fit">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-[#e34935]" />
-              <span className="opacity-70">&lt; 50% →</span>
+              <span className="opacity-70">Abaixo de 60% →</span>
               <span className="font-bold">Não aderente</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="opacity-70">50% a 69.9% →</span>
+              <span className="opacity-70">60% a 84% →</span>
               <span className="font-bold">Qualificado</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-[#22a06b]" />
-              <span className="opacity-70">≥ 70% →</span>
-              <span className="font-bold">Certificado</span>
+              <span className="opacity-70">85% ou mais →</span>
+              <span className="font-bold">Certificado S.O.M.</span>
             </div>
           </div>
         </div>
@@ -258,13 +258,13 @@ export const Dashboard = () => {
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-gray-500 dark:text-zinc-400 font-medium">Objetivo</span>
-                        <span className="text-gray-900 dark:text-zinc-200 font-black">&gt; 70%</span>
+                        <span className="text-gray-900 dark:text-zinc-200 font-black">&ge; 85%</span>
                       </div>
                       <div className="h-2.5 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: '70%' }}
-                          className="h-full bg-[#6b778c] rounded-full"
+                          animate={{ width: '85%' }}
+                          className="h-full bg-[#22a06b] rounded-full"
                         />
                       </div>
                     </div>
