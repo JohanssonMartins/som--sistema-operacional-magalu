@@ -43,15 +43,19 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   const [targetScore, setTargetScore] = useState<number>(70);
   const [selectedPilar, setSelectedPilar] = useState<string>('Geral');
 
-  // Extrair todos os pilares presentes
+  // Extrair apenas os pilares oficiais do SOM na ordem correta
   const availablePillars = useMemo(() => {
-    const pSet = new Set<string>();
+    const presentPillars = new Set<string>();
     data.forEach(d => {
       if (d.pillars) {
-        Object.keys(d.pillars).forEach(p => pSet.add(p));
+        Object.keys(d.pillars).forEach(p => {
+          if (p !== 'Outros') presentPillars.add(p);
+        });
       }
     });
-    return Array.from(pSet);
+
+    const officialOrder = ['Pessoas', 'Segurança', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
+    return officialOrder.filter(p => presentPillars.has(p));
   }, [data]);
 
   // Preparar os dados calculando a variação mês a mês
