@@ -205,11 +205,11 @@ export const Dashboard = () => {
           >
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-200 flex items-center gap-2">
-                <BarChart className="w-5 h-5 text-blue-500" /> Histórico de Performance
+                <BarChart className="w-5 h-5 text-blue-500" /> Evolução Mês a Mês da Autoavaliação
               </h3>
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-500">
-                <div className="w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500" />
-                <span>Mensal Oficial (%)</span>
+                <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500" />
+                <span>Comparativo Histórico com Metas</span>
               </div>
             </div>
             {isLoadingHistory ? (

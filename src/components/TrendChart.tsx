@@ -1,18 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import {
-  AreaChart,
-  Area,
+  BarChart as RechartsBarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  Line,
-  Legend,
-  ComposedChart
+  Cell,
+  LabelList
 } from 'recharts';
-import { TrendingUp, Target, Users, MapPin } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, Minus, Layers, Award } from 'lucide-react';
 
 interface HistoryData {
   mesAno: string;
@@ -28,42 +27,56 @@ interface TrendChartProps {
   data: HistoryData[];
 }
 
-const PILLAR_COLORS: Record<string, string> = {
-  'Pessoas': '#a855f7', // Purple
-  'Segurança': '#ef4444', // Red
-  'Processos': '#10b981', // Green
-  'Financeiro': '#f59e0b', // Amber
-  'Qualidade': '#06b6d4', // Cyan
-  'Outros': '#64748b'     // Slate
+const getBarColor = (value: number) => {
+  if (value >= 70) return '#22a06b'; // Certificado (Verde)
+  if (value >= 50) return '#f59e0b'; // Qualificado (Amarelo)
+  return '#e34935';                  // Não Aderente (Vermelho)
 };
 
-const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
-  const [showPillars, setShowPillars] = useState(false);
-  const [showNetwork, setShowNetwork] = useState(true);
-  const [showProjection, setShowProjection] = useState(true);
+const getStatusBadge = (value: number) => {
+  if (value >= 70) return { label: 'Certificado', bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' };
+  if (value >= 50) return { label: 'Qualificado', bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' };
+  return { label: 'Não aderente', bg: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30' };
+};
 
-  // Calcular Projeção (Regressão Linear Simples)
-  const chartDataWithProjection = useMemo(() => {
-    if (data.length < 2) return data;
+export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
+  const [targetScore, setTargetScore] = useState<number>(70);
+  const [selectedPilar, setSelectedPilar] = useState<string>('Geral');
 
-    const n = data.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    
-    data.forEach((d, i) => {
-      sumX += i;
-      sumY += d.performance;
-      sumXY += i * d.performance;
-      sumX2 += i * i;
+  // Extrair todos os pilares presentes
+  const availablePillars = useMemo(() => {
+    const pSet = new Set<string>();
+    data.forEach(d => {
+      if (d.pillars) {
+        Object.keys(d.pillars).forEach(p => pSet.add(p));
+      }
     });
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    return data.map((d, i) => ({
-      ...d,
-      projection: Math.round((slope * i + intercept) * 10) / 10
-    }));
+    return Array.from(pSet);
   }, [data]);
+
+  // Preparar os dados calculando a variação mês a mês
+  const processedData = useMemo(() => {
+    return data.map((d, index) => {
+      const currentValue = selectedPilar === 'Geral' 
+        ? d.performance 
+        : (d.pillars?.[selectedPilar] ?? 0);
+
+      const prevValue = index > 0
+        ? (selectedPilar === 'Geral' 
+            ? data[index - 1].performance 
+            : (data[index - 1].pillars?.[selectedPilar] ?? 0))
+        : null;
+
+      const diff = prevValue !== null ? Math.round((currentValue - prevValue) * 10) / 10 : null;
+
+      return {
+        ...d,
+        displayValue: currentValue,
+        diff,
+        color: getBarColor(currentValue)
+      };
+    });
+  }, [data, selectedPilar]);
 
   if (!data || data.length === 0) {
     return (
@@ -73,65 +86,86 @@ const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
     );
   }
 
-  const allPillars = Array.from(new Set(data.flatMap(d => Object.keys(d.pillars || {}))));
+  // Estatísticas de evolução geral
+  const firstItem = processedData[0];
+  const lastItem = processedData[processedData.length - 1];
+  const totalEvolucao = processedData.length > 1
+    ? Math.round((lastItem.displayValue - firstItem.displayValue) * 10) / 10
+    : 0;
 
   return (
-    <div className="flex flex-col gap-4 mt-4">
-      {/* Controles do Gráfico */}
-      <div className="flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex flex-wrap gap-2">
-            <button 
-                onClick={() => setShowPillars(!showPillars)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    showPillars 
-                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800' 
-                    : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-transparent'
-                }`}
+    <div className="flex flex-col gap-4 mt-2">
+      {/* Controles e Filtros do Gráfico */}
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-gray-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-gray-200/80 dark:border-zinc-800">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-zinc-300 mr-1">
+            <Layers size={14} className="text-blue-500" />
+            <span>Visualização:</span>
+          </div>
+
+          <button
+            onClick={() => setSelectedPilar('Geral')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              selectedPilar === 'Geral'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700 hover:bg-gray-100'
+            }`}
+          >
+            Geral CD
+          </button>
+
+          {availablePillars.map(p => (
+            <button
+              key={p}
+              onClick={() => setSelectedPilar(p)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                selectedPilar === p
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700 hover:bg-gray-100'
+              }`}
             >
-                <Users size={14} />
-                Ver por Pilares
+              {p}
             </button>
-            <button 
-                onClick={() => setShowNetwork(!showNetwork)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    showNetwork 
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800' 
-                    : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-transparent'
-                }`}
-            >
-                <MapPin size={14} />
-                Média da Rede
-            </button>
-            <button 
-                onClick={() => setShowProjection(!showProjection)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    showProjection 
-                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800' 
-                    : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-transparent'
-                }`}
-            >
-                <TrendingUp size={14} />
-                Tendência
-            </button>
+          ))}
         </div>
-        
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-            <Target size={14} className="text-red-500" />
-            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Meta: 90%</span>
+
+        {/* Ajuste de Meta e Evolução */}
+        <div className="flex items-center gap-3">
+          {processedData.length > 1 && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs font-bold">
+              <span className="text-gray-500 dark:text-zinc-400 font-normal">Evolução do Período:</span>
+              <span className={totalEvolucao > 0 ? 'text-emerald-600 flex items-center' : totalEvolucao < 0 ? 'text-red-500 flex items-center' : 'text-gray-500'}>
+                {totalEvolucao > 0 && <TrendingUp size={13} className="mr-0.5" />}
+                {totalEvolucao < 0 && <TrendingDown size={13} className="mr-0.5" />}
+                {totalEvolucao > 0 ? `+${totalEvolucao}%` : `${totalEvolucao}%`}
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs">
+            <Target size={14} className="text-emerald-500" />
+            <span className="text-gray-600 dark:text-zinc-400 font-medium">Meta:</span>
+            <select
+              value={targetScore}
+              onChange={(e) => setTargetScore(Number(e.target.value))}
+              className="bg-transparent font-bold text-gray-800 dark:text-zinc-200 focus:outline-none cursor-pointer"
+            >
+              <option value={70}>70% (Certificação)</option>
+              <option value={80}>80%</option>
+              <option value={90}>90% (Excelente)</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div className="h-[350px] w-full bg-white dark:bg-zinc-900/30 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm relative group">
+
+      {/* Área do Gráfico de Barras */}
+      <div className="h-[340px] w-full bg-white dark:bg-zinc-900/30 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm relative">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
-            data={chartDataWithProjection}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          <RechartsBarChart
+            data={processedData}
+            margin={{ top: 25, right: 20, left: -10, bottom: 5 }}
+            barCategoryGap="20%"
           >
-            <defs>
-              <linearGradient id="colorPerf" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:stroke-zinc-800" />
             <XAxis 
               dataKey="mesAno" 
@@ -148,93 +182,121 @@ const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
               tickFormatter={(value) => `${value}%`}
             />
             <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                borderRadius: '12px', 
-                border: '1px solid #e5e7eb', 
-                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                padding: '12px'
-              }}
-              labelStyle={{ fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}
-              itemStyle={{ fontSize: '12px', padding: '2px 0' }}
-              itemSorter={(item) => {
-                const order: Record<string, number> = {
-                  'Geral': 1,
-                  'Pessoas': 2,
-                  'Segurança': 3,
-                  'Processos': 4,
-                  'Financeiro': 5,
-                  'Qualidade': 6,
-                  'Média Rede': 100,
-                  'Tendência': 101,
-                };
-                return order[item.name as string] || 50;
+              cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload.length) return null;
+                const d = payload[0].payload;
+                const badge = getStatusBadge(d.displayValue);
+
+                return (
+                  <div className="bg-white dark:bg-zinc-900 p-3 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-xl text-xs space-y-2 min-w-[170px]">
+                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-1.5">
+                      <span className="font-bold text-gray-900 dark:text-zinc-100">{d.mesAno}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${badge.bg}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 dark:text-zinc-400">Aderência:</span>
+                        <span className="font-black text-gray-900 dark:text-zinc-100 text-sm">
+                          {d.displayValue.toFixed(1).replace('.', ',')}%
+                        </span>
+                      </div>
+
+                      {d.diff !== null && (
+                        <div className="flex justify-between items-center pt-1 border-t border-gray-100 dark:border-zinc-800/80">
+                          <span className="text-gray-500 dark:text-zinc-400">vs Mês Anterior:</span>
+                          <span className={`font-bold flex items-center ${d.diff > 0 ? 'text-emerald-600' : d.diff < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                            {d.diff > 0 && <TrendingUp size={12} className="mr-0.5" />}
+                            {d.diff < 0 && <TrendingDown size={12} className="mr-0.5" />}
+                            {d.diff === 0 && <Minus size={12} className="mr-0.5" />}
+                            {d.diff > 0 ? `+${d.diff}%` : `${d.diff}%`}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between pt-0.5">
+                        <span className="text-gray-500 dark:text-zinc-400">Meta:</span>
+                        <span className={`font-bold ${d.displayValue >= targetScore ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {d.displayValue >= targetScore ? 'Atingida ✓' : `${Math.round((d.displayValue - targetScore) * 10) / 10}%`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
               }}
             />
-            
-            {/* Meta */}
-            <ReferenceLine y={90} stroke="#ef4444" strokeDasharray="5 5" label={{ position: 'right', value: 'Meta', fill: '#ef4444', fontSize: 10, fontWeight: 'bold' }} />
 
-            {/* Performance Principal (Geral) - Primeira na lista do Tooltip */}
-            <Area
-              type="monotone"
-              dataKey="performance"
-              name="Geral"
-              stroke="#3b82f6"
-              strokeWidth={3}
-              fillOpacity={1}
-              fill="url(#colorPerf)"
-              animationDuration={1500}
-              activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
+            {/* Linha de Meta Corporativa */}
+            <ReferenceLine 
+              y={targetScore} 
+              stroke="#22a06b" 
+              strokeWidth={2}
+              strokeDasharray="4 4" 
+              label={{ 
+                position: 'top', 
+                value: `Meta: ${targetScore}%`, 
+                fill: '#22a06b', 
+                fontSize: 11, 
+                fontWeight: 'bold' 
+              }} 
             />
 
-            {/* Pilares */}
-            {showPillars && allPillars.map(pillar => (
-                <Line
-                    key={pillar}
-                    type="monotone"
-                    dataKey={`pillars.${pillar}`}
-                    name={pillar}
-                    stroke={PILLAR_COLORS[pillar] || '#64748b'}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    animationDuration={1500}
-                />
-            ))}
-
-            {/* Média da Rede */}
-            {showNetwork && (
-                <Line 
-                    type="monotone" 
-                    dataKey="networkAvg" 
-                    name="Média Rede" 
-                    stroke="#94a3b8" 
-                    strokeWidth={2} 
-                    strokeDasharray="4 4" 
-                    dot={false}
-                />
-            )}
-
-            {/* Tendência/Projeção */}
-            {showProjection && (
-                <Line 
-                    type="monotone" 
-                    dataKey="projection" 
-                    name="Tendência" 
-                    stroke="#f97316" 
-                    strokeWidth={1} 
-                    strokeDasharray="2 2" 
-                    dot={false}
-                    animationDuration={2000}
-                />
-            )}
-          </ComposedChart>
+            {/* Barras de Desempenho */}
+            <Bar 
+              dataKey="displayValue" 
+              radius={[6, 6, 0, 0]}
+              animationDuration={1200}
+            >
+              {processedData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+              <LabelList 
+                dataKey="displayValue" 
+                position="top" 
+                formatter={(val: number) => `${Math.round(val)}%`} 
+                style={{ fontSize: '11px', fontWeight: 'bold', fill: '#64748b' }} 
+              />
+            </Bar>
+          </RechartsBarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex flex-wrap gap-4 justify-center text-[11px] text-zinc-500">
-        <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-blue-500"></div> Performance Unidade</div>
-        <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-zinc-400 border-t border-dashed"></div> Média Geral Rede</div>
-        <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 border-t border-red-500 border-dashed"></div> Meta Corporativa</div>
+
+      {/* Legendas e Comparativo Mês a Mês */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
+        <div className="flex items-center gap-4 text-zinc-500">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-[#22a06b]"></div> ≥ 70% Certificado
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-amber-500"></div> 50% - 69,9% Qualificado
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-[#e34935]"></div> &lt; 50% Não Aderente
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-0.5 border-t-2 border-emerald-500 border-dashed"></div> Meta ({targetScore}%)
+          </div>
+        </div>
+
+        {/* Resumo rápido do último mês */}
+        {lastItem && (
+          <div className="flex items-center gap-2 font-medium text-gray-700 dark:text-zinc-300">
+            <span>Último mês ({lastItem.mesAno}):</span>
+            <span className="font-extrabold text-blue-600 dark:text-blue-400">
+              {lastItem.displayValue.toFixed(1).replace('.', ',')}%
+            </span>
+            {lastItem.diff !== null && (
+              <span className={`text-[11px] px-1.5 py-0.5 rounded font-bold ${
+                lastItem.diff >= 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40' : 'bg-red-50 text-red-500 dark:bg-red-950/40'
+              }`}>
+                {lastItem.diff >= 0 ? `+${lastItem.diff}%` : `${lastItem.diff}%`} vs mês anterior
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
