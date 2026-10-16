@@ -424,10 +424,10 @@ export const AvaliacaoExterna = () => {
             </div>
             <div>
               <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-cyan-400">
-                Avaliação Externa do CD
+                Auditoria Oficial do CD
               </h2>
               <p className="text-gray-500 dark:text-zinc-400 text-sm mt-0.5">
-                Realize a auditoria externa — <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedUnit !== 'Todas' ? `CD ${selectedUnit}` : 'Selecione um CD'}</span> · {localMesAno}
+                Realize a auditoria oficial — <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedUnit !== 'Todas' ? `CD ${selectedUnit}` : 'Selecione um CD'}</span> · {localMesAno}
               </p>
             </div>
           </div>
