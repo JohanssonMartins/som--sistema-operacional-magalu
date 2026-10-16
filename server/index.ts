@@ -427,7 +427,7 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
             })
             : [];
 
-        // 5. Calcular média da rede por mês
+        // 5. Calcular média da rede por mês (descontando N/A)
         const networkAvgByMonth: Record<string, number> = {};
         uniqueMonths.forEach(mes => {
             const audits = allAuditsInMonths.filter(a => a.mesAno === mes);
@@ -436,6 +436,7 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
 
             audits.forEach(audit => {
                 audit.items.forEach(item => {
+                    if (item.score === 'N/A') return;
                     const s = parseInt(item.score || '0');
                     monthTotalScore += (isNaN(s) ? 0 : s);
                     monthMaxScore += 3;
@@ -447,27 +448,32 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
                 : 0;
         });
 
-        // 6. Processar histórico final com pilares
+        // 6. Processar histórico final com pilares (descontando N/A)
         const history = autoauditorias.map(audit => {
             const pillarScores: Record<string, { score: number, max: number }> = {};
+            let totalScore = 0;
+            let totalMaxScore = 0;
 
             audit.items.forEach(item => {
                 const pilar = baseItemMap.get(item.baseItemId) || 'Outros';
+                if (!pillarScores[pilar]) pillarScores[pilar] = { score: 0, max: 0 };
+
+                if (item.score === 'N/A') {
+                    // Itens N/A não somam pontos nem entram no denominador
+                    return;
+                }
+
                 const s = parseInt(item.score || '0');
                 const val = (isNaN(s) ? 0 : s);
 
-                if (!pillarScores[pilar]) pillarScores[pilar] = { score: 0, max: 0 };
                 pillarScores[pilar].score += val;
                 pillarScores[pilar].max += 3;
+
+                totalScore += val;
+                totalMaxScore += 3;
             });
 
-            const totalScore = audit.items.reduce((acc, item) => {
-                const s = parseInt(item.score || '0');
-                return acc + (isNaN(s) ? 0 : s);
-            }, 0);
-
-            const maxScore = audit.items.length * 3;
-            const performance = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+            const performance = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0;
 
             const pillars: Record<string, number> = {};
             Object.entries(pillarScores).forEach(([name, data]) => {
@@ -478,7 +484,7 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
                 mesAno: audit.mesAno,
                 performance: Math.round(performance * 10) / 10,
                 score: totalScore,
-                maxScore,
+                maxScore: totalMaxScore,
                 status: audit.status,
                 pillars,
                 networkAvg: networkAvgByMonth[audit.mesAno] || 0
