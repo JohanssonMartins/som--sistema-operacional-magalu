@@ -11,7 +11,8 @@ import {
   Cell,
   LabelList
 } from 'recharts';
-import { Target, TrendingUp, TrendingDown, Minus, Layers, Award } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, Minus, Layers, Award, Calendar } from 'lucide-react';
+import { parseMesAno } from '../utils/appUtils';
 
 interface HistoryData {
   mesAno: string;
@@ -43,10 +44,29 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   const [targetScore, setTargetScore] = useState<number>(85);
   const [selectedPilar, setSelectedPilar] = useState<string>('Geral');
 
+  // Anos disponíveis nos dados do histórico
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    data.forEach(d => {
+      const { ano } = parseMesAno(d.mesAno);
+      if (ano) years.add(String(ano));
+    });
+    if (years.size === 0) years.add(String(new Date().getFullYear()));
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [data]);
+
+  const [selectedYear, setSelectedYear] = useState<string>('Todos');
+
+  // Dados filtrados pelo ano selecionado
+  const filteredData = useMemo(() => {
+    if (selectedYear === 'Todos') return data;
+    return data.filter(d => String(parseMesAno(d.mesAno).ano) === selectedYear);
+  }, [data, selectedYear]);
+
   // Extrair apenas os pilares oficiais do SOM na ordem correta
   const availablePillars = useMemo(() => {
     const presentPillars = new Set<string>();
-    data.forEach(d => {
+    filteredData.forEach(d => {
       if (d.pillars) {
         Object.keys(d.pillars).forEach(p => {
           if (p !== 'Outros') presentPillars.add(p);
@@ -56,19 +76,19 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
 
     const officialOrder = ['Pessoas', 'Segurança', 'Sustentabilidade', 'Cliente', 'Gestão', 'Armazém'];
     return officialOrder.filter(p => presentPillars.has(p));
-  }, [data]);
+  }, [filteredData]);
 
   // Preparar os dados calculando a variação mês a mês
   const processedData = useMemo(() => {
-    return data.map((d, index) => {
+    return filteredData.map((d, index) => {
       const currentValue = selectedPilar === 'Geral' 
         ? d.performance 
         : (d.pillars?.[selectedPilar] ?? 0);
 
       const prevValue = index > 0
         ? (selectedPilar === 'Geral' 
-            ? data[index - 1].performance 
-            : (data[index - 1].pillars?.[selectedPilar] ?? 0))
+            ? filteredData[index - 1].performance 
+            : (filteredData[index - 1].pillars?.[selectedPilar] ?? 0))
         : null;
 
       const diff = prevValue !== null ? Math.round((currentValue - prevValue) * 10) / 10 : null;
@@ -80,7 +100,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
         color: getBarColor(currentValue)
       };
     });
-  }, [data, selectedPilar]);
+  }, [filteredData, selectedPilar]);
 
   if (!data || data.length === 0) {
     return (
@@ -102,6 +122,24 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
       {/* Controles e Filtros do Gráfico */}
       <div className="flex flex-wrap gap-3 items-center justify-between bg-gray-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-gray-200/80 dark:border-zinc-800">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Filtro de Ano */}
+          {availableYears.length > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs font-semibold mr-1 shadow-sm">
+              <Calendar size={13} className="text-blue-500" />
+              <span className="text-gray-500 dark:text-zinc-400 font-normal">Ano:</span>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="bg-transparent font-bold text-gray-800 dark:text-zinc-200 focus:outline-none cursor-pointer"
+              >
+                <option value="Todos">Todos os Anos</option>
+                {availableYears.map(yr => (
+                  <option key={yr} value={yr}>{yr}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-zinc-300 mr-1">
             <Layers size={14} className="text-blue-500" />
             <span>Visualização:</span>

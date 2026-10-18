@@ -7,7 +7,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats';
 import { dashboardData, CD_NAMES, PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_REGIONS } from '../constants/appConstants';
 import TrendChart from '../components/TrendChart';
 import { api } from '../api';
-import { getPerformanceStatus, formatBlocoName } from '../utils/appUtils';
+import { getPerformanceStatus, formatBlocoName, parseMesAno, sortMesesCronologico } from '../utils/appUtils';
 
 export const Dashboard = () => {
   const { selectedUnit, setSelectedUnit, autoauditoriaMesAno, setAutoauditoriaMesAno, allAutoauditorias, currentUser } = useStore(useShallow(state => ({
@@ -24,11 +24,58 @@ export const Dashboard = () => {
   const [filterDivisional, setFilterDivisional] = useState<string>('Todas');
   const [filterPilar, setFilterPilar] = useState<string>('Todos');
 
-  const availableMonths = useMemo(() => {
+  // Todos os meses conhecidos
+  const allKnownMonths = useMemo(() => {
     const months = new Set((allAutoauditorias || []).map(a => a.mesAno).filter(Boolean));
-    if (!months.has(autoauditoriaMesAno)) months.add(autoauditoriaMesAno);
-    return Array.from(months);
+    if (autoauditoriaMesAno) months.add(autoauditoriaMesAno);
+    return sortMesesCronologico(Array.from(months));
   }, [allAutoauditorias, autoauditoriaMesAno]);
+
+  // Lista de anos disponíveis
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    allKnownMonths.forEach(m => {
+      const { ano } = parseMesAno(m);
+      if (ano) years.add(String(ano));
+    });
+    if (years.size === 0) {
+      years.add(String(new Date().getFullYear()));
+    }
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [allKnownMonths]);
+
+  // Ano selecionado (inicia com o ano do autoauditoriaMesAno ou ano atual)
+  const initialYear = useMemo(() => {
+    const curYear = String(parseMesAno(autoauditoriaMesAno).ano);
+    return availableYears.includes(curYear) ? curYear : (availableYears[0] || String(new Date().getFullYear()));
+  }, [autoauditoriaMesAno, availableYears]);
+
+  const [selectedYear, setSelectedYear] = useState<string>(initialYear);
+
+  // Sincronizar selectedYear caso mude autoauditoriaMesAno externamente
+  useEffect(() => {
+    const yearOfCurMonth = String(parseMesAno(autoauditoriaMesAno).ano);
+    if (yearOfCurMonth && availableYears.includes(yearOfCurMonth) && yearOfCurMonth !== selectedYear) {
+      setSelectedYear(yearOfCurMonth);
+    }
+  }, [autoauditoriaMesAno, availableYears]);
+
+  // Meses filtrados pelo ano selecionado
+  const availableMonths = useMemo(() => {
+    return allKnownMonths.filter(m => {
+      const { ano } = parseMesAno(m);
+      return String(ano) === selectedYear;
+    });
+  }, [allKnownMonths, selectedYear]);
+
+  // Se o mês atual não pertencer ao ano selecionado, seleciona o primeiro mês daquele ano
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    const monthsForYear = allKnownMonths.filter(m => String(parseMesAno(m).ano) === year);
+    if (monthsForYear.length > 0 && !monthsForYear.includes(autoauditoriaMesAno)) {
+      setAutoauditoriaMesAno(monthsForYear[monthsForYear.length - 1]); // Seleciona o mês mais recente do ano
+    }
+  };
 
   const cdOptions = useMemo(() => {
     if (filterDivisional === 'Todas') return UNIDADES_DISPONIVEIS;
@@ -97,6 +144,20 @@ export const Dashboard = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* Filtro de Ano */}
+            <div className="relative min-w-[120px]">
+              <select
+                value={selectedYear}
+                onChange={(e) => handleYearChange(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-gray-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all cursor-pointer hover:border-blue-400 dark:hover:border-blue-500/50"
+              >
+                {availableYears.map(yr => (
+                  <option key={yr} value={yr}>Ano {yr}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
             {/* Filtro de Mês */}
             <div className="relative min-w-[150px]">
               <select

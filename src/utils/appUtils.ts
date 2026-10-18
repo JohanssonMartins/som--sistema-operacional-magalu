@@ -36,3 +36,31 @@ export const getPerformanceStatus = (value: number) => {
   if (value >= 60) return { label: 'Qualificado', color: 'amber', bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' };
   return { label: 'Não aderente', color: 'red', bg: 'bg-[#e34935]', text: 'text-red-600 dark:text-red-400' };
 };
+
+export const MONTH_NAMES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+export const MONTH_ORDER: Record<string, number> = {
+  'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
+  'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+};
+
+export const parseMesAno = (mesAno: string) => {
+  if (!mesAno) return { mes: '', ano: new Date().getFullYear(), mesIndex: -1 };
+  const parts = mesAno.split('-');
+  const mes = parts[0] || '';
+  const ano = parseInt(parts[1], 10) || new Date().getFullYear();
+  const mesIndex = MONTH_ORDER[mes] !== undefined ? MONTH_ORDER[mes] : -1;
+  return { mes, ano, mesIndex };
+};
+
+export const sortMesesCronologico = (meses: string[]) => {
+  return [...meses].sort((a, b) => {
+    const tA = parseMesAno(a);
+    const tB = parseMesAno(b);
+    if (tA.ano !== tB.ano) return tA.ano - tB.ano;
+    return tA.mesIndex - tB.mesIndex;
+  });
+};

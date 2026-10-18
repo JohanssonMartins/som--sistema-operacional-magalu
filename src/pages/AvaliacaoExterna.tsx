@@ -5,7 +5,7 @@ import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PILAR_ORDER, UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
-import { getPilarWeight, getBlocoWeight, formatBlocoName } from '../utils/appUtils';
+import { getPilarWeight, getBlocoWeight, formatBlocoName, parseMesAno, MONTH_NAMES } from '../utils/appUtils';
 import { AutoauditoriaRow, parse5W2H } from '../components/AutoauditoriaRow';
 import { api } from '../api';
 
@@ -19,21 +19,6 @@ const PILAR_CONFIG: Record<string, { icon: React.ElementType; color: string }> =
   'Gestão': { icon: Settings, color: 'bg-blue-600' },
   'Armazém': { icon: Package, color: 'bg-orange-500' },
 };
-
-// Gera os últimos 12 meses no formato "Mês-Ano" (iniciando do próximo mês para testes/planejamento)
-const gerarUltimosMeses = (quantidade = 12): string[] => {
-  const meses: string[] = [];
-  for (let i = 0; i < quantidade; i++) {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1 - i);
-    const mes = d.toLocaleString('pt-BR', { month: 'long' });
-    const ano = d.getFullYear();
-    meses.push(`${mes.charAt(0).toUpperCase() + mes.slice(1)}-${ano}`);
-  }
-  return meses;
-};
-
-const MESES_DISPONIVEIS = gerarUltimosMeses();
 
 export const AvaliacaoExterna = () => {
   const {
@@ -81,6 +66,30 @@ export const AvaliacaoExterna = () => {
 
   // Mês local — carrega a avaliação do mês selecionado sem alterar o global
   const [localMesAno, setLocalMesAno] = useState(autoauditoriaMesAno);
+  const [localAno, setLocalAno] = useState<string>(() => {
+    return String(parseMesAno(autoauditoriaMesAno).ano || new Date().getFullYear());
+  });
+
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = new Set<string>([String(currentYear), String(currentYear - 1), String(currentYear + 1)]);
+    (allAutoauditorias || []).forEach(a => {
+      const { ano } = parseMesAno(a.mesAno);
+      if (ano) years.add(String(ano));
+    });
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [allAutoauditorias]);
+
+  const mesesDoAno = useMemo(() => {
+    return MONTH_NAMES.map(m => `${m}-${localAno}`);
+  }, [localAno]);
+
+  const handleYearChange = (year: string) => {
+    setLocalAno(year);
+    const { mes } = parseMesAno(localMesAno);
+    const newMesAno = `${mes || 'Janeiro'}-${year}`;
+    setLocalMesAno(newMesAno);
+  };
 
   const { dashboardStats } = useDashboardStats(selectedUnit, localMesAno);
   const { resumoPorPilar: _rpp } = dashboardStats;
@@ -510,6 +519,22 @@ export const AvaliacaoExterna = () => {
 
           <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 hidden md:block" />
 
+          {/* Ano */}
+          <div className="flex flex-col">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Ano</label>
+            <select
+              value={localAno}
+              onChange={(e) => handleYearChange(e.target.value)}
+              className="bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer min-w-[90px]"
+            >
+              {availableYears.map(yr => (
+                <option key={yr} value={yr}>{yr}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700 hidden md:block" />
+
           {/* Mês */}
           <div className="flex flex-col">
             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Mês</label>
@@ -518,7 +543,7 @@ export const AvaliacaoExterna = () => {
               onChange={(e) => setLocalMesAno(e.target.value)}
               className="bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer min-w-[170px]"
             >
-              {MESES_DISPONIVEIS.map(m => (
+              {mesesDoAno.map(m => (
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
