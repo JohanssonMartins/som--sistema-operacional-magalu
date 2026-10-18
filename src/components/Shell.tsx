@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Trophy, CheckCircle2, Database, Users,
   Menu, PanelLeftClose, ChevronDown, Package, Bell,
   Sun, Moon, LogOut, Lock, User as UserIcon, Check, X, ArrowUp,
-  BookOpen, Users2, Search, Radio
+  BookOpen, Users2, Search, Radio, Clock, History
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -39,11 +39,13 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
 
   const { socket } = useRealtime();
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [usersViewTab, setUsersViewTab] = useState<'online' | 'recent'>('online');
   const [isOnlineModalOpen, setIsOnlineModalOpen] = useState(false);
   const [onlineSearch, setOnlineSearch] = useState('');
   const onlineRef = useRef<HTMLDivElement>(null);
 
-  // Enviar presença via Socket e ouvir atualizações de quem está online
+  // Enviar presença via Socket e ouvir atualizações de quem está online e recentes
   useEffect(() => {
     if (!socket || !currentUser) return;
 
@@ -67,16 +69,26 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       setOnlineUsers(users);
     };
 
-    socket.on('users:online', handleUsersOnline);
+    const handleUsersRecent = (users: any[]) => {
+      setRecentUsers(users);
+    };
 
-    // Buscar lista inicial de online caso o socket já estivesse aberto
+    socket.on('users:online', handleUsersOnline);
+    socket.on('users:recent', handleUsersRecent);
+
+    // Buscar lista inicial de online e recentes
     api.getOnlineUsers().then(users => {
       if (users && users.length > 0) setOnlineUsers(users);
+    }).catch(() => {});
+
+    api.getRecentUsers().then(users => {
+      if (users && users.length > 0) setRecentUsers(users);
     }).catch(() => {});
 
     return () => {
       socket.off('connect', sendPresence);
       socket.off('users:online', handleUsersOnline);
+      socket.off('users:recent', handleUsersRecent);
     };
   }, [socket, currentUser]);
 
@@ -353,20 +365,47 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     transition={{ duration: 0.15 }}
                     className={`absolute bottom-full mb-3 left-0 ${isSidebarCollapsed ? 'w-80' : 'w-72'} bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden text-left`}
                   >
-                    {/* Header do Popover */}
-                    <div className="p-3.5 bg-gray-50 dark:bg-zinc-950/60 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    {/* Header do Popover com Abas Online / Recentes */}
+                    <div className="p-3 bg-gray-50 dark:bg-zinc-950/60 border-b border-gray-100 dark:border-zinc-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Users2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 uppercase tracking-wider">
+                            Atividade de Usuários
+                          </h4>
                         </div>
-                        <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 uppercase tracking-wider">
-                          Usuários Conectados ({onlineUsers.length > 0 ? onlineUsers.length : 1})
-                        </h4>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                          {onlineUsers.length > 0 ? onlineUsers.length : 1} online
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-                        Ao Vivo
-                      </span>
+
+                      {/* Abas */}
+                      <div className="flex p-0.5 bg-gray-200/70 dark:bg-zinc-800 rounded-lg text-xs font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => setUsersViewTab('online')}
+                          className={`flex-1 py-1 rounded-md text-[11px] transition-all flex items-center justify-center gap-1.5 ${
+                            usersViewTab === 'online'
+                              ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm font-bold'
+                              : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Online ({onlineUsers.length > 0 ? onlineUsers.length : 1})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUsersViewTab('recent')}
+                          className={`flex-1 py-1 rounded-md text-[11px] transition-all flex items-center justify-center gap-1.5 ${
+                            usersViewTab === 'recent'
+                              ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm font-bold'
+                              : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          Recentes ({recentUsers.length > 0 ? recentUsers.length : (onlineUsers.length > 0 ? onlineUsers.length : 1)})
+                        </button>
+                      </div>
                     </div>
 
                     {/* Busca */}
@@ -383,22 +422,28 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                       </div>
                     </div>
 
-                    {/* Lista de Usuários Conectados */}
+                    {/* Lista de Usuários */}
                     <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-zinc-800/60 p-1">
                       {(() => {
-                        // Se o array de onlineUsers estiver vazio no primeiro instante, coloca pelo menos o currentUser
-                        const displayList = onlineUsers.length > 0 
-                          ? onlineUsers 
+                        const onlineList = onlineUsers.length > 0
+                          ? onlineUsers
                           : (currentUser ? [{
                               userId: currentUser.id,
                               name: currentUser.name,
                               email: currentUser.email,
                               role: currentUser.role,
                               unidade: currentUser.unidade,
-                              photo: currentUser.photo
+                              photo: currentUser.photo,
+                              connectedAt: Date.now()
                             }] : []);
 
-                        const filtered = displayList.filter(u => 
+                        const recentList = recentUsers.length > 0
+                          ? recentUsers
+                          : onlineList;
+
+                        const sourceList = usersViewTab === 'online' ? onlineList : recentList;
+
+                        const filtered = sourceList.filter(u =>
                           (u.name || '').toLowerCase().includes(onlineSearch.toLowerCase()) ||
                           (u.unidade || '').toLowerCase().includes(onlineSearch.toLowerCase()) ||
                           (u.role || '').toLowerCase().includes(onlineSearch.toLowerCase())
@@ -412,8 +457,22 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                           );
                         }
 
+                        // Função auxiliar para tempo relativo amigável
+                        const formatRelativeTime = (timestamp?: number) => {
+                          if (!timestamp) return 'Recentemente';
+                          const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+                          if (diffSec < 60) return 'Agora mesmo';
+                          const diffMin = Math.floor(diffSec / 60);
+                          if (diffMin < 60) return `Há ${diffMin} min`;
+                          const diffHour = Math.floor(diffMin / 60);
+                          if (diffHour < 24) return `Há ${diffHour}h`;
+                          return 'Ontem';
+                        };
+
                         return filtered.map((u, i) => {
                           const isMe = u.userId === currentUser?.id;
+                          const isUserOnline = onlineList.some(o => o.userId === u.userId);
+
                           return (
                             <div
                               key={u.userId || i}
@@ -427,7 +486,9 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                                     {(u.name || 'U').charAt(0).toUpperCase()}
                                   </div>
                                 )}
-                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full"></div>
+                                <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white dark:border-zinc-900 rounded-full ${
+                                  isUserOnline ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400 dark:bg-zinc-600'
+                                }`}></div>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1">
@@ -438,8 +499,19 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                                     {u.unidade ? `CD ${u.unidade}` : 'Master'}
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate capitalize">
-                                  {(u.role || '').toLowerCase().replace(/_/g, ' ')}
+                                <div className="flex items-center justify-between gap-1 mt-0.5">
+                                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 truncate capitalize">
+                                    {(u.role || '').toLowerCase().replace(/_/g, ' ')}
+                                  </span>
+                                  {usersViewTab === 'recent' && (
+                                    <span className="text-[9px] font-medium text-gray-400 dark:text-zinc-500 shrink-0">
+                                      {isUserOnline ? (
+                                        <span className="text-emerald-500 font-semibold">Online agora</span>
+                                      ) : (
+                                        formatRelativeTime(u.lastSeenAt || u.connectedAt)
+                                      )}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -451,7 +523,9 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
                     {/* Rodapé do Popover */}
                     <div className="p-2 bg-gray-50 dark:bg-zinc-950/40 border-t border-gray-100 dark:border-zinc-800 text-center">
                       <p className="text-[10px] text-gray-400 dark:text-zinc-500">
-                        Atualizado em tempo real via WebSocket
+                        {usersViewTab === 'online'
+                          ? 'Atualizado em tempo real via WebSocket'
+                          : 'Histórico dos últimos acessos na plataforma'}
                       </p>
                     </div>
                   </motion.div>

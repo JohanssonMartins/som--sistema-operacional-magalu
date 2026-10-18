@@ -19,6 +19,11 @@ export const api = {
         if (!res.ok) throw new Error('Failed to fetch online users');
         return res.json();
     },
+    getRecentUsers: async (): Promise<any[]> => {
+        const res = await fetch(`${API_BASE_URL}/users/recent`);
+        if (!res.ok) throw new Error('Failed to fetch recent users');
+        return res.json();
+    },
     createUser: async (user: User) => {
         const res = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user) });
         return res.json();

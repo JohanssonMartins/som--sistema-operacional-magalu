@@ -21,7 +21,7 @@ const io = new Server(httpServer, {
 const prisma = new PrismaClient({});
 const PORT = Number(process.env.PORT) || 3333;
 
-// Gerenciamento de Usuários Online via Socket.io
+// Gerenciamento de Usuários Online e Recentes via Socket.io
 interface OnlineUserInfo {
     userId: string;
     socketId: string;
@@ -31,20 +31,34 @@ interface OnlineUserInfo {
     unidade: string;
     photo?: string | null;
     connectedAt: number;
+    lastSeenAt?: number;
 }
 const onlineUsers = new Map<string, OnlineUserInfo>(); // socketId -> OnlineUserInfo
+// Histórico de acessos recentes (mantém os últimos 30 usuários únicos com timestamp)
+const recentAccesses = new Map<string, OnlineUserInfo>(); // userId -> OnlineUserInfo
 
-const emitOnlineUsers = () => {
-    // Agrupar por userId para evitar duplicar se o mesmo usuário tiver 2 abas abertas
+const getUniqueOnlineUsers = () => {
     const uniqueMap = new Map<string, OnlineUserInfo>();
     for (const user of onlineUsers.values()) {
         if (!uniqueMap.has(user.userId)) {
             uniqueMap.set(user.userId, user);
         }
     }
-    const list = Array.from(uniqueMap.values());
-    console.log(`[Socket] Usuários online atualmente: ${list.length}`);
-    io.emit('users:online', list);
+    return Array.from(uniqueMap.values());
+};
+
+const getRecentUsersList = () => {
+    const list = Array.from(recentAccesses.values());
+    // Ordena do mais recente para o mais antigo
+    return list.sort((a, b) => (b.lastSeenAt || b.connectedAt) - (a.lastSeenAt || a.connectedAt)).slice(0, 30);
+};
+
+const emitOnlineUsers = () => {
+    const onlineList = getUniqueOnlineUsers();
+    const recentList = getRecentUsersList();
+    console.log(`[Socket] Usuários online: ${onlineList.length} | Recentes: ${recentList.length}`);
+    io.emit('users:online', onlineList);
+    io.emit('users:recent', recentList);
 };
 
 // Socket.io connection handling
@@ -54,7 +68,8 @@ io.on('connection', (socket) => {
     // Cliente envia seus dados de autenticação/presença
     socket.on('user:presence', (userData: { id: string; name: string; email: string; role: string; unidade: string; photo?: string | null }) => {
         if (userData && userData.id) {
-            onlineUsers.set(socket.id, {
+            const now = Date.now();
+            const userInfo: OnlineUserInfo = {
                 userId: userData.id,
                 socketId: socket.id,
                 name: userData.name,
@@ -62,15 +77,24 @@ io.on('connection', (socket) => {
                 role: userData.role,
                 unidade: userData.unidade,
                 photo: userData.photo,
-                connectedAt: Date.now()
-            });
+                connectedAt: now,
+                lastSeenAt: now
+            };
+            onlineUsers.set(socket.id, userInfo);
+            recentAccesses.set(userData.id, userInfo);
             emitOnlineUsers();
         }
     });
 
     socket.on('disconnect', () => {
         console.log(`[Socket] Cliente desconectado: ${socket.id}`);
-        if (onlineUsers.has(socket.id)) {
+        const user = onlineUsers.get(socket.id);
+        if (user) {
+            // Atualiza lastSeenAt no histórico de recentes
+            recentAccesses.set(user.userId, {
+                ...user,
+                lastSeenAt: Date.now()
+            });
             onlineUsers.delete(socket.id);
             emitOnlineUsers();
         }
@@ -119,13 +143,11 @@ app.use(express.json({ limit: '50mb' }));
 
 // Users
 app.get('/api/users/online', (req, res) => {
-    const uniqueMap = new Map<string, OnlineUserInfo>();
-    for (const user of onlineUsers.values()) {
-        if (!uniqueMap.has(user.userId)) {
-            uniqueMap.set(user.userId, user);
-        }
-    }
-    res.json(Array.from(uniqueMap.values()));
+    res.json(getUniqueOnlineUsers());
+});
+
+app.get('/api/users/recent', (req, res) => {
+    res.json(getRecentUsersList());
 });
 
 app.get('/api/users', async (req, res) => {
