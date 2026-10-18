@@ -592,7 +592,7 @@ export const Autoauditoria = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow-sm">
         <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-zinc-800 border-b border-gray-200 dark:border-zinc-800 p-4 text-center">
           <div>
             <div className="text-xl font-bold text-gray-900 dark:text-white">{progressoTotal.toFixed(1).replace('.', ',')}%</div>
@@ -615,7 +615,7 @@ export const Autoauditoria = () => {
           <h3 className="text-sm font-semibold text-gray-800 dark:text-zinc-200">Resumo por Pilar</h3>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-center text-xs text-gray-600 dark:text-zinc-300">
             <thead className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 font-bold">
               <tr>
@@ -630,7 +630,9 @@ export const Autoauditoria = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-              {resumoLocal.map(row => (
+              {resumoLocal.map((row, idx) => {
+                const isBottomRow = idx >= Math.floor(resumoLocal.length / 2);
+                return (
                 <tr key={row.pilar} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="px-3 py-3 text-left min-w-[200px]">
                     <div className="flex items-center gap-2">
@@ -680,8 +682,8 @@ export const Autoauditoria = () => {
                         <HelpCircle className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Tooltip com detalhamento do cálculo */}
-                      <div className="absolute top-full right-0 mt-2 hidden group-hover:flex flex-col w-64 p-3 bg-zinc-950 text-white rounded-xl shadow-2xl border border-zinc-800 text-[11px] z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                      {/* Tooltip com detalhamento do cálculo: se for linha de baixo, abre para cima; se for linha de cima, abre para baixo */}
+                      <div className={`absolute right-0 ${isBottomRow ? 'bottom-full mb-2' : 'top-full mt-2'} hidden group-hover:flex flex-col w-64 p-3 bg-zinc-950 text-white rounded-xl shadow-2xl border border-zinc-800 text-[11px] z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150`}>
                         <div className="font-bold border-b border-zinc-800 pb-1.5 mb-2 flex items-center justify-between text-zinc-100">
                           <span>Memória de Cálculo ({row.pilar})</span>
                           <span className="text-blue-400 font-extrabold">{row.aderencia.toFixed(1).replace('.', ',')}%</span>
@@ -722,7 +724,11 @@ export const Autoauditoria = () => {
                         </div>
 
                         {/* Triângulo indicador do tooltip */}
-                        <div className="absolute bottom-full right-4 border-4 border-transparent border-b-zinc-950" />
+                        {isBottomRow ? (
+                          <div className="absolute top-full right-4 border-4 border-transparent border-t-zinc-950" />
+                        ) : (
+                          <div className="absolute bottom-full right-4 border-4 border-transparent border-b-zinc-950" />
+                        )}
                       </div>
                     </div>
                   </td>
@@ -732,7 +738,8 @@ export const Autoauditoria = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
             </tbody>
           </table>
         </div>
