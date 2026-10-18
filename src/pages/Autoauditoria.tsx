@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package, ClipboardCheck, HelpCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -124,7 +124,7 @@ export const Autoauditoria = () => {
       const maxPoints = (total - na) * 3;
       const aderencia = maxPoints === 0 ? 0 : (totalPoints / maxPoints) * 100;
       const status = aderencia >= 80 ? 'Aderente' : 'Não Aderente';
-      return { pilar, total, na, conforme, parcial, naoConforme, respondidos, aderencia, status };
+      return { pilar, total, na, conforme, parcial, naoConforme, respondidos, aderencia, status, totalPoints, maxPoints };
     }).filter(row => row.total > 0);
   }, [baseItems, autoauditoriaData, selectedPilarFilter, selectedBlocoFilter]);
 
@@ -667,7 +667,65 @@ export const Autoauditoria = () => {
                   <td className="px-3 py-3 text-center align-bottom font-bold text-emerald-600">{row.conforme}</td>
                   <td className="px-3 py-3 text-center align-bottom font-bold text-amber-500">{row.parcial}</td>
                   <td className="px-3 py-3 text-center align-bottom font-bold text-red-600">{row.naoConforme}</td>
-                  <td className="px-3 py-3 text-center align-bottom">{row.aderencia.toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-3 py-3 text-center align-bottom">
+                    <div className="inline-flex items-center justify-center gap-1.5 relative group">
+                      <span className="font-semibold text-gray-800 dark:text-zinc-200">
+                        {row.aderencia.toFixed(1).replace('.', ',')}%
+                      </span>
+                      <button
+                        type="button"
+                        className="text-gray-400 hover:text-blue-500 transition-colors p-0.5 rounded cursor-help focus:outline-none"
+                        aria-label="Ver fórmula e cálculo"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Tooltip com detalhamento do cálculo */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col w-64 p-3 bg-zinc-950 text-white rounded-xl shadow-2xl border border-zinc-800 text-[11px] z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                        <div className="font-bold border-b border-zinc-800 pb-1.5 mb-2 flex items-center justify-between text-zinc-100">
+                          <span>Memória de Cálculo ({row.pilar})</span>
+                          <span className="text-blue-400 font-extrabold">{row.aderencia.toFixed(1).replace('.', ',')}%</span>
+                        </div>
+
+                        <div className="space-y-1 text-zinc-300">
+                          <div className="flex justify-between">
+                            <span>Conforme (x3):</span>
+                            <span className="font-mono text-emerald-400">{row.conforme} × 3 = {row.conforme * 3} pts</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Parcial (x1):</span>
+                            <span className="font-mono text-amber-400">{row.parcial} × 1 = {row.parcial * 1} pts</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>N. Conforme (x0):</span>
+                            <span className="font-mono text-red-400">{row.naoConforme} × 0 = 0 pts</span>
+                          </div>
+                          {row.na > 0 && (
+                            <div className="flex justify-between text-zinc-400">
+                              <span>N/A (descontado):</span>
+                              <span className="font-mono">{row.na} item(ns)</span>
+                            </div>
+                          )}
+                          <div className="border-t border-zinc-800 pt-1.5 mt-1 text-[10px]">
+                            <div className="flex justify-between font-bold text-zinc-200">
+                              <span>Pontos Obtidos:</span>
+                              <span className="font-mono text-blue-400">{row.totalPoints} pts</span>
+                            </div>
+                            <div className="flex justify-between font-bold text-zinc-200">
+                              <span>Máximo Possível:</span>
+                              <span className="font-mono text-zinc-400">{row.maxPoints} pts <span className="font-normal text-[9px] text-zinc-500">({row.total - row.na} × 3)</span></span>
+                            </div>
+                            <div className="mt-1.5 p-1 bg-zinc-900 rounded text-center font-mono text-[10px] text-emerald-300 border border-zinc-800">
+                              ({row.totalPoints} ÷ {row.maxPoints}) × 100 = {row.aderencia.toFixed(1).replace('.', ',')}%
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Triângulo indicador do tooltip */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-950" />
+                      </div>
+                    </div>
+                  </td>
                   <td className="px-3 py-3 text-center align-bottom">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${row.status === 'Aderente' ? 'bg-emerald-500' : 'bg-red-500'}`}>
                       {row.status}
