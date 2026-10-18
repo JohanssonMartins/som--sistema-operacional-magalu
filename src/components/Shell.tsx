@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Trophy, CheckCircle2, Database, Users,
   Menu, PanelLeftClose, ChevronDown, Package, Bell,
   Sun, Moon, LogOut, Lock, User as UserIcon, Check, X, ArrowUp,
-  BookOpen
+  BookOpen, Users2, Search, Radio
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -13,6 +13,7 @@ import { MainLogo } from './Logos';
 import { UNIDADES_DISPONIVEIS, CD_NAMES } from '../constants/appConstants';
 import { getDueDateStatus } from '../utils/appUtils';
 import { api } from '../api';
+import { useRealtime } from '../hooks/useRealtime';
 
 interface ShellProps {
   children: React.ReactNode;
@@ -35,6 +36,49 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
     setSelectedUnit: state.setSelectedUnit,
     items: state.items
   })));
+
+  const { socket } = useRealtime();
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [isOnlineModalOpen, setIsOnlineModalOpen] = useState(false);
+  const [onlineSearch, setOnlineSearch] = useState('');
+  const onlineRef = useRef<HTMLDivElement>(null);
+
+  // Enviar presença via Socket e ouvir atualizações de quem está online
+  useEffect(() => {
+    if (!socket || !currentUser) return;
+
+    const sendPresence = () => {
+      socket.emit('user:presence', {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+        unidade: currentUser.unidade,
+        photo: currentUser.photo
+      });
+    };
+
+    if (socket.connected) {
+      sendPresence();
+    }
+    socket.on('connect', sendPresence);
+
+    const handleUsersOnline = (users: any[]) => {
+      setOnlineUsers(users);
+    };
+
+    socket.on('users:online', handleUsersOnline);
+
+    // Buscar lista inicial de online caso o socket já estivesse aberto
+    api.getOnlineUsers().then(users => {
+      if (users && users.length > 0) setOnlineUsers(users);
+    }).catch(() => {});
+
+    return () => {
+      socket.off('connect', sendPresence);
+      socket.off('users:online', handleUsersOnline);
+    };
+  }, [socket, currentUser]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +105,9 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
       }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
+      }
+      if (onlineRef.current && !onlineRef.current.contains(event.target as Node)) {
+        setIsOnlineModalOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -260,7 +307,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         </nav>
 
         <div className="p-3 border-t border-gray-200 dark:border-zinc-800/80 bg-gray-50 dark:bg-zinc-950/80">
-          <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-center gap-4'}`}>
+          <div className={`flex ${isSidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-center gap-3'}`}>
             <button
               onClick={toggleTheme}
               className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm"
@@ -273,12 +320,143 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm relative"
+                title="Notificações"
               >
                 <Bell className="w-5 h-5" />
                 {notificationsCount > 0 && (
                   <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50 animate-pulse"></span>
                 )}
               </button>
+            </div>
+
+            {/* Botão de Usuários Online */}
+            <div className="relative" ref={onlineRef}>
+              <button
+                onClick={() => setIsOnlineModalOpen(!isOnlineModalOpen)}
+                className={`p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400/50 transition-all shadow-sm relative group ${isOnlineModalOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20 text-emerald-600 dark:text-emerald-400' : ''}`}
+                title="Usuários Conectados"
+              >
+                <Users2 className="w-5 h-5" />
+                {/* Badge com quantidade online */}
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow-md shadow-emerald-500/30">
+                  {onlineUsers.length > 0 ? onlineUsers.length : 1}
+                </span>
+              </button>
+
+              {/* Popover de Usuários Online */}
+              <AnimatePresence>
+                {isOnlineModalOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className={`absolute bottom-full mb-3 left-0 ${isSidebarCollapsed ? 'w-80' : 'w-72'} bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden text-left`}
+                  >
+                    {/* Header do Popover */}
+                    <div className="p-3.5 bg-gray-50 dark:bg-zinc-950/60 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </div>
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 uppercase tracking-wider">
+                          Usuários Conectados ({onlineUsers.length > 0 ? onlineUsers.length : 1})
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                        Ao Vivo
+                      </span>
+                    </div>
+
+                    {/* Busca */}
+                    <div className="p-2 border-b border-gray-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-900">
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 text-gray-400 dark:text-zinc-500" />
+                        <input
+                          type="text"
+                          value={onlineSearch}
+                          onChange={(e) => setOnlineSearch(e.target.value)}
+                          placeholder="Filtrar por nome ou CD..."
+                          className="w-full pl-8 pr-2 py-1.5 text-xs bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700/60 rounded-lg text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lista de Usuários Conectados */}
+                    <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-zinc-800/60 p-1">
+                      {(() => {
+                        // Se o array de onlineUsers estiver vazio no primeiro instante, coloca pelo menos o currentUser
+                        const displayList = onlineUsers.length > 0 
+                          ? onlineUsers 
+                          : (currentUser ? [{
+                              userId: currentUser.id,
+                              name: currentUser.name,
+                              email: currentUser.email,
+                              role: currentUser.role,
+                              unidade: currentUser.unidade,
+                              photo: currentUser.photo
+                            }] : []);
+
+                        const filtered = displayList.filter(u => 
+                          (u.name || '').toLowerCase().includes(onlineSearch.toLowerCase()) ||
+                          (u.unidade || '').toLowerCase().includes(onlineSearch.toLowerCase()) ||
+                          (u.role || '').toLowerCase().includes(onlineSearch.toLowerCase())
+                        );
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="py-6 text-center text-xs text-gray-400 dark:text-zinc-500">
+                              Nenhum usuário encontrado.
+                            </div>
+                          );
+                        }
+
+                        return filtered.map((u, i) => {
+                          const isMe = u.userId === currentUser?.id;
+                          return (
+                            <div
+                              key={u.userId || i}
+                              className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
+                            >
+                              <div className="relative shrink-0">
+                                {u.photo ? (
+                                  <img src={u.photo} className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-zinc-700" alt="" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                    {(u.name || 'U').charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full"></div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate">
+                                    {u.name} {isMe && <span className="text-[10px] text-blue-500 font-semibold">(você)</span>}
+                                  </span>
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0">
+                                    {u.unidade ? `CD ${u.unidade}` : 'Master'}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate capitalize">
+                                  {(u.role || '').toLowerCase().replace(/_/g, ' ')}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+
+                    {/* Rodapé do Popover */}
+                    <div className="p-2 bg-gray-50 dark:bg-zinc-950/40 border-t border-gray-100 dark:border-zinc-800 text-center">
+                      <p className="text-[10px] text-gray-400 dark:text-zinc-500">
+                        Atualizado em tempo real via WebSocket
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

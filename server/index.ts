@@ -21,11 +21,59 @@ const io = new Server(httpServer, {
 const prisma = new PrismaClient({});
 const PORT = Number(process.env.PORT) || 3333;
 
+// Gerenciamento de Usuários Online via Socket.io
+interface OnlineUserInfo {
+    userId: string;
+    socketId: string;
+    name: string;
+    email: string;
+    role: string;
+    unidade: string;
+    photo?: string | null;
+    connectedAt: number;
+}
+const onlineUsers = new Map<string, OnlineUserInfo>(); // socketId -> OnlineUserInfo
+
+const emitOnlineUsers = () => {
+    // Agrupar por userId para evitar duplicar se o mesmo usuário tiver 2 abas abertas
+    const uniqueMap = new Map<string, OnlineUserInfo>();
+    for (const user of onlineUsers.values()) {
+        if (!uniqueMap.has(user.userId)) {
+            uniqueMap.set(user.userId, user);
+        }
+    }
+    const list = Array.from(uniqueMap.values());
+    console.log(`[Socket] Usuários online atualmente: ${list.length}`);
+    io.emit('users:online', list);
+};
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
     console.log(`[Socket] Novo cliente conectado: ${socket.id}`);
+
+    // Cliente envia seus dados de autenticação/presença
+    socket.on('user:presence', (userData: { id: string; name: string; email: string; role: string; unidade: string; photo?: string | null }) => {
+        if (userData && userData.id) {
+            onlineUsers.set(socket.id, {
+                userId: userData.id,
+                socketId: socket.id,
+                name: userData.name,
+                email: userData.email,
+                role: userData.role,
+                unidade: userData.unidade,
+                photo: userData.photo,
+                connectedAt: Date.now()
+            });
+            emitOnlineUsers();
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`[Socket] Cliente desconectado: ${socket.id}`);
+        if (onlineUsers.has(socket.id)) {
+            onlineUsers.delete(socket.id);
+            emitOnlineUsers();
+        }
     });
 });
 
@@ -70,6 +118,16 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // Users
+app.get('/api/users/online', (req, res) => {
+    const uniqueMap = new Map<string, OnlineUserInfo>();
+    for (const user of onlineUsers.values()) {
+        if (!uniqueMap.has(user.userId)) {
+            uniqueMap.set(user.userId, user);
+        }
+    }
+    res.json(Array.from(uniqueMap.values()));
+});
+
 app.get('/api/users', async (req, res) => {
     try {
         const users = await prisma.user.findMany();
