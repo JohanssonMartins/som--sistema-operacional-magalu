@@ -399,9 +399,9 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
     try {
         const { unidade } = req.params;
 
-        // 1 & 2. Buscar itens base e auditorias da unidade em paralelo
+        // 1 & 2. Buscar itens base ativos e auditorias da unidade em paralelo
         const [baseItems, autoauditorias] = await Promise.all([
-            prisma.baseChecklistItem.findMany(),
+            prisma.baseChecklistItem.findMany({ where: { ativo: true } }),
             prisma.autoauditoria.findMany({
                 where: { unidade, tipo: 'AUTO' },
                 include: {
@@ -409,7 +409,13 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
                 }
             })
         ]);
-        const baseItemMap = new Map(baseItems.map(item => [item.id, item.pilar]));
+
+        // Agrupar itens base ativos por pilar
+        const pilarItemsMap: Record<string, typeof baseItems> = {};
+        baseItems.forEach(item => {
+            if (!pilarItemsMap[item.pilar]) pilarItemsMap[item.pilar] = [];
+            pilarItemsMap[item.pilar].push(item);
+        });
 
         // 3. Identificar os meses presentes para calcular média da rede
         const uniqueMonths = [...new Set(autoauditorias.map(a => a.mesAno))];
@@ -427,64 +433,74 @@ app.get('/api/autoauditoria/history/:unidade', async (req, res) => {
             })
             : [];
 
-        // 5. Calcular média da rede por mês (descontando N/A)
+        // 5. Calcular média da rede por mês (alinhado com a base ativa de itens)
         const networkAvgByMonth: Record<string, number> = {};
         uniqueMonths.forEach(mes => {
             const audits = allAuditsInMonths.filter(a => a.mesAno === mes);
-            let monthTotalScore = 0;
-            let monthMaxScore = 0;
+            if (audits.length === 0) {
+                networkAvgByMonth[mes] = 0;
+                return;
+            }
 
+            let sumAuditPct = 0;
             audits.forEach(audit => {
-                audit.items.forEach(item => {
-                    if (item.score === 'N/A') return;
-                    const s = parseInt(item.score || '0');
-                    monthTotalScore += (isNaN(s) ? 0 : s);
-                    monthMaxScore += 3;
+                const auditMap = new Map(audit.items.map(i => [i.baseItemId, i]));
+                let totalPts = 0;
+                let naCount = 0;
+
+                baseItems.forEach(bi => {
+                    const ai = auditMap.get(bi.id);
+                    if (ai?.score === '3') totalPts += 3;
+                    else if (ai?.score === '1') totalPts += 1;
+                    else if (ai?.score === 'N/A') naCount++;
                 });
+
+                const maxPossible = (baseItems.length - naCount) * 3;
+                const pct = maxPossible > 0 ? (totalPts / maxPossible) * 100 : 0;
+                sumAuditPct += pct;
             });
 
-            networkAvgByMonth[mes] = monthMaxScore > 0
-                ? Math.round((monthTotalScore / monthMaxScore) * 1000) / 10
-                : 0;
+            networkAvgByMonth[mes] = Math.round((sumAuditPct / audits.length) * 10) / 10;
         });
 
-        // 6. Processar histórico final com pilares (descontando N/A)
+        // 6. Processar histórico final com pilares idêntico ao cálculo dos cards do Dashboard
         const history = autoauditorias.map(audit => {
-            const pillarScores: Record<string, { score: number, max: number }> = {};
-            let totalScore = 0;
-            let totalMaxScore = 0;
+            const auditMap = new Map(audit.items.map(i => [i.baseItemId, i]));
+            const pillars: Record<string, number> = {};
 
-            audit.items.forEach(item => {
-                const pilar = baseItemMap.get(item.baseItemId) || 'Outros';
-                if (!pillarScores[pilar]) pillarScores[pilar] = { score: 0, max: 0 };
+            let totalAuditPoints = 0;
+            let totalAuditNa = 0;
 
-                if (item.score === 'N/A') {
-                    // Itens N/A não somam pontos nem entram no denominador
-                    return;
-                }
-
-                const s = parseInt(item.score || '0');
-                const val = (isNaN(s) ? 0 : s);
-
-                pillarScores[pilar].score += val;
-                pillarScores[pilar].max += 3;
-
-                totalScore += val;
-                totalMaxScore += 3;
+            baseItems.forEach(bi => {
+                const ai = auditMap.get(bi.id);
+                if (ai?.score === '3') totalAuditPoints += 3;
+                else if (ai?.score === '1') totalAuditPoints += 1;
+                else if (ai?.score === 'N/A') totalAuditNa++;
             });
 
-            const performance = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0;
+            const overallMax = (baseItems.length - totalAuditNa) * 3;
+            const overallPerformance = overallMax > 0 ? (totalAuditPoints / overallMax) * 100 : 0;
 
-            const pillars: Record<string, number> = {};
-            Object.entries(pillarScores).forEach(([name, data]) => {
-                pillars[name] = data.max > 0 ? Math.round((data.score / data.max) * 1000) / 10 : 0;
+            Object.entries(pilarItemsMap).forEach(([pilarName, items]) => {
+                let pilarPoints = 0;
+                let pilarNa = 0;
+
+                items.forEach(bi => {
+                    const ai = auditMap.get(bi.id);
+                    if (ai?.score === '3') pilarPoints += 3;
+                    else if (ai?.score === '1') pilarPoints += 1;
+                    else if (ai?.score === 'N/A') pilarNa++;
+                });
+
+                const pilarMax = (items.length - pilarNa) * 3;
+                pillars[pilarName] = pilarMax > 0 ? Math.round((pilarPoints / pilarMax) * 1000) / 10 : 0;
             });
 
             return {
                 mesAno: audit.mesAno,
-                performance: Math.round(performance * 10) / 10,
-                score: totalScore,
-                maxScore: totalMaxScore,
+                performance: Math.round(overallPerformance * 10) / 10,
+                score: totalAuditPoints,
+                maxScore: overallMax,
                 status: audit.status,
                 pillars,
                 networkAvg: networkAvgByMonth[audit.mesAno] || 0
