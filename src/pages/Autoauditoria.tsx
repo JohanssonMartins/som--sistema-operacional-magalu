@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package, ClipboardCheck, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, ChevronDown, Users, Shield, Leaf, ShoppingCart, Settings, Package, ClipboardCheck, HelpCircle, Copy, ArrowDownToLine } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStats } from '../hooks/useDashboardStats';
@@ -228,6 +228,55 @@ export const Autoauditoria = () => {
         setIsLoading(false);
         setTimeout(() => { isInitialLoad.current = false; }, 500);
       }
+    }
+  };
+
+  const [isCloning, setIsCloning] = useState(false);
+
+  const handleClonePreviousMonth = async () => {
+    if (!selectedUnit || selectedUnit === 'Todas' || selectedUnit === 'Master') {
+      alert('Selecione uma unidade específica para importar.');
+      return;
+    }
+
+    const hasFilledItems = Object.values(autoauditoriaData).some(
+      (v: any) => v && (v.score || v.nossaAcao || (v.evidencias && v.evidencias.length > 0))
+    );
+
+    if (hasFilledItems) {
+      const confirmOverwrite = window.confirm(
+        `O mês de ${localMesAno} já possui avaliações preenchidas. Tem certeza que deseja substituir e importar os dados do mês anterior?`
+      );
+      if (!confirmOverwrite) return;
+    } else {
+      const confirmImport = window.confirm(
+        `Deseja importar notas, planos 5W2H e evidências do mês anterior mais recente para ${localMesAno}?`
+      );
+      if (!confirmImport) return;
+    }
+
+    try {
+      setIsCloning(true);
+      const res = await api.cloneAutoauditoria(selectedUnit, localMesAno, 'AUTO');
+      if (res && res.autoauditoria && res.autoauditoria.items) {
+        const mappedData: Record<string, any> = {};
+        res.autoauditoria.items.forEach((item: any) => {
+          mappedData[item.baseItemId] = {
+            score: item.score || '',
+            nossaAcao: item.nossaAcao || '',
+            evidencias: item.evidencias || []
+          };
+        });
+        setAutoauditoriaData(mappedData);
+        alert(`Sucesso! Foram importados dados do mês de ${res.sourceMonth} para ${localMesAno}.`);
+      } else {
+        await loadAutoauditoria(selectedUnit, localMesAno);
+      }
+    } catch (err: any) {
+      console.error('Erro ao clonar mês anterior:', err);
+      alert(err.message || 'Não foi possível importar dados do mês anterior.');
+    } finally {
+      setIsCloning(false);
     }
   };
 
@@ -562,6 +611,17 @@ export const Autoauditoria = () => {
           <div className="flex flex-col ml-auto shrink-0">
             <span className="text-[10px] font-bold uppercase tracking-wider text-transparent mb-1 select-none" aria-hidden="true">Ações</span>
             <div className="flex items-center gap-2">
+              {currentUser && (
+                <button
+                  onClick={handleClonePreviousMonth}
+                  disabled={isCloning}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 disabled:opacity-50"
+                  title="Importar notas, planos e evidências do mês anterior"
+                >
+                  <ArrowDownToLine className={`w-3.5 h-3.5 ${isCloning ? 'animate-bounce' : ''}`} />
+                  <span>{isCloning ? 'Importando...' : 'Importar do mês anterior'}</span>
+                </button>
+              )}
               {currentUser && (
                 <button
                   onClick={() => setShowMyPending(!showMyPending)}

@@ -661,6 +661,147 @@ app.get('/api/autoauditoria/:unidade/:mesAno', async (req, res) => {
     }
 });
 
+app.post('/api/autoauditoria/clone', async (req, res) => {
+    try {
+        const { unidade, mesAno, tipo = 'AUTO' } = req.body;
+
+        if (!unidade || !mesAno) {
+            return res.status(400).json({ error: 'Unidade e Mês/Ano são obrigatórios' });
+        }
+
+        // Verifica se já existe auditoria para este mês
+        const existingAudit = await prisma.autoauditoria.findUnique({
+            where: {
+                unidade_mesAno_tipo: { unidade, mesAno, tipo }
+            },
+            include: {
+                items: true
+            }
+        });
+
+        // Se já existe e já tem itens preenchidos
+        if (existingAudit && existingAudit.items.length > 0) {
+            return res.status(400).json({ error: 'Este mês já possui dados preenchidos.' });
+        }
+
+        // Busca todas as auditorias anteriores da mesma unidade e tipo
+        const allAudits = await prisma.autoauditoria.findMany({
+            where: { unidade, tipo },
+            include: {
+                items: {
+                    include: {
+                        evidencias: true
+                    }
+                }
+            }
+        });
+
+        const monthOrder: Record<string, number> = {
+            'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
+            'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+        };
+
+        const parseMesAno = (str: string) => {
+            const [mes, anoStr] = str.split('-');
+            const ano = parseInt(anoStr) || 0;
+            const mesIndex = monthOrder[mes] !== undefined ? monthOrder[mes] : -1;
+            return { ano, mesIndex };
+        };
+
+        const targetTime = parseMesAno(mesAno);
+
+        // Filtra meses anteriores
+        const pastAudits = allAudits.filter(a => {
+            const t = parseMesAno(a.mesAno);
+            if (t.ano < targetTime.ano) return true;
+            if (t.ano === targetTime.ano && t.mesIndex < targetTime.mesIndex) return true;
+            return false;
+        });
+
+        if (pastAudits.length === 0) {
+            return res.status(404).json({ error: 'Nenhuma auditoria anterior encontrada para importar.' });
+        }
+
+        // Ordena para pegar a mais recente
+        pastAudits.sort((a, b) => {
+            const tA = parseMesAno(a.mesAno);
+            const tB = parseMesAno(b.mesAno);
+            if (tA.ano !== tB.ano) return tB.ano - tA.ano;
+            return tB.mesIndex - tA.mesIndex;
+        });
+
+        const sourceAudit = pastAudits[0];
+
+        // Cria ou atualiza a auditoria destino
+        const targetAudit = existingAudit || await prisma.autoauditoria.create({
+            data: {
+                unidade,
+                mesAno,
+                tipo,
+                status: 'Pendente de Auditoria'
+            }
+        });
+
+        // Clona cada item e suas evidências
+        for (const pastItem of sourceAudit.items) {
+            const newItem = await prisma.autoauditoriaItem.upsert({
+                where: {
+                    autoauditoriaId_baseItemId: {
+                        autoauditoriaId: targetAudit.id,
+                        baseItemId: pastItem.baseItemId
+                    }
+                },
+                update: {
+                    score: pastItem.score,
+                    nossaAcao: pastItem.nossaAcao
+                },
+                create: {
+                    autoauditoriaId: targetAudit.id,
+                    baseItemId: pastItem.baseItemId,
+                    score: pastItem.score,
+                    nossaAcao: pastItem.nossaAcao
+                }
+            });
+
+            if (pastItem.evidencias && pastItem.evidencias.length > 0) {
+                for (const pastEv of pastItem.evidencias) {
+                    await prisma.evidenciaAutoauditoria.create({
+                        data: {
+                            autoauditoriaItemId: newItem.id,
+                            url: pastEv.url,
+                            name: pastEv.name
+                        }
+                    });
+                }
+            }
+        }
+
+        // Busca o resultado final completo
+        const finalAudit = await prisma.autoauditoria.findUnique({
+            where: { id: targetAudit.id },
+            include: {
+                items: {
+                    include: {
+                        evidencias: true
+                    }
+                }
+            }
+        });
+
+        notifyDataChange('autoauditoria_updated', { unidade, mesAno });
+
+        res.json({
+            success: true,
+            sourceMonth: sourceAudit.mesAno,
+            itemsCount: sourceAudit.items.length,
+            autoauditoria: finalAudit
+        });
+    } catch (error: any) {
+        console.error('CLONE AUTOAUDITORIA ERROR:', error);
+        res.status(500).json({ error: error.message || 'Erro ao importar dados do mês anterior' });
+    }
+});
+
 app.post('/api/autoauditoria', async (req, res) => {
     try {
         const { unidade, mesAno, items, tipo = 'AUTO' } = req.body;

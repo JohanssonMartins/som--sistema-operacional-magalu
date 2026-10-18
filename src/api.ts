@@ -126,6 +126,16 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/autoauditoria`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         return res.json();
     },
+    cloneAutoauditoria: async (unidade: string, mesAno: string, tipo?: 'AUTO' | 'EXTERNA') => {
+        const res = await fetch(`${API_BASE_URL}/autoauditoria/clone`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unidade, mesAno, tipo: tipo || 'AUTO' })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao importar dados do mês anterior');
+        return data;
+    },
     getHistory: async (unidade: string, tipo?: 'AUTO' | 'EXTERNA') => {
         const url = new URL(`${API_BASE_URL}/autoauditoria/history/${encodeURIComponent(unidade)}`);
         if (tipo) url.searchParams.append('tipo', tipo);
