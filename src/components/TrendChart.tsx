@@ -11,7 +11,7 @@ import {
   Cell,
   LabelList
 } from 'recharts';
-import { Target, TrendingUp, TrendingDown, Minus, Layers, Award, Calendar } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, Minus, Layers, Award, Calendar, BarChart3 } from 'lucide-react';
 import { parseMesAno } from '../utils/appUtils';
 
 interface HistoryData {
@@ -27,6 +27,15 @@ interface HistoryData {
 interface TrendChartProps {
   data: HistoryData[];
 }
+
+export const PILAR_COLORS: Record<string, string> = {
+  'Pessoas': '#7b52ab',
+  'Segurança': '#4a545e',
+  'Sustentabilidade': '#36b37e',
+  'Cliente': '#00b8d9',
+  'Gestão': '#2684ff',
+  'Armazém': '#ff8b00',
+};
 
 const getBarColor = (value: number) => {
   if (value >= 85) return '#22a06b'; // Certificado S.O.M. (Verde)
@@ -78,7 +87,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
     return officialOrder.filter(p => presentPillars.has(p));
   }, [filteredData]);
 
-  // Preparar os dados calculando a variação mês a mês
+  // Preparar os dados calculando a variação mês a mês (quando um pilar ou Geral CD está ativo)
   const processedData = useMemo(() => {
     return filteredData.map((d, index) => {
       const currentValue = selectedPilar === 'Geral' 
@@ -93,14 +102,21 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
 
       const diff = prevValue !== null ? Math.round((currentValue - prevValue) * 10) / 10 : null;
 
+      // Montar objeto com valores individuais de cada pilar para a visão "Todos os Pilares"
+      const pillarValues: Record<string, number> = {};
+      availablePillars.forEach(p => {
+        pillarValues[p] = d.pillars?.[p] ?? 0;
+      });
+
       return {
         ...d,
+        ...pillarValues,
         displayValue: currentValue,
         diff,
         color: getBarColor(currentValue)
       };
     });
-  }, [filteredData, selectedPilar]);
+  }, [filteredData, selectedPilar, availablePillars]);
 
   if (!data || data.length === 0) {
     return (
@@ -156,6 +172,18 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
             Geral CD
           </button>
 
+          <button
+            onClick={() => setSelectedPilar('TODOS_PILARES')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+              selectedPilar === 'TODOS_PILARES'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/30'
+            }`}
+          >
+            <BarChart3 size={13} />
+            <span>Barras dos Pilares</span>
+          </button>
+
           {availablePillars.map(p => (
             <button
               key={p}
@@ -173,7 +201,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
 
         {/* Ajuste de Meta e Evolução */}
         <div className="flex items-center gap-3">
-          {processedData.length > 1 && (
+          {selectedPilar !== 'TODOS_PILARES' && processedData.length > 1 && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs font-bold">
               <span className="text-gray-500 dark:text-zinc-400 font-normal">Evolução do Período:</span>
               <span className={totalEvolucao > 0 ? 'text-emerald-600 flex items-center' : totalEvolucao < 0 ? 'text-red-500 flex items-center' : 'text-gray-500'}>
@@ -202,12 +230,13 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
       </div>
 
       {/* Área do Gráfico de Barras */}
-      <div className="h-[340px] w-full bg-white dark:bg-zinc-900/30 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm relative">
+      <div className="h-[360px] w-full bg-white dark:bg-zinc-900/30 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm relative">
         <ResponsiveContainer width="100%" height="100%">
           <RechartsBarChart
             data={processedData}
             margin={{ top: 25, right: 20, left: -10, bottom: 5 }}
-            barCategoryGap="20%"
+            barCategoryGap={selectedPilar === 'TODOS_PILARES' ? '12%' : '20%'}
+            barGap={4}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:stroke-zinc-800" />
             <XAxis 
@@ -229,8 +258,35 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
               content={({ active, payload }) => {
                 if (!active || !payload || !payload.length) return null;
                 const d = payload[0].payload;
-                const badge = getStatusBadge(d.displayValue);
 
+                if (selectedPilar === 'TODOS_PILARES') {
+                  return (
+                    <div className="bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-xl text-xs space-y-2.5 min-w-[220px]">
+                      <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-1.5">
+                        <span className="font-bold text-gray-900 dark:text-zinc-100 text-sm">{d.mesAno}</span>
+                        <span className="text-[10px] text-gray-500 font-medium">Autoavaliação por Pilar</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {availablePillars.map(p => {
+                          const val = d[p] ?? 0;
+                          return (
+                            <div key={p} className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: PILAR_COLORS[p] || '#64748b' }} />
+                                <span className="text-gray-600 dark:text-zinc-300 font-medium">{p}</span>
+                              </div>
+                              <span className="font-black text-gray-900 dark:text-zinc-100">
+                                {Number(val).toFixed(0)}%
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
+
+                const badge = getStatusBadge(d.displayValue);
                 return (
                   <div className="bg-white dark:bg-zinc-900 p-3 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-xl text-xs space-y-2 min-w-[170px]">
                     <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-1.5">
@@ -287,45 +343,80 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
               }} 
             />
 
-            {/* Barras de Desempenho */}
-            <Bar 
-              dataKey="displayValue" 
-              radius={[6, 6, 0, 0]}
-              animationDuration={1200}
-            >
-              {processedData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-              <LabelList 
+            {/* Renderização Condicional: Todos os Pilares lado a lado OU Pilar Único */}
+            {selectedPilar === 'TODOS_PILARES' ? (
+              availablePillars.map(pilar => (
+                <Bar 
+                  key={pilar}
+                  dataKey={pilar}
+                  name={pilar}
+                  fill={PILAR_COLORS[pilar] || '#3b82f6'}
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1000}
+                >
+                  <LabelList 
+                    dataKey={pilar} 
+                    position="top" 
+                    formatter={(val: number) => val > 0 ? `${Math.round(val)}%` : ''} 
+                    style={{ fontSize: '10px', fontWeight: 'bold', fill: '#64748b' }} 
+                  />
+                </Bar>
+              ))
+            ) : (
+              <Bar 
                 dataKey="displayValue" 
-                position="top" 
-                formatter={(val: number) => `${Math.round(val)}%`} 
-                style={{ fontSize: '11px', fontWeight: 'bold', fill: '#64748b' }} 
-              />
-            </Bar>
+                radius={[6, 6, 0, 0]}
+                animationDuration={1200}
+              >
+                {processedData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+                <LabelList 
+                  dataKey="displayValue" 
+                  position="top" 
+                  formatter={(val: number) => `${Math.round(val)}%`} 
+                  style={{ fontSize: '11px', fontWeight: 'bold', fill: '#64748b' }} 
+                />
+              </Bar>
+            )}
           </RechartsBarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Legendas e Comparativo Mês a Mês */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-        <div className="flex items-center gap-4 text-zinc-500">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#22a06b]"></div> ≥ 85% Certificado S.O.M.
+        {selectedPilar === 'TODOS_PILARES' ? (
+          <div className="flex flex-wrap items-center gap-4 text-zinc-600 dark:text-zinc-300 font-medium">
+            {availablePillars.map(p => (
+              <div key={p} className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: PILAR_COLORS[p] || '#64748b' }} />
+                <span>{p}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5 ml-2">
+              <div className="w-4 h-0.5 border-t-2 border-emerald-500 border-dashed" />
+              <span>Meta ({targetScore}%)</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-amber-500"></div> 60% - 84% Qualificado
+        ) : (
+          <div className="flex items-center gap-4 text-zinc-500">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-[#22a06b]"></div> ≥ 85% Certificado S.O.M.
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-amber-500"></div> 60% - 84% Qualificado
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-[#e34935]"></div> Abaixo de 60% Não Aderente
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-0.5 border-t-2 border-emerald-500 border-dashed"></div> Meta ({targetScore}%)
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#e34935]"></div> Abaixo de 60% Não Aderente
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-4 h-0.5 border-t-2 border-emerald-500 border-dashed"></div> Meta ({targetScore}%)
-          </div>
-        </div>
+        )}
 
         {/* Resumo rápido do último mês */}
-        {lastItem && (
+        {selectedPilar !== 'TODOS_PILARES' && lastItem && (
           <div className="flex items-center gap-2 font-medium text-gray-700 dark:text-zinc-300">
             <span>Último mês ({lastItem.mesAno}):</span>
             <span className="font-extrabold text-blue-600 dark:text-blue-400">
